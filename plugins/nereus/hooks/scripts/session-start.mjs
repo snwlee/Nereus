@@ -5,7 +5,7 @@ import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
 import { handoffPath, userConfigDir } from "./lib/paths.mjs";
 import { which } from "./lib/exec.mjs";
 
-export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "gemini", "codex"];
+export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "agy", "codex"];
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function toolStatusCached({ now = Date.now(), cacheFile = path.join(userConfigDir(), "tools.json"), probe = (t) => !!which(t) } = {}) {

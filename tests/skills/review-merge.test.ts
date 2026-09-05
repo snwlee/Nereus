@@ -26,9 +26,9 @@ describe("review merge", () => {
     expect(gate([{ severity: "HIGH" }, { severity: "CRITICAL" }])).toEqual({ pass: false, blocking: 2 });
   });
   it("plans runners from config and availability", () => {
-    const avail = (b: string) => ["ocr", "gemini"].includes(b);
+    const avail = (b: string) => ["ocr", "agy"].includes(b);
     expect(planRunners("both", avail)).toEqual({ ocr: true, codex: false, gemini: true, skipped: ["codex"] });
     expect(planRunners("codex", avail)).toEqual({ ocr: true, codex: false, gemini: false, skipped: ["codex"] });
-    expect(planRunners("gemini", (b: string) => b === "gemini")).toEqual({ ocr: false, codex: false, gemini: true, skipped: ["ocr"] });
+    expect(planRunners("gemini", (b: string) => b === "agy")).toEqual({ ocr: false, codex: false, gemini: true, skipped: ["ocr"] });
   });
 });

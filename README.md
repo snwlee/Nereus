@@ -15,7 +15,7 @@ snwlee의 개인 Claude Code 하네스 마켓플레이스. macOS·Windows 공용
 /nereus:setup
 ```
 
-`setup`이 외부 도구(codegraph, ouroboros, Open Code Review, spec-kit, OpenSpec, Typst, Gemini/Codex CLI 등) 설치 상태를 표로 보여주고 승인된 것만 설치한다. 외부 도구는 이 저장소에 포함되지 않고 래퍼로 호출된다.
+`setup`이 외부 도구(codegraph, ouroboros, Open Code Review, spec-kit, OpenSpec, Typst, Antigravity(agy)/Codex CLI 등) 설치 상태를 표로 보여주고 승인된 것만 설치한다. 외부 도구는 이 저장소에 포함되지 않고 래퍼로 호출된다.
 
 ## 워크플로
 

@@ -4,7 +4,7 @@ import { detect, renderTable, TOOLS } from "../../plugins/nereus/skills/setup/sc
 describe("setup detect", () => {
   it("declares required and optional tools with per-platform installers", () => {
     const required = TOOLS.filter((t) => t.required).map((t) => t.bin);
-    expect(required).toEqual(expect.arrayContaining(["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "gemini", "codex"]));
+    expect(required).toEqual(expect.arrayContaining(["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "agy", "codex"]));
     for (const t of TOOLS) {
       expect(t.install.darwin).toBeTruthy();
       expect(t.install.win32).toBeTruthy();

@@ -8,10 +8,11 @@ const norm = (s) => { const u = String(s ?? "INFO").toUpperCase(); return ORDER.
 
 export function planRunners(mode, available = (b) => !!which(b)) {
   const want = { ocr: true, codex: mode === "both" || mode === "codex", gemini: mode === "both" || mode === "gemini" };
+  const bins = { ocr: "ocr", codex: "codex", gemini: "agy" }; // Gemini 2차 의견은 Antigravity CLI(agy)로 실행
   const plan = { ocr: false, codex: false, gemini: false, skipped: [] };
   for (const k of Object.keys(want)) {
     if (!want[k]) continue;
-    if (available(k)) plan[k] = true; else plan.skipped.push(k);
+    if (available(bins[k])) plan[k] = true; else plan.skipped.push(k);
   }
   return plan;
 }

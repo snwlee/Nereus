@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Nereus 하네스 초기 설정. 외부 도구(codegraph, ouroboros, OCR, spec-kit, OpenSpec, Typst, Gemini/Codex CLI 등) 설치 상태를 표로 보여주고, 승인된 것만 설치하며, 공식 플러그인 목록을 안내하고 설정 파일을 만든다. "/nereus:setup", "하네스 설정", "도구 설치 확인", "setup --check" 요청 시 사용.
+description: Nereus 하네스 초기 설정. 외부 도구(codegraph, ouroboros, OCR, spec-kit, OpenSpec, Typst, Antigravity(agy)/Codex CLI 등) 설치 상태를 표로 보여주고, 승인된 것만 설치하며, 공식 플러그인 목록을 안내하고 설정 파일을 만든다. "/nereus:setup", "하네스 설정", "도구 설치 확인", "setup --check" 요청 시 사용.
 ---
 
 # Nereus setup

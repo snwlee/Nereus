@@ -1,6 +1,6 @@
 ---
 name: review
-description: 변경 사항을 Open Code Review(delegation)와 2차 의견(Codex, Gemini CLI)으로 병렬 리뷰하고 심각도별로 병합한다. CRITICAL/HIGH가 0이어야 통과. "/nereus:review", "리뷰해", "코드 검토", "2차 의견" 요청 시, 그리고 build 게이트 통과 직후 자동으로 사용.
+description: 변경 사항을 Open Code Review(delegation)와 2차 의견(Codex, Antigravity CLI(agy, Gemini))으로 병렬 리뷰하고 심각도별로 병합한다. CRITICAL/HIGH가 0이어야 통과. "/nereus:review", "리뷰해", "코드 검토", "2차 의견" 요청 시, 그리고 build 게이트 통과 직후 자동으로 사용.
 ---
 
 # review
@@ -20,7 +20,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 
 - **OCR delegation**: `ocr delegate preview`로 리뷰할 파일과 룰을 받고, 파일별 `ocr delegate rule <files>`로 룰을 받아 **이 세션의 모델이 직접** 리뷰한다. OCR이 API 키로 직접 리뷰하게 설정돼 있으면 `ocr review --format json --output .nereus/review-ocr.json`을 쓴다.
 - **Codex**: `codex review` (또는 codex 플러그인의 `/codex:adversarial-review`). 결과를 파일·줄·심각도·메시지로 정리한다.
-- **Gemini**: `gemini -p "다음 diff를 리뷰하고 file:line, severity(CRITICAL/HIGH/MEDIUM/LOW), message 형식의 JSON 배열로만 답하라: $(git diff ...)"`.
+- **Gemini (Antigravity CLI)**: `agy -p "다음 diff를 리뷰하고 file:line, severity(CRITICAL/HIGH/MEDIUM/LOW), message 형식의 JSON 배열로만 답하라: $(git diff ...)"`.
 
 세 결과를 `{source, file, line, severity, message}` 배열로 정규화한다.
 
