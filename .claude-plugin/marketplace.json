@@ -2,15 +2,20 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "nereus",
   "description": "snwlee의 개인 개발 하네스. 인터뷰 → 스펙 → TDD 빌드 → 이중 리뷰 → 마무리 워크플로, 전문가 에이전트, 컨텍스트 핸드오프. macOS·Windows 공용.",
-  "owner": { "name": "snwlee", "email": "PGRRR119@gmail.com" },
+  "owner": {
+    "name": "snwlee",
+    "email": "PGRRR119@gmail.com"
+  },
   "plugins": [
     {
       "name": "nereus",
       "description": "코어 하네스: 워크플로 스킬, 전문가 에이전트 10개, Node 훅, Baton 핸드오프, setup",
       "source": "./plugins/nereus",
       "category": "workflow",
-      "version": "0.1.0",
-      "author": { "name": "snwlee" }
+      "version": "0.2.0",
+      "author": {
+        "name": "snwlee"
+      }
     },
     {
       "name": "credstore",
@@ -18,7 +23,9 @@
       "source": "./plugins/credstore",
       "category": "security",
       "version": "0.1.0",
-      "author": { "name": "snwlee" }
+      "author": {
+        "name": "snwlee"
+      }
     }
   ]
 }
