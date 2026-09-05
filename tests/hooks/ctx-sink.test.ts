@@ -15,13 +15,13 @@ describe("ctx-sink", () => {
   });
   it("baton-meter prefers the official ratio over the transcript estimate", () => {
     const deps = {
-      usage: () => ({ inputTotal: 100_000, model: "claude-opus-5" }), // 추정 50%
+      usage: () => ({ inputTotal: 60_000, model: "claude-opus-5" }), // 추정 30% — 두 소스가 다를 때 공식 값이 이겨야 한다
       official: () => 0.7,
-      config: () => ({ baton: { warn: 0.65, hard: 0.8 } }),
+      config: () => ({ baton: { warn: 0.5, hard: 0.7 } }),
       hasMark: () => false, setMark: () => {},
     };
     const out = batonMeter({ session_id: "s", cwd: "/r", transcript_path: "/t" }, deps)!;
-    expect(out.hookSpecificOutput.additionalContext).toMatch(/70%/);
+    expect(out.hookSpecificOutput.additionalContext).toMatch(/하드 스톱 70%/);
     expect(batonMeter({ session_id: "s", cwd: "/r", transcript_path: "/t" }, { ...deps, official: () => null })).toBeNull();
   });
 });

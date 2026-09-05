@@ -48,8 +48,9 @@ intake | spec | build | e2e | review | finish 중 하나 + 진행 중인 태스�
 
 ## 임계값 동작
 
-- **65%**(설정 `baton.warn`): 새 태스크 시작 금지. 현재 태스크만 마무리 → handoff 재작성 → 커밋 → 멈춤. 사용자에게 "새 세션에서 /nereus:resume" 안내.
-- **80%**(`baton.hard`): 즉시 handoff 재작성과 커밋만. 다른 도구 호출 금지.
+- **50%**(설정 `baton.warn`): 새 태스크 시작 금지. 현재 태스크만 마무리 → handoff 재작성 → 커밋 → 멈춤. 사용자에게 "새 세션에서 /nereus:resume" 안내.
+- **70%**(`baton.hard`): 즉시 handoff 재작성과 커밋만. 다른 도구 호출 금지.
+- **80%**: Claude Code 자동 압축(`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`). Baton을 놓쳤을 때의 안전망일 뿐, 여기까지 오면 이미 늦은 것이다.
 - 자동 압축이 먼저 오면 PreCompact 훅이 handoff 작성을 요구한다. 압축 뒤에도 handoff가 진실이다.
 
 ## 재개

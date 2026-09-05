@@ -14,21 +14,28 @@ import { mdToTypst, wrapMarkdownForTypst, templatePath } from "../../plugins/ner
 import { classify } from "../../plugins/nereus/skills/spec/scripts/classify.mjs";
 
 let dir: string;
+let savedHome: string | undefined;
 beforeAll(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), "nereus-deps-"));
+  // 사용자 전역 설정(~/.config/nereus)이 테스트 결과를 바꾸지 않도록 격리한다
+  savedHome = process.env.NEREUS_HOME;
+  process.env.NEREUS_HOME = path.join(dir, "home");
   fs.writeFileSync(path.join(dir, "package.json"), '{"scripts":{"test":"vitest run"}}');
   fs.mkdirSync(path.join(dir, "src"));
   const line = JSON.stringify({ message: { role: "assistant", model: "claude-opus-5", usage: { input_tokens: 170000 } } });
   fs.writeFileSync(path.join(dir, "t.jsonl"), line + "\n");
 });
-afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
+afterAll(() => {
+  if (savedHome === undefined) delete process.env.NEREUS_HOME; else process.env.NEREUS_HOME = savedHome;
+  fs.rmSync(dir, { recursive: true, force: true });
+});
 
 describe("default (file-backed) dependencies", () => {
   it("baton-meter uses file marks: hard stop repeats, warn once", () => {
     const input = { session_id: "d1", cwd: dir, transcript_path: path.join(dir, "t.jsonl") };
     expect(batonMeter(input)!.hookSpecificOutput.additionalContext).toContain("하드 스톱");
     expect(batonMeter(input)).not.toBeNull();
-    const warnLine = JSON.stringify({ message: { role: "assistant", model: "claude-opus-5", usage: { input_tokens: 140000 } } });
+    const warnLine = JSON.stringify({ message: { role: "assistant", model: "claude-opus-5", usage: { input_tokens: 110000 } } });
     fs.writeFileSync(path.join(dir, "w.jsonl"), warnLine + "\n");
     const w = { session_id: "d2", cwd: dir, transcript_path: path.join(dir, "w.jsonl") };
     expect(batonMeter(w)).not.toBeNull();

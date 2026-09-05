@@ -39,7 +39,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/detect.mjs"
 ```json
 {
   "secondOpinion": "both",
-  "baton": { "warn": 0.65, "hard": 0.8 },
+  "baton": { "warn": 0.5, "hard": 0.7 },
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/*.d.ts", "**/generated/**", "**/*.g.dart", "**/*.freezed.dart"] },
   "pdf": { "engine": "typst", "font": "Noto Sans KR" },
   "image": { "backend": "auto" }
@@ -59,6 +59,17 @@ printf '%s' "$input" | node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/ctx-sink.mjs" >
 ```
 (`$input`은 statusline이 stdin으로 받은 JSON을 담은 변수명에 맞춘다. Windows PowerShell은 `$input | node ... ctx-sink.mjs`.) 연동이 없으면 Baton은 transcript 기반 추정치로 동작한다.
 
-## 6. 마무리
+## 6. 자동 압축 임계값
+
+Baton(50% 경고 / 70% 하드 스톱)이 Claude Code 자동 압축보다 먼저 작동해야 한다. 자동 압축은 손실 요약이라 마지막 안전망으로만 둔다.
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/autocompact.mjs"            # 현재 값
+node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/autocompact.mjs" --set 80   # 권장값
+```
+
+현재 값을 보여주고 80으로 설정할지 묻는다. 승인하면 실행한다. `~/.claude/settings.json`의 `env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`에 쓰고 변경 전 파일을 백업한다. Claude Code 내부 상한이 약 83%라 그 위 값은 자동으로 조정된다. 새 세션부터 적용된다.
+
+## 7. 마무리
 
 무엇을 설치했고 무엇이 남았는지 표로 요약한다. 남은 필수 도구가 있으면 어떤 워크플로 단계가 영향을 받는지 알려준다 (예: `ooo` 없음 → intake 인터뷰 불가, `ocr` 없음 → review는 2차 의견만).

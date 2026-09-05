@@ -44,11 +44,11 @@ flowchart LR
 
     subgraph Baton [Baton — context handoff]
         direction LR
-        W[65% warn:<br/>finish current task] --> H[write handoff.md<br/>commit · stop]
+        W[50% warn:<br/>finish current task] --> H[write handoff.md<br/>commit · stop]
         H --> N[new session<br/>/nereus:resume]
     end
 
-    B -. context ≥ 65% .-> W
+    B -. context ≥ 50% .-> W
     N -. continues at same stage .-> B
 ```
 
@@ -81,7 +81,7 @@ Each agent is a persona, an allow-list of tools, and an output contract. Agents 
 |---|---|
 | PreToolUse | `pre-tool-guard`: blocks commands/edits matching rules (`--no-verify`, force push, secret files). On `git commit`, scans staged changes for secrets, `.env`, `console.log` |
 | SessionStart | Injects `handoff.md`, reports missing tools |
-| PostToolUse | `tdd-guard`: warns when source is edited before its test. `baton-meter`: 65% warn, 80% hard stop |
+| PostToolUse | `tdd-guard`: warns when source is edited before its test. `baton-meter`: 50% warn, 70% hard stop |
 | PreCompact | Demands a handoff before auto-compaction |
 | Stop | Flags uncommitted changes, a stale handoff, or missing/stale test evidence |
 
@@ -94,12 +94,14 @@ All hooks are Node scripts. No bash, zero runtime dependencies, identical on mac
 ```json
 {
   "secondOpinion": "both",
-  "baton": { "warn": 0.65, "hard": 0.8 },
+  "baton": { "warn": 0.5, "hard": 0.7 },
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/generated/**"] },
   "pdf": { "engine": "typst", "font": "Noto Sans KR" },
   "image": { "backend": "auto" }
 }
 ```
+
+Baton runs ahead of Claude Code's own auto-compaction (a lossy summary). `/nereus:setup` offers to set `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` so the order is 50% warn → 70% hard stop → 80% compaction as a last resort.
 
 ## Development
 

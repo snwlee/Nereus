@@ -44,11 +44,11 @@ flowchart LR
 
     subgraph Baton [Baton — 컨텍스트 핸드오프]
         direction LR
-        W[65% 경고:<br/>현재 태스크만 마무리] --> H[handoff.md 작성<br/>커밋 · 정지]
+        W[50% 경고:<br/>현재 태스크만 마무리] --> H[handoff.md 작성<br/>커밋 · 정지]
         H --> N[새 세션<br/>/nereus:resume]
     end
 
-    B -. 컨텍스트 ≥ 65% .-> W
+    B -. 컨텍스트 ≥ 50% .-> W
     N -. 같은 단계에서 이어감 .-> B
 ```
 
@@ -81,7 +81,7 @@ flowchart LR
 |---|---|
 | PreToolUse | `pre-tool-guard`: 규칙(regex)에 걸리는 명령·편집 차단(`--no-verify`, force push, 시크릿 파일). `git commit` 시 스테이징의 시크릿·`.env`·`console.log` 검사 |
 | SessionStart | `handoff.md` 주입, 미설치 도구 알림 |
-| PostToolUse | `tdd-guard`: 테스트보다 소스를 먼저 고치면 경고. `baton-meter`: 65% 경고, 80% 하드 스톱 |
+| PostToolUse | `tdd-guard`: 테스트보다 소스를 먼저 고치면 경고. `baton-meter`: 50% 경고, 70% 하드 스톱 |
 | PreCompact | 자동 압축 전에 handoff 작성 요구 |
 | Stop | 미커밋 변경, 오래된 handoff, 테스트 evidence(FRESH/STALE/MISSING) 알림 |
 
@@ -94,12 +94,14 @@ flowchart LR
 ```json
 {
   "secondOpinion": "both",
-  "baton": { "warn": 0.65, "hard": 0.8 },
+  "baton": { "warn": 0.5, "hard": 0.7 },
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/generated/**"] },
   "pdf": { "engine": "typst", "font": "Noto Sans KR" },
   "image": { "backend": "auto" }
 }
 ```
+
+Baton은 Claude Code 자체 자동 압축(손실 요약)보다 먼저 작동한다. `/nereus:setup`이 `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` 설정을 제안해 50% 경고 → 70% 하드 스톱 → 80% 압축(최후 수단) 순서를 만든다.
 
 ## 개발
 
