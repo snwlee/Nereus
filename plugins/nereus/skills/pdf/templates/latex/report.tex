@@ -1,0 +1,18 @@
+% XeLaTeX + kotex 기술 보고서 템플릿. 본문은 \input{body} 로 끼운다. 컴파일: xelatex -interaction=nonstopmode report.tex
+\documentclass[a4paper,10.5pt]{article}
+\usepackage{kotex}
+\usepackage{fontspec}
+\setmainfont{Noto Sans KR}
+\setmainhangulfont{Noto Sans KR}
+\usepackage[margin=24mm]{geometry}
+\usepackage{xcolor,titlesec,fancyhdr,booktabs,listings,hyperref}
+\definecolor{accent}{HTML}{1F4E79}
+\titleformat{\section}{\Large\bfseries\color{accent}}{}{0pt}{}[\color{accent}\titlerule]
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\color{gray}\@title}\fancyfoot[C]{\thepage}
+\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{gray!10},frame=single,rulecolor=\color{gray!30},breaklines=true}
+\hypersetup{colorlinks,linkcolor=accent,urlcolor=accent}
+\title{\TITLE}\author{\AUTHOR}\date{\today}
+\begin{document}
+\maketitle
+\input{body}
+\end{document}
