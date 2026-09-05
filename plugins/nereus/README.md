@@ -15,6 +15,6 @@
 - `hooks/` SessionStart(handoff 주입), PostToolUse(baton-meter 65/80%, tdd-guard)
 - `skills/` setup, common, intake, spec, build, review, finish, baton, e2e, pdf, image, research, seo
 - `agents/` architect, backend, frontend, app, researcher, seo, reviewer, security, qa, writer
-- `commands/` setup, intake, spec, build, review, finish, handoff, resume, loop, pdf, image
+- 커맨드는 별도 디렉터리 없이 스킬 이름으로 호출 (`/nereus:setup`, `/nereus:intake`, `/nereus:handoff` 등)
 
 설계 문서: `docs/specs/2026-09-05-nereus-harness-design.md`
