@@ -129,11 +129,15 @@ async def run(args) -> int:
         return await run_api(args)
     from gemini_webapi import GeminiClient
 
+    helper = Path(__file__).with_name("chrome_cookies.py")
+    if not COOKIES.is_file() and sys.platform == "darwin" and helper.is_file():
+        # 첫 실행: 쿠키 파일이 없으면 Chrome 프로파일에서 바로 읽어온다 (Keychain 승인 1회 필요)
+        print("[auth] no cookie file; reading Chrome profile", file=sys.stderr)
+        subprocess.run([sys.executable, str(helper)], stdout=subprocess.DEVNULL)
     psid, psidts = load_cookies()
     if not check_session(psid, psidts):
         # Copied cookies die within ~20 min because Chrome rotates 1PSIDTS.
         # Re-read the live profile instead of asking the user again.
-        helper = Path(__file__).with_name("chrome_cookies.py")
         if helper.is_file():
             print("[auth] session stale; re-reading Chrome profile", file=sys.stderr)
             subprocess.run([sys.executable, str(helper)],

@@ -1,6 +1,10 @@
-# Nereus
+<p align="center">
+  <img src="docs/assets/nereus-hero.webp" alt="Nereus — 바다의 신처럼 솟아오르는 범고래" width="720">
+</p>
 
-snwlee의 개인 Claude Code 하네스 마켓플레이스. macOS·Windows 공용.
+<h1 align="center">Nereus</h1>
+
+<p align="center">바다의 신 네레우스의 이름을 딴 개인 Claude Code 하네스 마켓플레이스. macOS·Windows 공용.</p>
 
 | 플러그인 | 역할 |
 |---|---|
