@@ -28,9 +28,12 @@ describe("transcript", () => {
     expect(contextLimitFor("claude-sonnet-5[1m]")).toBe(1000000);
     expect(contextLimitFor("weird-model")).toBe(200000);
     expect(contextLimitFor(undefined)).toBe(200000);
+    expect(contextLimitFor("claude-fable-5-1")).toBe(1000000);
   });
   it("computes ratio", () => {
     expect(usageRatio({ inputTotal: 130000, model: "claude-opus-5" })).toBeCloseTo(0.65);
     expect(usageRatio(null)).toBe(0);
+    expect(usageRatio({ inputTotal: 354000, model: "unknown-big" })).toBeCloseTo(0.354);
+    expect(usageRatio({ inputTotal: 2500000, model: "x" })).toBe(1);
   });
 });

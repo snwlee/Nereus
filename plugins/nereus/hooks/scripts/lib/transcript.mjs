@@ -3,6 +3,7 @@ import fs from "node:fs";
 
 const LIMITS = [
   [/\[1m\]/, 1000000],
+  [/fable|mythos/, 1000000],
   [/claude-/, 200000],
 ];
 const DEFAULT_LIMIT = 200000;
@@ -34,5 +35,8 @@ export function lastAssistantUsage(transcriptPath, { readFile = (p) => fs.readFi
 
 export function usageRatio(usage) {
   if (!usage) return 0;
-  return usage.inputTotal / contextLimitFor(usage.model);
+  let limit = contextLimitFor(usage.model);
+  // 한도 표에 없는 대형 컨텍스트 모델: 실제 사용량이 표 한도를 넘으면 1M으로 간주한다(오탐 하드 스톱 방지).
+  if (usage.inputTotal > limit) limit = 1000000;
+  return Math.min(usage.inputTotal / limit, 1);
 }
