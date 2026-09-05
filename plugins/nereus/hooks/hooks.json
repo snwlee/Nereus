@@ -1,0 +1,12 @@
+{
+  "description": "Nereus 하네스 훅. 전부 Node 스크립트 (macOS/Windows 공용)",
+  "hooks": {
+    "SessionStart": [
+      { "matcher": "startup|resume|clear|compact", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.mjs\"", "timeout": 10 } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Edit|Write|MultiEdit", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/tdd-guard.mjs\"", "timeout": 10 } ] },
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/baton-meter.mjs\"", "timeout": 10 } ] }
+    ]
+  }
+}
