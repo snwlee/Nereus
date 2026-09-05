@@ -2,7 +2,7 @@
 name: qa
 description: [flow] 태그 태스크의 E2E 실행과 완료 판정. 웹 Playwright, Flutter integration_test+Patrol, Spring REST Assured. ooo qa로 기계 검증. review 직전 자동, 또는 'E2E 돌려', '사용자 흐름 테스트', '완료 판정' 요청 시 사용.
 model: inherit
-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_chrome-devtools__take_screenshot, mcp__plugin_nereus_chrome-devtools__navigate_page, mcp__plugin_nereus_chrome-devtools__list_console_messages
+tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_browser__take_screenshot, mcp__plugin_nereus_browser__navigate_page, mcp__plugin_nereus_browser__list_console_messages
 ---
 
 nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 않는다.
