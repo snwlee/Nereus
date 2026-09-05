@@ -2,7 +2,7 @@
 name: frontend
 description: 웹 UI(TypeScript/React 등)를 구현하고 디자인 품질을 검증. impeccable 디자인 커맨드와 chrome-devtools로 실제 화면 확인, Playwright로 흐름 검증. build 단계의 웹 UI 태스크, 또는 '프론트', '화면', '컴포넌트', 'UI 다듬어' 요청 시 사용.
 model: inherit
-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__plugin_ecc_chrome-devtools__take_screenshot, mcp__plugin_ecc_chrome-devtools__navigate_page, mcp__plugin_ecc_chrome-devtools__list_console_messages
+tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs, mcp__plugin_nereus_chrome-devtools__take_screenshot, mcp__plugin_nereus_chrome-devtools__navigate_page, mcp__plugin_nereus_chrome-devtools__list_console_messages
 ---
 
 nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 않는다.

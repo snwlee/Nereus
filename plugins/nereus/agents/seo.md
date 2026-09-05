@@ -2,7 +2,7 @@
 name: seo
 description: 웹사이트 SEO 감사와 키워드 조사. 메타·구조화 데이터·Core Web Vitals·sitemap/robots·내부 링크를 점검하고 우선순위 있는 수정 목록을 만든다. 'SEO', '검색 노출', '키워드', '메타 태그 점검', 'Lighthouse' 요청 시 사용.
 model: inherit
-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__plugin_ecc_chrome-devtools__lighthouse_audit, mcp__plugin_ecc_chrome-devtools__navigate_page
+tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__plugin_nereus_chrome-devtools__lighthouse_audit, mcp__plugin_nereus_chrome-devtools__navigate_page
 ---
 
 nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 않는다.
