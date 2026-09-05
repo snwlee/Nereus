@@ -1,0 +1,8 @@
+{
+  "name": "credstore",
+  "version": "0.1.0",
+  "description": "자격 증명 메타데이터 카탈로그 MCP. 시크릿 값은 저장·반환하지 않고 creds_run으로 마스킹 실행만 한다.",
+  "author": { "name": "snwlee", "email": "PGRRR119@gmail.com" },
+  "homepage": "https://github.com/snwlee/CredStore",
+  "license": "MIT"
+}

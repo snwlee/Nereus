@@ -1,0 +1,16 @@
+{
+  "name": "nereus-dev",
+  "private": true,
+  "type": "module",
+  "description": "Nereus 하네스 개발·테스트 전용. 플러그인 런타임은 Node 표준 라이브러리만 사용한다.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.0",
+    "vitest": "^3.2.0"
+  }
+}

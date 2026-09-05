@@ -1,0 +1,5 @@
+node_modules/
+coverage/
+.nereus/
+*.local.md
+.DS_Store
