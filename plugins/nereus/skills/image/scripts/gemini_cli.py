@@ -13,6 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # cutout.py
+
 def _nereus_home() -> Path:
     if os.environ.get("NEREUS_HOME"):
         return Path(os.environ["NEREUS_HOME"])
@@ -34,7 +36,7 @@ def bootstrap() -> None:
         print(f"[setup] creating venv at {VENV}", file=sys.stderr)
         VENV.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run([sys.executable, "-m", "venv", str(VENV)], check=True)
-        subprocess.run([str(py), "-m", "pip", "install", "-q", "-U", "gemini_webapi", "google-genai"], check=True)
+        subprocess.run([str(py), "-m", "pip", "install", "-q", "-U", "gemini_webapi", "google-genai", "opencv-python-headless", "numpy"], check=True)
     # browser_cookie3 blocks init() on a macOS Keychain prompt — keep it out.
     subprocess.run([str(py), "-m", "pip", "uninstall", "-y", "-q", "browser_cookie3"],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -88,12 +90,29 @@ def choose_backend(requested: str) -> str:
     sys.exit(2)
 
 
+def effective_prompt(args) -> str:
+    prompt = Path(args.prompt_file).read_text("utf-8") if args.prompt_file else args.prompt
+    if args.cmd == "image" and args.transparent:
+        from cutout import background_prompt
+        prompt = prompt.rstrip() + background_prompt(args.bg)
+    return prompt
+
+
+def postprocess(saved: list[str], args) -> None:
+    if not args.transparent:
+        return
+    from cutout import cut
+    for s in saved:
+        out = cut(Path(s), args.transparent, args.bg)
+        print(json.dumps({"saved": str(out), "type": "AlphaImage", "method": args.transparent}), flush=True)
+
+
 async def run_api(args) -> int:
     """google-genai API 백엔드. 텍스트는 gemini-2.5-flash, 이미지는 gemini-2.5-flash-image."""
     from google import genai
     from google.genai import types
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    prompt = Path(args.prompt_file).read_text("utf-8") if args.prompt_file else args.prompt
+    prompt = effective_prompt(args)
     parts = [prompt]
     for f in args.file:
         data = Path(f).read_bytes()
@@ -114,10 +133,13 @@ async def run_api(args) -> int:
         imgs = [p for c in (r.candidates or []) for p in (c.content.parts or []) if getattr(p, "inline_data", None)]
         if not imgs:
             print(f"[attempt {attempt}] no images returned", file=sys.stderr); continue
+        saved = []
         for i, part in enumerate(imgs):
             fn = f"{args.name}_{i}.png" if len(imgs) > 1 else f"{args.name}.png"
             (out / fn).write_bytes(part.inline_data.data)
+            saved.append(str(out / fn))
             print(json.dumps({"saved": str(out / fn), "type": "ApiImage"}), flush=True)
+        postprocess(saved, args)
         return 0
     return 1
 
@@ -162,7 +184,7 @@ async def run(args) -> int:
             print(f"{name}: {q}")
         return 0
 
-    prompt = Path(args.prompt_file).read_text("utf-8") if args.prompt_file else args.prompt
+    prompt = effective_prompt(args)
     if not prompt:
         sys.exit("need --prompt or --prompt-file")
 
@@ -196,6 +218,7 @@ async def run(args) -> int:
     if args.cmd == "image" and not saved:
         print("FAILED: no image after retries", file=sys.stderr)
         return 1
+    postprocess(saved, args)
     return 0
 
 
@@ -210,6 +233,9 @@ def main() -> int:
     p.add_argument("--model", default="", help="e.g. gemini-pro; omit for account default")
     p.add_argument("--retries", type=int, default=5)
     p.add_argument("--backend", choices=["auto", "web", "api"], default=os.environ.get("NEREUS_IMAGE_BACKEND", "auto"))
+    p.add_argument("--transparent", nargs="?", const="chroma", choices=["chroma", "rembg"], default=None,
+                   help="배경 제거해 *_alpha.png도 저장. 값 없이 쓰면 chroma(평면 아이콘·로고), 사진형은 rembg")
+    p.add_argument("--bg", choices=["white", "magenta", "green"], default="white", help="--transparent 시 생성 배경색 (chroma 키 색)")
     args = p.parse_args()
 
     import asyncio
