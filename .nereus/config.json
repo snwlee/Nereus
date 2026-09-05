@@ -1,0 +1,11 @@
+{
+  "gate": {
+    "exclude": [
+      "**/integrity.mjs",
+      "**/pre-tool-guard.mjs",
+      "**/rules.default.json",
+      "tests/**",
+      "**/SKILL.md"
+    ]
+  }
+}

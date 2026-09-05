@@ -64,7 +64,7 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 | `/nereus:build` | Implement tasks with TDD |
 | `/nereus:e2e` | End-to-end checks for `[flow]` tasks |
 | `/nereus:review` | Parallel review, severity gate |
-| `/nereus:finish` | Commit, archive, update handoff |
+| `/nereus:finish` | Completion gate (test evidence + integrity scan), then commit, archive, update handoff |
 | `/nereus:handoff` / `/nereus:resume` | Save state for the next session / pick it up |
 | `/nereus:loop "goal" --max N` | Autonomous loop with a fresh session per iteration |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | Standalone skills |
@@ -79,10 +79,11 @@ Each agent is a persona, an allow-list of tools, and an output contract. Agents 
 
 | Event | What it does |
 |---|---|
+| PreToolUse | `pre-tool-guard`: blocks commands/edits matching rules (`--no-verify`, force push, secret files). On `git commit`, scans staged changes for secrets, `.env`, `console.log` |
 | SessionStart | Injects `handoff.md`, reports missing tools |
 | PostToolUse | `tdd-guard`: warns when source is edited before its test. `baton-meter`: 65% warn, 80% hard stop |
 | PreCompact | Demands a handoff before auto-compaction |
-| Stop | Flags uncommitted changes or a stale handoff |
+| Stop | Flags uncommitted changes, a stale handoff, or missing/stale test evidence |
 
 All hooks are Node scripts. No bash, zero runtime dependencies, identical on macOS and Windows.
 

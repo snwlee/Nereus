@@ -4,6 +4,7 @@ import path from "node:path";
 import { readStdinJson, emit } from "./lib/io.mjs";
 import { run } from "./lib/exec.mjs";
 import { handoffPath, projectStateDir } from "./lib/paths.mjs";
+import { evidenceStatus } from "./lib/evidence.mjs";
 
 function defaultGitStatus(cwd) {
   const r = run("git", ["status", "--porcelain"], { cwd });
@@ -27,6 +28,9 @@ export function handle(input, deps = {}) {
   const updated = (deps.handoffUpdatedThisSession ?? defaultHandoffUpdated)(cwd, input.session_id || "nosession");
   const notes = [];
   if (status.trim()) notes.push("미커밋 변경이 있습니다");
+  const ev = (deps.evidence ?? (() => evidenceStatus(cwd)))();
+  if (status.trim() && ev.status !== "FRESH") notes.push(`테스트 evidence가 ${ev.status === "MISSING" ? "없습니다" : "STALE 입니다(코드가 바뀐 뒤 테스트를 다시 돌리지 않음)"}`);
+  else if (ev.status === "FRESH" && !ev.passing) notes.push(`마지막 테스트가 실패 상태입니다(${ev.command})`);
   if (!updated) notes.push(".nereus/handoff.md가 이 세션에서 갱신되지 않았습니다");
   if (!notes.length) return null;
   return { systemMessage: `[Nereus] ${notes.join(". ")}. 작업 단위가 끝났다면 /nereus:finish 로 마무리하세요.` };

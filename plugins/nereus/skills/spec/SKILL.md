@@ -34,6 +34,16 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/classify.mjs" "$PWD"
 - 모든 태스크는 체크박스 `- [ ]`와 **완료 조건** 한 줄을 가진다. 완료 조건은 실행 가능한 검증(테스트 이름, 명령, 관찰 가능한 결과)이어야 한다.
 - 핵심 사용자 흐름(로그인, 결제, 데이터 생성·삭제 등)에는 `[flow]` 태그를 붙인다. QA가 E2E 대상을 이걸로 고른다.
 - 태스크 하나는 한 세션 안에 끝날 크기(파일 3개 이내, 테스트 포함)로 쪼갠다.
+- 태스크마다 아래 형식을 채운다. 비어 있는 항목은 "없음"이라고 쓴다. `TBD`, `...`, `<채우기>` 같은 플레이스홀더는 금지.
+
+```markdown
+- [ ] T3. 토큰 만료 검사 미들웨어 [flow]
+  - Files: Create `src/auth/expiry.ts` · Modify `src/app.ts:40-55` · Test `src/auth/expiry.test.ts`
+  - Interfaces: Consumes `verifyToken(token): Claims` · Produces `expiryGuard(): Middleware`
+  - Steps: [ ] 실패 테스트 작성 → [ ] 실패 확인 → [ ] 최소 구현 → [ ] 통과 확인 → [ ] 커밋
+  - Done when: 만료 토큰 요청이 401, 유효 토큰은 통과, `npm test` 전부 통과
+```
+- 태스크 파일 끝에 **Global Constraints**(전 태스크 공통 제약: 스택, 금지 라이브러리, 성능 예산)를 한 번 적는다.
 - 규칙을 만족하지 않으면 tasks 파일을 고친 뒤 넘어간다.
 
 ## 3. 마무리

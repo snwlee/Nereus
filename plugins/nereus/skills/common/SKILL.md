@@ -14,4 +14,5 @@ description: Nereus 모든 에이전트와 워크플로 스킬이 공유하는 �
 7. **에이전트 간 직접 호출 금지**: 에이전트는 다른 에이전트를 부르지 않는다. 오케스트레이션은 워크플로 스킬(intake/spec/build/review/finish)이 한다.
 8. **범위**: 요청된 범위만 한다. 넓히거나 줄일 때는 먼저 말한다. 관련 없는 리팩터링은 하지 않는다.
 9. **작은 파일**: 파일 800줄, 함수 50줄을 넘기면 나눈다.
-10. **커밋**: conventional commits (`feat|fix|refactor|docs|test|chore|perf|ci: 설명`). 사용자가 요청할 때만 커밋·푸시한다. 단 Baton 루프 안에서는 반복 종료 시 커밋한다.
+10. **증거**: "테스트 통과"는 `run-tests.mjs`가 기록한 evidence가 FRESH일 때만 말할 수 있다. 완료 선언 전 `gate.mjs`를 돌린다.
+11. **커밋**: conventional commits (`feat|fix|refactor|docs|test|chore|perf|ci: 설명`). 사용자가 요청할 때만 커밋·푸시한다. 단 Baton 루프 안에서는 반복 종료 시 커밋한다.

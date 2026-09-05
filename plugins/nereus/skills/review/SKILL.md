@@ -7,6 +7,9 @@ description: 변경 사항을 Open Code Review(delegation)와 2차 의견(Codex,
 
 nereus:common 규칙을 따른다. 담당 에이전트: reviewer. 인증·입력 처리·외부 호출·파일시스템·DB 쿼리를 만진 변경이면 security 에이전트도 함께 투입한다.
 
+## 0. 사전 게이트
+`node "${CLAUDE_PLUGIN_ROOT}/skills/finish/scripts/gate.mjs"`를 먼저 돌린다. evidence가 FRESH·통과가 아니거나 완료 무결성 항목이 있으면 리뷰어를 부르지 않고 build로 돌려보낸다. 리뷰어 비용을 아끼고, 리뷰어가 스텁·TODO를 지적하느라 진짜 결함을 놓치는 일을 막는다.
+
 ## 1. 계획
 
 ```bash

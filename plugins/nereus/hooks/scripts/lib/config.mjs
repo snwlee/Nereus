@@ -9,6 +9,7 @@ export const DEFAULTS = Object.freeze({
   tdd: { exclude: ["**/migrations/**", "**/*.config.*", "**/*.d.ts", "**/generated/**", "**/*.g.dart", "**/*.freezed.dart"] },
   pdf: { engine: "typst", font: "Noto Sans KR" },
   image: { backend: "auto" }, // auto | web | api
+  gate: { exclude: [] }, // 완료 무결성 검사에서 제외할 파일 glob (예: 분류기 자체, 픽스처)
 });
 
 const isPlain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);

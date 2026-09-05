@@ -64,7 +64,7 @@ flowchart LR
 | `/nereus:build` | TDD로 태스크 구현 |
 | `/nereus:e2e` | `[flow]` 태스크의 엔드투엔드 검증 |
 | `/nereus:review` | 병렬 리뷰, 심각도 게이트 |
-| `/nereus:finish` | 커밋, 아카이브, handoff 갱신 |
+| `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사) → 커밋, 아카이브, handoff 갱신 |
 | `/nereus:handoff` / `/nereus:resume` | 다음 세션용 상태 저장 / 이어받기 |
 | `/nereus:loop "목표" --max N` | 반복마다 새 세션으로 도는 자율 루프 |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | 단독 스킬 |
@@ -79,10 +79,11 @@ flowchart LR
 
 | 이벤트 | 동작 |
 |---|---|
+| PreToolUse | `pre-tool-guard`: 규칙(regex)에 걸리는 명령·편집 차단(`--no-verify`, force push, 시크릿 파일). `git commit` 시 스테이징의 시크릿·`.env`·`console.log` 검사 |
 | SessionStart | `handoff.md` 주입, 미설치 도구 알림 |
 | PostToolUse | `tdd-guard`: 테스트보다 소스를 먼저 고치면 경고. `baton-meter`: 65% 경고, 80% 하드 스톱 |
 | PreCompact | 자동 압축 전에 handoff 작성 요구 |
-| Stop | 미커밋 변경이나 오래된 handoff 알림 |
+| Stop | 미커밋 변경, 오래된 handoff, 테스트 evidence(FRESH/STALE/MISSING) 알림 |
 
 훅은 전부 Node 스크립트다. bash 없음, 런타임 의존성 0, macOS와 Windows에서 동일.
 

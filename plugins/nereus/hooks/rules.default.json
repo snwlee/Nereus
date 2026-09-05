@@ -1,0 +1,7 @@
+[
+  { "id": "no-verify", "tools": ["Bash"], "pattern": "--no-verify\\b", "message": "훅을 우회하는 --no-verify 는 금지. 훅이 실패하면 원인을 고치세요." },
+  { "id": "rm-rf-root", "tools": ["Bash"], "pattern": "rm\\s+-[a-zA-Z]*r[a-zA-Z]*\\s+(/|~|\\$HOME)(\\s|$)", "message": "루트/홈 디렉터리 재귀 삭제 금지." },
+  { "id": "force-push", "tools": ["Bash"], "pattern": "git\\s+push\\s+.*(--force\\b|\\s-f\\b)", "message": "force push 금지. 필요하면 사용자가 직접 실행." },
+  { "id": "discard-work", "tools": ["Bash"], "pattern": "git\\s+(reset\\s+--hard|checkout\\s+--\\s+\\.|clean\\s+-[a-z]*f)", "message": "작업 내용을 버리는 git 명령은 사용자 승인 후 직접 실행." },
+  { "id": "secret-files", "tools": ["Edit", "Write", "MultiEdit"], "pattern": "(^|[\\\\/])(\\.env(\\..*)?|[^\\\\/]*secrets?\\.(ya?ml|json|toml)|id_rsa|[^\\\\/]*\\.(pem|p12|jks))$", "message": "시크릿 파일은 편집하지 않는다. 값은 사람이 직접 넣고, 필요하면 creds_run 으로 실행." }
+]
