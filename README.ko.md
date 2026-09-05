@@ -67,6 +67,9 @@ flowchart LR
 | `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사) → 커밋, 아카이브, handoff 갱신 |
 | `/nereus:handoff` / `/nereus:resume` | 다음 세션용 상태 저장 / 이어받기 |
 | `/nereus:loop "목표" --max N` | 반복마다 새 세션으로 도는 자율 루프 |
+| `/nereus:continue on\|off` | 같은 세션에서 남은 태스크 자동 계속 (기본 꺼짐, 컨텍스트 경고선에서 자동 해제) |
+| `/nereus:learn` | 교정·실패 접근을 규칙으로 남겨 다음 세션에 주입 |
+| `/nereus:hud` | 한 줄 상태: 태스크 진행률, 검증 상태, 컨텍스트 % |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | 단독 스킬 |
 
 ## 에이전트
@@ -79,11 +82,12 @@ flowchart LR
 
 | 이벤트 | 동작 |
 |---|---|
+| UserPromptSubmit | `learn-watch`: 교정을 받으면 규칙으로 남기라고 한 줄 안내 |
 | PreToolUse | `pre-tool-guard`: 규칙(regex)에 걸리는 명령·편집 차단(`--no-verify`, force push, 시크릿 파일). `git commit` 시 스테이징의 시크릿·`.env`·`console.log` 검사 |
-| SessionStart | `handoff.md` 주입, 미설치 도구 알림 |
+| SessionStart | `handoff.md`와 신뢰도 높은 학습 규칙 주입, 미설치 도구 알림 |
 | PostToolUse | `tdd-guard`: 테스트보다 소스를 먼저 고치면 경고. `baton-meter`: 50% 경고, 70% 하드 스톱 |
 | PreCompact | 자동 압축 전에 handoff 작성 요구 |
-| Stop | 미커밋 변경, 오래된 handoff, 테스트 evidence(FRESH/STALE/MISSING) 알림 |
+| Stop | `/nereus:continue` 가 켜져 있으면 다음 태스크로 이어감. 아니면 미커밋 변경·오래된 handoff·evidence 상태 알림 |
 
 훅은 전부 Node 스크립트다. bash 없음, 런타임 의존성 0, macOS와 Windows에서 동일.
 

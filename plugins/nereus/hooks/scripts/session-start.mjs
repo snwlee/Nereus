@@ -4,6 +4,8 @@ import path from "node:path";
 import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
 import { handoffPath, userConfigDir } from "./lib/paths.mjs";
 import { which } from "./lib/exec.mjs";
+import { readAll, selectForInjection } from "./lib/learnings.mjs";
+import { loadConfig } from "./lib/config.mjs";
 
 export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "agy", "codex"];
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -32,6 +34,12 @@ export function handle(input, deps = {}) {
     try { body = readFile(hp); } catch { body = ""; }
     if (body.trim()) parts.push(`## Baton 재개\n이전 세션이 남긴 handoff입니다. 여기서 이어서 진행하고, 완료된 항목은 반복하지 마세요.\n\n${body.trim()}`);
   }
+
+  const learn = (deps.learnings ?? (() => {
+    const cfg = (deps.config ?? (() => loadConfig({ cwd })))();
+    return selectForInjection(readAll(cwd), cfg.learnings);
+  }))();
+  if (learn) parts.push(`## 이 프로젝트에서 배운 것\n${learn}`);
 
   if (input.source !== "compact") {
     const notes = [];

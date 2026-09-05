@@ -59,6 +59,13 @@ printf '%s' "$input" | node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/ctx-sink.mjs" >
 ```
 (`$input`은 statusline이 stdin으로 받은 JSON을 담은 변수명에 맞춘다. Windows PowerShell은 `$input | node ... ctx-sink.mjs`.) 연동이 없으면 Baton은 transcript 기반 추정치로 동작한다.
 
+같은 statusline에 Nereus 상태 한 줄(`⚓ 3/7 · 미검증 · 54%`)을 붙이려면 아래도 추가한다. 사용자가 원할 때만.
+
+```bash
+sid=$(printf '%s' "$input" | jq -r '.session_id // empty')
+node "${CLAUDE_PLUGIN_ROOT}/skills/hud/scripts/hud.mjs" --session "$sid"
+```
+
 ## 6. 자동 압축 임계값
 
 Baton(50% 경고 / 70% 하드 스톱)이 Claude Code 자동 압축보다 먼저 작동해야 한다. 자동 압축은 손실 요약이라 마지막 안전망으로만 둔다.
