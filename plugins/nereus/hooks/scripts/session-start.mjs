@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // SessionStart: handoff.md 주입, codegraph 인덱스·외부 도구 상태 한 줄 요약.
 import fs from "node:fs";
 import path from "node:path";

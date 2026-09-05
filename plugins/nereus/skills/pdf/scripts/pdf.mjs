@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // PDF 생성기. 기본 Typst, --engine latex 시 xelatex. 템플릿 선택·컴파일·에러 위치 추출.
 // 사용: node pdf.mjs <input.md|.typ|.tex> --out <file.pdf> [--template report|adr|research|spec] [--engine typst|latex] [--font "Noto Sans KR"] [--font-dir <dir>]
 import fs from "node:fs";

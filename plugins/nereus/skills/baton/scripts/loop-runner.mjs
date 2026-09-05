@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // reset 루프: 반복마다 새 `claude -p` 세션이 handoff.md·tasks·스펙만 읽고 시작한다. 상태는 파일과 git에만 있다.
 // 사용: node loop-runner.mjs --goal "작업" --tasks <path> [--spec <path>] [--max 30]
 import fs from "node:fs";

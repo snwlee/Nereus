@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // PostToolUse(Edit|Write|MultiEdit): 테스트 러너가 있는 프로젝트에서 테스트보다 소스를 먼저 편집하면 경고. 차단은 하지 않는다.
 import fs from "node:fs";
 import path from "node:path";

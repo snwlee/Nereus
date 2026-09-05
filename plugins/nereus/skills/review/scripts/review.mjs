@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // 리뷰 실행기: OCR delegation + 2차 의견(codex/gemini)을 설정대로 돌리고 findings를 병합한다.
 // 실제 CLI 호출은 SKILL이 주도하고, 이 스크립트는 계획·파싱·병합·게이트를 담당한다.
 import { which } from "../../../hooks/scripts/lib/exec.mjs";

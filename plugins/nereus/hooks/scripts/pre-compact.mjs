@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // PreCompact: 자동 압축 직전. handoff.md가 없거나 30분 넘게 갱신되지 않았으면 작성 지시.
 import fs from "node:fs";
 import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";

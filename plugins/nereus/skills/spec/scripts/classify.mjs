@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // 프로젝트가 신규(spec-kit)인지 기존(OpenSpec)인지 판별.
 import fs from "node:fs";
 import path from "node:path";

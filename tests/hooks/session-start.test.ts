@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { handle } from "../../plugins/nereus/hooks/scripts/session-start.mjs";
 
 const deps = (over: any = {}) => ({
-  readFile: (p: string) => { if (over.files && p in over.files) return over.files[p]; throw new Error("ENOENT"); },
-  exists: (p: string) => !!over.files && p in over.files,
+  readFile: (p: string) => { const k = p.replace(/\\/g, "/"); if (over.files && k in over.files) return over.files[k]; throw new Error("ENOENT"); },
+  exists: (p: string) => { const k = p.replace(/\\/g, "/"); return !!over.files && k in over.files; },
   toolStatus: () => over.tools ?? { missing: [] },
   ...over,
 });

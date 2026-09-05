@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // PostToolUse(*): 컨텍스트 사용률 측정. warn에서 1회 경고, hard 이상은 매번 하드 스톱 지시.
 import fs from "node:fs";
 import path from "node:path";

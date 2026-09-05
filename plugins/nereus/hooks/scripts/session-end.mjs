@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // SessionEnd: 요약 저장은 claude-mem이 자체 훅으로 한다. 없을 때만 stderr로 안내. 컨텍스트는 내보내지 않는다.
 import fs from "node:fs";
 import path from "node:path";

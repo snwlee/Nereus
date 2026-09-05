@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Stop: 미커밋 변경이나 이 세션에서 갱신되지 않은 handoff를 알린다. 차단하지 않는다.
 import fs from "node:fs";
 import path from "node:path";

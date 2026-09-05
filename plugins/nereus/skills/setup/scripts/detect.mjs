@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // 외부 도구 설치 상태 감지. 설치 명령은 플랫폼별 문자열이며 실행은 SKILL이 사용자 승인 후 한다.
 import { which } from "../../../hooks/scripts/lib/exec.mjs";
 
