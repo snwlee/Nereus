@@ -3,7 +3,7 @@
   set document(title: title, author: if author != none { author } else { "" })
   set page(paper: "a4", margin: (x: 22mm, y: 24mm), numbering: "1", number-align: center,
     header: context { if counter(page).get().first() > 1 { text(size: 9pt, fill: luma(110))[#title] ; h(1fr); text(size: 9pt, fill: luma(110))[TECHNICAL REPORT] } })
-  set text(font: (font, "Noto Sans", "Helvetica"), size: 10.5pt, lang: "ko", hyphenate: false)
+  set text(font: (font, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", "Noto Sans"), size: 10.5pt, lang: "ko", hyphenate: false)
   set par(justify: true, leading: 0.75em, first-line-indent: 0em)
   show heading.where(level: 1): it => { v(1.4em); text(size: 18pt, weight: 700, fill: rgb("#1f4e79"))[#it.body]; v(0.4em); line(length: 100%, stroke: 0.6pt + rgb("#1f4e79")); v(0.6em) }
   show heading.where(level: 2): it => { v(1em); text(size: 13.5pt, weight: 600)[#it.body]; v(0.3em) }

@@ -81,6 +81,8 @@ describe("default (file-backed) dependencies", () => {
     expect(mdToTypst("# T\n## S\n**b** `c`\n- x")).toBe("= T\n== S\n*b* `c`\n- x");
     const main = wrapMarkdownForTypst({ markdown: "# T", template: templatePath("typst", "report"), title: 'A "q"', font: "Noto Sans KR", outDir: dir });
     expect(fs.readFileSync(main, "utf8")).toContain('title: "A \\"q\\""');
+    expect(fs.readFileSync(main, "utf8")).toContain('#import "template.typ"');
+    expect(fs.existsSync(path.join(dir, "template.typ"))).toBe(true);
     expect(fs.existsSync(path.join(dir, "body.typ"))).toBe(true);
   });
   it("classify default deps run against a real directory", () => {

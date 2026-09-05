@@ -48,8 +48,11 @@ export function compile({ engine, bin, input, output, font, fontDir }, { run = d
 export function wrapMarkdownForTypst({ markdown, template, title, font, outDir }) {
   const bodyFile = path.join(outDir, "body.typ");
   fs.writeFileSync(bodyFile, mdToTypst(markdown));
+  // Typst는 프로젝트 루트(입력 파일 디렉터리) 밖의 import를 거부한다. 템플릿을 옆에 복사해 상대 경로로 읽는다.
+  const localTemplate = path.join(outDir, "template.typ");
+  fs.copyFileSync(template, localTemplate);
   const main = path.join(outDir, "main.typ");
-  fs.writeFileSync(main, `#import "${template.replace(/\\/g, "/")}": doc\n#show: doc.with(title: "${title.replace(/"/g, '\\"')}", font: "${font}")\n#include "body.typ"\n`);
+  fs.writeFileSync(main, `#import "template.typ": doc\n#show: doc.with(title: "${title.replace(/"/g, '\\"')}", font: "${font}")\n#include "body.typ"\n`);
   return main;
 }
 
