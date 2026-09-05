@@ -1,6 +1,6 @@
 ---
 name: backend
-description: Spring(Java/Kotlin) 또는 Node 서버 코드를 TDD로 구현. API, 도메인 로직, DB 접근, 인증 흐름. build 단계에서 서버 태스크가 배정될 때, 또는 '백엔드', 'API 만들어', 'Spring', '서버 로직' 요청 시 사용.
+description: Spring/Node 서버 코드를 TDD로 구현. API·도메인·DB·인증. "백엔드", "API", "서버 로직" 요청 시.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__codegraph__codegraph_explore, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs
 ---

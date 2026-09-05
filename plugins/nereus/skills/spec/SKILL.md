@@ -1,6 +1,6 @@
 ---
 name: spec
-description: intake 결과를 스펙과 태스크로 만든다. 프로젝트가 신규면 spec-kit(constitution→specify→plan→tasks), 기존이면 OpenSpec(onboard→propose)을 자동 선택한다. "/nereus:spec", "스펙 잡자", "계획 세워", "태스크로 쪼개" 요청 시 사용.
+description: intake 결과를 스펙·태스크로. 신규는 spec-kit, 기존은 OpenSpec 자동 선택. "스펙", "계획", "태스크로 쪼개" 요청 시.
 ---
 
 # spec

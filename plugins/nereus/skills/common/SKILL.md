@@ -1,6 +1,6 @@
 ---
 name: common
-description: Nereus 모든 에이전트와 워크플로 스킬이 공유하는 공통 규칙. 에이전트 본문에서 "nereus:common 규칙을 따른다"로 참조한다. 직접 호출용은 아니다.
+description: 모든 Nereus 에이전트·스킬의 공통 규칙. 에이전트 본문에서 참조. 직접 호출용 아님.
 ---
 
 # Nereus 공통 규칙

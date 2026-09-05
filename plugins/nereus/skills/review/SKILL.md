@@ -1,6 +1,6 @@
 ---
 name: review
-description: 변경 사항을 Open Code Review(delegation)와 2차 의견(Codex, Antigravity CLI(agy, Gemini))으로 병렬 리뷰하고 심각도별로 병합한다. CRITICAL/HIGH가 0이어야 통과. "/nereus:review", "리뷰해", "코드 검토", "2차 의견" 요청 시, 그리고 build 게이트 통과 직후 자동으로 사용.
+description: OCR delegation + Codex/Gemini(agy) 병렬 리뷰, CRITICAL/HIGH 0 게이트. "리뷰", "코드 검토" 요청 시, build 직후 자동.
 ---
 
 # review

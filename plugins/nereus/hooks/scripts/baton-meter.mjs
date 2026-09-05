@@ -5,6 +5,7 @@ import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
 import { lastAssistantUsage, usageRatio } from "./lib/transcript.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
+import { officialRatio } from "./ctx-sink.mjs";
 
 function fileMarks(cwd) {
   const dir = projectStateDir(cwd);
@@ -17,24 +18,29 @@ function fileMarks(cwd) {
 
 export function handle(input, deps = {}) {
   const cwd = input.cwd || process.cwd();
-  const usage = (deps.usage ?? ((p) => lastAssistantUsage(p)))(input.transcript_path);
-  if (!usage) return null;
+  // statusline 이 남긴 공식 비율이 있으면 그것을, 없으면 transcript 추정치를 쓴다.
+  const official = (deps.official ?? officialRatio)(input.session_id);
+  let ratio = official;
+  if (ratio === null || ratio === undefined) {
+    const usage = (deps.usage ?? ((p) => lastAssistantUsage(p)))(input.transcript_path);
+    if (!usage) return null;
+    ratio = usageRatio(usage);
+  }
   const cfg = (deps.config ?? (() => loadConfig({ cwd })))();
   const marks = deps.hasMark ? deps : fileMarks(cwd);
-  const ratio = usageRatio(usage);
   const pct = Math.round(ratio * 100);
   const sid = input.session_id || "nosession";
 
   if (ratio >= cfg.baton.hard) {
     return contextPayload("PostToolUse",
-      `[Baton 하드 스톱] 컨텍스트 ${pct}% 사용. 더 진행하지 마세요. 지금 즉시 .nereus/handoff.md를 전체 재작성(목표/현재 단계/완료/진행 중/다음/실패한 접근과 이유/결정/열린 질문/테스트 상태)하고, 미커밋 변경이 있으면 커밋한 뒤 사용자에게 새 세션에서 /nereus:resume 하라고 안내하고 멈추세요.`);
+      `[Baton 하드 스톱 ${pct}%] 진행 중단. 지금 .nereus/handoff.md 전체 재작성(nereus:baton 형식) → 커밋 → 사용자에게 "새 세션에서 /nereus:resume" 안내 후 정지.`);
   }
   if (ratio >= cfg.baton.warn) {
     const key = `warn-${sid}`;
     if (marks.hasMark(key)) return null;
     marks.setMark(key);
     return contextPayload("PostToolUse",
-      `[Baton] 컨텍스트 ${pct}% 사용. 새 작업을 시작하지 말고 현재 태스크만 마무리하세요. 마무리되면 .nereus/handoff.md를 전체 재작성하고 커밋한 뒤 멈추세요. ${Math.round(cfg.baton.hard * 100)}%에 도달하면 강제 정지됩니다.`);
+      `[Baton ${pct}%] 새 태스크 시작 금지. 현재 태스크만 끝내고 handoff.md 재작성 → 커밋 → 정지. ${Math.round(cfg.baton.hard * 100)}%에서 강제 정지.`);
   }
   return null;
 }

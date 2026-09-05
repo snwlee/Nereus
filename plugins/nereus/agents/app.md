@@ -1,6 +1,6 @@
 ---
 name: app
-description: Flutter/Dart 앱 코드를 TDD로 구현. 위젯, 상태 관리, 플랫폼 채널, 빌드 오류 해결. build 단계의 앱 태스크, 또는 '앱', 'Flutter', '위젯', 'dart analyze 에러' 요청 시 사용.
+description: Flutter/Dart 앱을 TDD로 구현. 위젯·상태·플랫폼 채널·analyze 클린. "앱", "Flutter", "위젯" 요청 시.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__codegraph__codegraph_explore, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs
 ---

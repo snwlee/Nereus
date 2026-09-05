@@ -1,6 +1,6 @@
 ---
 name: finish
-description: 작업 단위 마무리. 커밋(conventional commits), OpenSpec archive, tasks 체크 확인, handoff.md 갱신. 브랜치 정리는 사용자에게 묻는다. "/nereus:finish", "마무리해", "커밋하고 정리", "작업 끝" 요청 시, 그리고 review 게이트 통과 직후 사용.
+description: 완료 게이트(evidence+무결성) → 커밋, archive, tasks 체크, handoff 갱신. "마무리", "커밋하고 정리" 요청 시, review 직후.
 ---
 
 # finish

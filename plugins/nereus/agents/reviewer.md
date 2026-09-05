@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: review 단계 담당. Open Code Review delegation 모드로 변경을 리뷰하고 Codex/Gemini 2차 의견을 병합해 심각도별 findings를 낸다. nereus:review 스킬이 실행될 때, 또는 '리뷰', '코드 검토', '2차 의견' 요청 시 사용.
+description: review 단계. OCR delegation + Codex/Gemini 병합, 심각도별 findings. "리뷰", "코드 검토" 요청 시.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, mcp__codegraph__codegraph_explore
 ---

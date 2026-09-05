@@ -1,6 +1,6 @@
 ---
 name: writer
-description: finish 단계와 문서 요청 담당. ADR, README, 설계 문서, 리서치 보고서 편집, archify 다이어그램, Typst PDF 생성, OpenSpec archive. '문서 써', 'ADR', 'README 갱신', 'PDF로 만들어', '다이어그램' 요청 시 사용.
+description: finish·문서. ADR, README, 다이어그램(archify), Typst PDF, OpenSpec archive. "문서 써", "ADR", "PDF로" 요청 시.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---

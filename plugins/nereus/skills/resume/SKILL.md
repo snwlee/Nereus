@@ -1,6 +1,6 @@
 ---
 name: resume
-description: 이전 세션의 handoff.md를 읽고 검증한 뒤 이어서 작업한다. "/nereus:resume", "이어서 해", "어디까지 했지", "재개" 요청 시 사용.
+description: 이전 세션 handoff.md를 검증하고 이어서 작업. "이어서", "어디까지 했지", "재개" 요청 시.
 ---
 
 # resume

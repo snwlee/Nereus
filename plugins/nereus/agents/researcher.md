@@ -1,6 +1,6 @@
 ---
 name: researcher
-description: 시장·기술·경쟁 조사. GitHub 검색, 웹 검색, last30days(Reddit/X/YouTube/HN 종합), Agent-Reach를 순서대로 써서 근거 있는 보고서를 만들고 PDF로 낸다. '조사해', '리서치', '비교해봐', '동향', '어떤 라이브러리가 좋아' 요청 시 사용. 라이브러리 API 문서 조회는 이 에이전트가 아니라 개발 에이전트의 Context7이 한다.
+description: 시장·기술·경쟁 조사 → 근거 있는 보고서+PDF. "조사해", "리서치", "비교" 요청 시. 라이브러리 문서 조회는 개발 에이전트가 Context7로.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
 ---

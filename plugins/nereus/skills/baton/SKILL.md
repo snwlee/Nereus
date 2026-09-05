@@ -1,6 +1,6 @@
 ---
 name: baton
-description: 컨텍스트 핸드오프 규칙과 handoff.md 형식. 훅(baton-meter)이 65%/80% 경고를 낼 때, 세션을 끊고 새로 시작해야 할 때, 재개할 때 참조한다. 직접 호출은 nereus:handoff / nereus:resume / nereus:loop 를 쓴다.
+description: 컨텍스트 핸드오프 규칙과 handoff.md 형식. Baton 경고 시, 재개 시 참조. 직접 호출은 handoff/resume/loop.
 ---
 
 # Baton

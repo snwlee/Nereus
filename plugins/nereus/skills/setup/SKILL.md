@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Nereus 하네스 초기 설정. 외부 도구(codegraph, ouroboros, OCR, spec-kit, OpenSpec, Typst, Antigravity(agy)/Codex CLI 등) 설치 상태를 표로 보여주고, 승인된 것만 설치하며, 공식 플러그인 목록을 안내하고 설정 파일을 만든다. "/nereus:setup", "하네스 설정", "도구 설치 확인", "setup --check" 요청 시 사용.
+description: 외부 도구 감지·설치, 동반 플러그인 안내, 설정 파일 생성. /nereus:setup [--check]
 ---
 
 # Nereus setup
@@ -50,6 +50,15 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/detect.mjs"
 
 도구 호출 차단 규칙은 별도 파일이다. 기본 규칙(`--no-verify`, 루트 재귀 삭제, force push, 작업 폐기 git 명령, 시크릿 파일 편집)은 플러그인에 내장되어 있고, 사용자 규칙은 같은 디렉터리의 `rules.json`, 프로젝트 규칙은 `.nereus/rules.json`에 둔다. 형식은 `[{ "id", "tools": ["Bash"], "pattern": "<regex>", "message": "<되돌릴 문구>", "enabled": true }]`. 같은 id를 다시 쓰면 기본 규칙을 덮어쓰거나 `"enabled": false`로 끌 수 있다. 잘못된 regex는 무시된다(fail-open). 프로젝트별로 다르게 하려면 `.nereus/config.json`에 같은 형식으로 둔다.
 
-## 5. 마무리
+## 5. statusline 연동 (Baton 기준 일치)
+
+Claude Code가 statusline에 넘기는 공식 `context_window.used_percentage`를 Baton이 그대로 쓰게 한다. 사용자의 statusline 스크립트(`~/.claude/settings.json`의 `statusLine.command`)에 아래 한 줄을 추가한다. 없으면 이 줄만 실행하는 스크립트를 만들어 등록한다.
+
+```bash
+printf '%s' "$input" | node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/ctx-sink.mjs" >/dev/null 2>&1 &
+```
+(`$input`은 statusline이 stdin으로 받은 JSON을 담은 변수명에 맞춘다. Windows PowerShell은 `$input | node ... ctx-sink.mjs`.) 연동이 없으면 Baton은 transcript 기반 추정치로 동작한다.
+
+## 6. 마무리
 
 무엇을 설치했고 무엇이 남았는지 표로 요약한다. 남은 필수 도구가 있으면 어떤 워크플로 단계가 영향을 받는지 알려준다 (예: `ooo` 없음 → intake 인터뷰 불가, `ocr` 없음 → review는 2차 의견만).

@@ -1,6 +1,6 @@
 ---
 name: loop
-description: 장기 자율 작업용 reset 루프. 반복마다 새 claude 세션이 handoff.md와 tasks만 읽고 태스크 하나를 끝내고 커밋한다. 종료는 tasks 전부 완료+검증 통과, max 도달, 같은 태스크 3회 실패. "/nereus:loop", "루프 돌려", "끝날 때까지 자동으로", "ralph" 요청 시 사용.
+description: 장기 자율 reset 루프. 반복마다 새 세션이 태스크 하나를 끝내고 커밋. "루프 돌려", "끝날 때까지 자동" 요청 시.
 ---
 
 # loop

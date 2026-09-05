@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: 지금 상태를 .nereus/handoff.md에 전체 재작성하고 커밋해 세션을 넘길 준비를 한다. "/nereus:handoff", "핸드오프", "여기까지 저장하고 끊자", "다음 세션에 넘겨" 요청 시, 또는 Baton 경고를 받았을 때 사용.
+description: 현재 상태를 .nereus/handoff.md에 전체 재작성하고 커밋. "핸드오프", "여기까지 저장", Baton 경고 시.
 ---
 
 # handoff

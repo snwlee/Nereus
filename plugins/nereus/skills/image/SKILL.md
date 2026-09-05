@@ -1,6 +1,6 @@
 ---
 name: image
-description: Gemini로 이미지(앱 아이콘, 배너, 스토어 이미지, 목업, 일러스트)와 텍스트를 생성. macOS는 로그인된 Chrome 세션으로 무료, Windows/Linux는 GEMINI_API_KEY 또는 쿠키 수동 저장. "/nereus:image", "이미지 만들어", "아이콘 생성", "배너", "목업 그려" 요청 시 사용.
+description: Gemini 이미지·텍스트 생성(mac 웹세션 무료, Win API키), --transparent 배경 제거. "이미지 만들어", "아이콘", "배너" 요청 시.
 ---
 
 # image

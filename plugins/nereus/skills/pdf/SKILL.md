@@ -1,6 +1,6 @@
 ---
 name: pdf
-description: 마크다운이나 Typst/LaTeX 소스를 PDF로 만든다. 기본 Typst(단일 바이너리, 한글 네이티브), --engine latex 시 XeLaTeX+kotex. 템플릿 report/adr/research/spec. "/nereus:pdf", "PDF로 만들어", "보고서 PDF", "문서 출력" 요청 시 사용.
+description: 마크다운/Typst/LaTeX → PDF. Typst 기본, 템플릿 report/adr/research/spec. "PDF로", "보고서 출력" 요청 시.
 ---
 
 # pdf

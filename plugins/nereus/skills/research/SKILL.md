@@ -1,6 +1,6 @@
 ---
 name: research
-description: 시장·기술·경쟁 조사 절차와 출력 형식. GitHub 검색 → 웹 검색 → last30days(커뮤니티) → Agent-Reach(소셜 원문) 순서로 근거를 모아 docs/research/ 보고서와 PDF를 만든다. "/nereus:research", "조사해", "리서치", "비교", "동향" 요청 시 researcher 에이전트가 사용.
+description: 시장·기술 조사 절차: gh search → 웹 → last30days → Agent-Reach. docs/research/ 보고서+PDF. "조사", "리서치", "비교" 요청 시.
 ---
 
 # research

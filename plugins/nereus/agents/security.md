@@ -1,6 +1,6 @@
 ---
 name: security
-description: 인증·인가, 사용자 입력 처리, DB 쿼리, 파일시스템, 외부 API 호출, 암호화, 결제 코드가 바뀐 변경의 보안 리뷰. 외부 스킬 설치 전 SkillSpector 스캔. review 단계에서 해당 영역 변경이 감지될 때 자동, 또는 '보안 점검', '취약점', '이 스킬 안전해?' 요청 시 사용.
+description: 인증·입력·DB·파일·외부호출·암호화·결제 변경의 보안 리뷰, 외부 스킬 SkillSpector 스캔. review에서 자동, "보안 점검" 요청 시.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write
 ---

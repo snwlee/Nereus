@@ -1,6 +1,6 @@
 ---
 name: e2e
-description: "[flow] 태그 태스크의 엔드투엔드 검증. 웹 Playwright, Flutter integration_test+Patrol, Spring REST Assured+Testcontainers. build 게이트 통과 후 review 직전에 qa 에이전트가 실행. '/nereus:e2e', 'E2E', '사용자 흐름 테스트' 요청 시 사용."
+description: [flow] 태스크 E2E: 웹 Playwright, Flutter Patrol, Spring REST Assured. review 직전 qa가 실행. "E2E", "사용자 흐름 테스트" 요청 시.
 ---
 
 # e2e

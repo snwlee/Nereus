@@ -1,6 +1,6 @@
 ---
 name: seo
-description: 웹사이트 SEO 감사 체크리스트와 보고서 형식. 메타·구조화 데이터·Core Web Vitals·크롤링·내부 링크·키워드 매핑. "/nereus:seo", "SEO 점검", "검색 노출", "키워드", "Lighthouse" 요청 시 seo 에이전트가 사용.
+description: SEO 감사 체크리스트(메타·구조화 데이터·CWV·크롤링·키워드)와 보고서. "SEO", "검색 노출", "Lighthouse" 요청 시.
 ---
 
 # seo

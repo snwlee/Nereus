@@ -1,6 +1,6 @@
 ---
 name: architect
-description: intake와 spec 단계 담당. 요구사항 인터뷰(ooo interview), 스펙 도구 선택(spec-kit/OpenSpec), 태스크 분해, 아키텍처 결정과 다이어그램(archify). '설계', '스펙', '아키텍처', '태스크 쪼개기' 요청이나 nereus:intake/spec 스킬이 실행될 때 사용.
+description: intake·spec 담당. 인터뷰, 스펙 도구 선택, 태스크 분해, ADR·다이어그램. "설계", "스펙", "아키텍처" 요청 시.
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, WebFetch, mcp__codegraph__codegraph_explore
 ---
