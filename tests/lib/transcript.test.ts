@@ -36,4 +36,12 @@ describe("transcript", () => {
     expect(usageRatio({ inputTotal: 354000, model: "unknown-big" })).toBeCloseTo(0.354);
     expect(usageRatio({ inputTotal: 2500000, model: "x" })).toBe(1);
   });
+  it("uses an explicit limit over the model table, because transcripts never mark a 1M session", () => {
+    // 실제 1M 세션의 message.model 은 "claude-opus-5" — [1m] 접미사가 없어 표로는 200k 로 오판한다.
+    const usage = { inputTotal: 150000, model: "claude-opus-5" };
+    expect(usageRatio(usage)).toBeCloseTo(0.75);
+    expect(usageRatio(usage, { limit: 1000000 })).toBeCloseTo(0.15);
+    expect(usageRatio(usage, { limit: null })).toBeCloseTo(0.75);
+    expect(usageRatio(usage, { limit: 0 })).toBeCloseTo(0.75);
+  });
 });

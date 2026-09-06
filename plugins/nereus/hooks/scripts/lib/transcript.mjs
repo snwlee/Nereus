@@ -33,9 +33,11 @@ export function lastAssistantUsage(transcriptPath, { readFile = (p) => fs.readFi
   return parseUsageFromLines(text.split("\n"));
 }
 
-export function usageRatio(usage) {
+// limit: 실측으로 학습한 한도(ctx-sink 의 세션 캐시). 없으면 모델 표로 추측한다.
+// transcript 의 message.model 에는 1M 세션을 알리는 [1m] 접미사가 없어 표만으로는 200k 로 오판한다.
+export function usageRatio(usage, { limit: known = null } = {}) {
   if (!usage) return 0;
-  let limit = contextLimitFor(usage.model);
+  let limit = known > 0 ? known : contextLimitFor(usage.model);
   // 한도 표에 없는 대형 컨텍스트 모델: 실제 사용량이 표 한도를 넘으면 1M으로 간주한다(오탐 하드 스톱 방지).
   if (usage.inputTotal > limit) limit = 1000000;
   return Math.min(usage.inputTotal / limit, 1);
