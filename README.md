@@ -83,7 +83,7 @@ Each agent is a persona, an allow-list of tools, and an output contract. Agents 
 | Event | What it does |
 |---|---|
 | UserPromptSubmit | `learn-watch`: records the correction and nudges once per session |
-| PreToolUse | `pre-tool-guard`: blocks commands/edits matching rules (`--no-verify`, force push, secret files). On `git commit`, scans staged changes for secrets, `.env`, `console.log` |
+| PreToolUse | `pre-tool-guard`: blocks commands/edits matching rules (`--no-verify`, force push, secret files). On `git commit`, blocks staged secrets and `.env`; debug logs are warnings only |
 | SessionStart | Injects `handoff.md` and high-confidence learnings, reports missing tools |
 | PostToolUse | `tdd-guard`: warns when source is edited before its test. `baton-meter`: 50% warn, 70% hard stop. `observe`: appends raw observations, no judgment |
 | PreCompact | Demands a handoff before auto-compaction |

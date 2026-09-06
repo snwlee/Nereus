@@ -83,7 +83,7 @@ flowchart LR
 | 이벤트 | 동작 |
 |---|---|
 | UserPromptSubmit | `learn-watch`: 교정을 관찰에 남기고 세션당 한 번만 안내 |
-| PreToolUse | `pre-tool-guard`: 규칙(regex)에 걸리는 명령·편집 차단(`--no-verify`, force push, 시크릿 파일). `git commit` 시 스테이징의 시크릿·`.env`·`console.log` 검사 |
+| PreToolUse | `pre-tool-guard`: 규칙(regex)에 걸리는 명령·편집 차단(`--no-verify`, force push, 시크릿 파일). `git commit` 시 스테이징의 시크릿·`.env` 는 차단, 디버그 로그는 경고만 |
 | SessionStart | `handoff.md`와 신뢰도 높은 학습 규칙 주입, 미설치 도구 알림 |
 | PostToolUse | `tdd-guard`: 테스트보다 소스를 먼저 고치면 경고. `baton-meter`: 50% 경고, 70% 하드 스톱. `observe`: 판정 없이 관찰만 적재 |
 | PreCompact | 자동 압축 전에 handoff 작성 요구 |
