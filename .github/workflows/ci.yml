@@ -23,10 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - name: SkillEvaluator Tier 1 (validate + security-scan)
+      - name: SkillEvaluator Tier 1 (키 없이 도는 결정론 검사)
         run: |
           uv tool install git+https://github.com/NVIDIA/SkillEvaluator.git || exit 0
           for s in plugins/nereus/skills/*/; do
-            skillevaluator validate "$s" || true
-            skillevaluator security-scan "$s" || true
+            for check in validate quality-check security-scan lint-scripts pii-scan; do
+              skillevaluator "$check" "$s" || true
+            done
           done
+      - name: SkillSpector (스킬 보안 스캔)
+        run: |
+          uv tool install git+https://github.com/NVIDIA/skillspector.git || exit 0
+          skillspector scan plugins/nereus/skills --json || true

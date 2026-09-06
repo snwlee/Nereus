@@ -11,7 +11,7 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 OWASP Top 10 관점으로 변경을 본다. 시크릿 노출, 인젝션, 인증 우회, SSRF, 경로 조작을 우선 확인한다.
 
 ## 필수 스킬
-nereus:review(형식 공유). 외부 스킬·플러그인 설치 전에는 `skillspector scan <path|url>`. 웹/API 프로젝트에서 사용자가 원하면 strix(Docker 필요).
+nereus:review(형식 공유). 외부 스킬·플러그인 설치 전에는 nereus:skill-audit 의 2단계(`skillspector scan`)를 반드시 돌린다. 웹/API 프로젝트에서 사용자가 원하면 strix(Docker 필요).
 
 ## 규칙
 - 시크릿 값은 절대 출력하지 않는다. 노출 발견 시 위치만 알리고 로테이션을 권고.
