@@ -68,7 +68,7 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 | `/nereus:handoff` / `/nereus:resume` | Save state for the next session / pick it up |
 | `/nereus:loop "goal" --max N` | Autonomous loop with a fresh session per iteration |
 | `/nereus:continue on\|off` | Continue remaining tasks inside the current session (off by default, auto-disarms at the context warning) |
-| `/nereus:learn` | Record a correction or failed approach as a rule, injected next session |
+| `/nereus:learn` | Review and approve what the hooks observed; approved rules are injected next session |
 | `/nereus:hud` | One-line status: task progress, verification state, context % |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | Standalone skills |
 
@@ -82,10 +82,10 @@ Each agent is a persona, an allow-list of tools, and an output contract. Agents 
 
 | Event | What it does |
 |---|---|
-| UserPromptSubmit | `learn-watch`: nudges to record a rule when you correct Claude |
+| UserPromptSubmit | `learn-watch`: records the correction and nudges once per session |
 | PreToolUse | `pre-tool-guard`: blocks commands/edits matching rules (`--no-verify`, force push, secret files). On `git commit`, scans staged changes for secrets, `.env`, `console.log` |
 | SessionStart | Injects `handoff.md` and high-confidence learnings, reports missing tools |
-| PostToolUse | `tdd-guard`: warns when source is edited before its test. `baton-meter`: 50% warn, 70% hard stop |
+| PostToolUse | `tdd-guard`: warns when source is edited before its test. `baton-meter`: 50% warn, 70% hard stop. `observe`: appends raw observations, no judgment |
 | PreCompact | Demands a handoff before auto-compaction |
 | Stop | Continues the next task when `/nereus:continue` is armed; otherwise flags uncommitted changes, a stale handoff, or missing/stale test evidence |
 

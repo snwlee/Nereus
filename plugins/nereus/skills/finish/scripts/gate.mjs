@@ -17,15 +17,18 @@ export function untrackedAsDiff(cwd, files, readFile = (p) => fs.readFileSync(p,
   }).filter(Boolean).join("\n");
 }
 
-// 설정 gate.exclude(glob) 에 해당하는 파일 블록을 diff 에서 제거한다.
-export function excludeFiles(diff, globs = []) {
-  if (!globs.length) return diff;
+// gate.exclude(glob) 는 diff 를 잘라내지 않고 findings 만 거른다.
+// diff 에서 파일을 통째로 빼면 "테스트도 함께 바뀌었다" 같은 문맥까지 사라져 정당한 변경이 오탐된다.
+export function excludeFindings(findings, globs = []) {
+  if (!globs.length) return findings;
   const res = globs.map(globToRegExp);
-  return diff.split(/(?=^diff --git )/m).filter((block) => { const m = block.match(/^diff --git a\/(.+?) b\//); return !(m && res.some((re) => re.test(m[1]))); }).join("");
+  return findings.filter((f) => !res.some((re) => re.test(f.file)));
 }
 
-export function gateReport({ diff, evidence }) {
-  const integrity = checkIntegrity(diff);
+export function gateReport({ diff, evidence, exclude = [] }) {
+  const found = checkIntegrity(diff);
+  const findings = excludeFindings(found.findings, exclude);
+  const integrity = { pass: findings.length === 0, findings };
   const lines = ["## 완료 게이트", ""];
   lines.push(`- 테스트 evidence: **${evidence.status}**${evidence.status === "MISSING" ? " (run-tests.mjs 로 테스트를 실행해 기록하세요)" : evidence.status === "STALE" ? " (코드가 바뀐 뒤 테스트를 다시 돌리지 않았음)" : evidence.passing ? ` (${evidence.command} 통과)` : ` (${evidence.command} **실패**)`}`);
   lines.push(`- 완료 무결성: **${integrity.pass ? "통과" : `${integrity.findings.length}건 발견`}**`);
@@ -47,7 +50,7 @@ if (process.argv[1] && /gate\.mjs$/.test(process.argv[1])) {
     diff += "\n" + untrackedAsDiff(cwd, untracked);
   }
   const cfg = loadConfig({ cwd });
-  const r = gateReport({ diff: excludeFiles(diff, cfg.gate?.exclude ?? []), evidence: evidenceStatus(cwd) });
+  const r = gateReport({ diff, evidence: evidenceStatus(cwd), exclude: cfg.gate?.exclude ?? [] });
   process.stdout.write(r.markdown + "\n");
   process.exit(r.pass ? 0 : 1);
 }

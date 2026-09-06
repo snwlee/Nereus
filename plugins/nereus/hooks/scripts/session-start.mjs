@@ -6,6 +6,7 @@ import { handoffPath, userConfigDir } from "./lib/paths.mjs";
 import { which } from "./lib/exec.mjs";
 import { readAll, selectForInjection } from "./lib/learnings.mjs";
 import { loadConfig } from "./lib/config.mjs";
+import { readCandidates } from "./session-end.mjs";
 
 export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "agy", "codex"];
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -46,6 +47,8 @@ export function handle(input, deps = {}) {
     if (!exists(path.join(cwd, ".codegraph"))) notes.push("codegraph 인덱스 없음 (`codegraph init`으로 생성 가능)");
     const status = toolStatus();
     if (status.missing?.length) notes.push(`미설치 도구: ${status.missing.join(", ")} → /nereus:setup`);
+    const pending = (deps.pendingCandidates ?? ((c) => readCandidates(c).filter((x) => x.status === "open").length))(cwd);
+    if (pending > 0) notes.push(`학습 후보 ${pending}건 검토 대기 → /nereus:learn review`);
     if (notes.length) parts.push(`## Nereus 상태\n- ${notes.join("\n- ")}`);
   }
 

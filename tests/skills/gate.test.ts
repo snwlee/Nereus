@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { gateReport, untrackedAsDiff, excludeFiles } from "../../plugins/nereus/skills/finish/scripts/gate.mjs";
+import { gateReport, untrackedAsDiff, excludeFindings } from "../../plugins/nereus/skills/finish/scripts/gate.mjs";
 
 const diff = (file: string, added: string[]) => [`diff --git a/${file} b/${file}`, `+++ b/${file}`, ...added.map((l) => "+" + l)].join("\n");
 
@@ -34,11 +34,14 @@ describe("gate helpers", () => {
     expect(d).toContain("+// TODO x");
     expect(d).not.toContain("missing.ts");
   });
-  it("excludes files by glob", () => {
-    const d = diff("lib/integrity.mjs", ["TODO regex"]) + "\n" + diff("src/a.ts", ["ok"]);
-    const out = excludeFiles(d, ["**/integrity.mjs"]);
-    expect(out).not.toContain("integrity.mjs");
-    expect(out).toContain("src/a.ts");
-    expect(excludeFiles(d, [])).toBe(d);
+  it("제외 glob 은 findings 만 거른다", () => {
+    const f = [{ file: "lib/integrity.mjs", category: "todo_marker" }, { file: "src/a.ts", category: "todo_marker" }];
+    expect(excludeFindings(f, ["**/integrity.mjs"]).map((x: any) => x.file)).toEqual(["src/a.ts"]);
+    expect(excludeFindings(f, [])).toEqual(f);
+  });
+  it("제외해도 diff 문맥(테스트 변경 여부)은 유지된다", () => {
+    const d = diff("src/a.ts", []).replace("+++ b/src/a.ts", "+++ b/src/a.ts\n-  if (!x) return null;") + "\n" + diff("tests/a.test.ts", ["it('x', () => {})"]);
+    const r = gateReport({ diff: d, evidence: { status: "FRESH", passing: true, command: "npm test" }, exclude: ["tests/**"] });
+    expect(r.integrity.findings.some((x: any) => x.category === "guard_removed")).toBe(false);
   });
 });
