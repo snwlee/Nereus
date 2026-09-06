@@ -21,10 +21,11 @@ export const LOG_FILE = ".nereus/auto-clear.log";
  * 실행할 orca 명령 단계를 만든다. 부수 효과 없음 — 테스트 가능하게 분리했다.
  * 조건이 하나라도 맞지 않으면 null(아무것도 하지 않음).
  */
-export function planSteps({ handle, enabled = true, dirty = false, resumePrompt = DEFAULT_RESUME_PROMPT } = {}) {
+export function planSteps({ handle, enabled = true, resumePrompt = DEFAULT_RESUME_PROMPT } = {}) {
   if (!handle) return null;        // Orca 밖 — 자동화할 방법이 없다
   if (!enabled) return null;       // 설정으로 꺼둠
-  if (dirty) return null;          // 미커밋 변경이 있으면 지우지 않는다(되돌릴 수 없다)
+  // 미커밋 변경은 막지 않는다. /clear 는 파일도 git 상태도 건드리지 않고 대화 컨텍스트만 비운다.
+  // 잃는 것은 대화 맥락뿐이고 그것은 방금 쓴 handoff.md 가 담고 있다. dirty 는 로그에만 남긴다.
   const wait = (timeout) => ({ kind: "wait", handle, args: ["terminal", "wait", "--terminal", handle, "--for", "tui-idle", "--timeout-ms", String(timeout), "--json"] });
   const send = (text) => ({ kind: "send", args: ["terminal", "send", "--terminal", handle, "--text", text, "--enter", "--json"] });
   return [
@@ -119,9 +120,10 @@ if (process.argv[1] && /auto-clear\.mjs$/.test(process.argv[1])) {
   const cwd = process.cwd();
   const log = (line) => { appendLog(cwd, line); console.error(`auto-clear: ${line}`); };
   const opts = resolveOptions();
+  if (opts.dirty) log("미커밋 변경이 있지만 그대로 진행한다(/clear 는 파일을 건드리지 않는다)");
   const steps = planSteps(opts);
   if (!steps) {
-    log(`조건 불충족 — handle=${opts.handle ? "있음" : "없음"} enabled=${opts.enabled} dirty=${opts.dirty} → 아무것도 하지 않음`);
+    log(`조건 불충족 — handle=${opts.handle ? "있음" : "없음"} enabled=${opts.enabled} → 아무것도 하지 않음`);
     process.exit(0);
   }
   execute(steps, { log });

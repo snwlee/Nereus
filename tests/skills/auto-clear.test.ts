@@ -24,8 +24,8 @@ describe("auto-clear", () => {
     expect(planSteps({ ...base, enabled: false })).toBeNull();
   });
 
-  it("refuses to clear while changes are uncommitted — clearing would strand them", () => {
-    expect(planSteps({ ...base, dirty: true })).toBeNull();
+  it("still clears with uncommitted changes — /clear touches no files, and handoff.md already holds the state", () => {
+    expect(planSteps({ ...base, dirty: true })).not.toBeNull();
   });
 
   it("carries a custom resume prompt", () => {
