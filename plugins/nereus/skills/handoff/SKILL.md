@@ -16,6 +16,8 @@ description: 현재 상태를 .nereus/handoff.md에 전체 재작성하고 커�
    node "${CLAUDE_PLUGIN_ROOT}/skills/handoff/scripts/auto-clear.mjs" &
    ```
 
-   Orca 터미널 밖이거나(`ORCA_TERMINAL_HANDLE` 없음), `autoClear.enabled: false` 이거나, 미커밋 변경이 남아 있으면 스스로 아무것도 하지 않는다. 그때는 사용자가 직접 `/clear` 를 친다.
+   Orca 터미널 밖이거나(`ORCA_TERMINAL_HANDLE` 없음), `autoClear.enabled: false` 이거나, 미커밋 변경이 남아 있으면 스스로 아무것도 하지 않는다. 턴이 실제로 끝났는지 확인하지 못해도 `/clear` 를 보내지 않는다 — 턴 도중에 보내면 입력이 삼켜진다. 그때는 사용자가 직접 `/clear` 를 친다.
+
+   **안 됐을 때는 `.nereus/auto-clear.log` 를 본다.** 매 실행이 이유와 함께 남는다(`조건 불충족 …`, `유휴 확인 실패(…)`, `유휴 확인(quiet)`, `전송 /clear → ok`).
 
 그 다음 새 작업을 시작하지 않는다.

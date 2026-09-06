@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { planSteps, resolveOptions, DEFAULT_RESUME_PROMPT } from "../../plugins/nereus/skills/handoff/scripts/auto-clear.mjs";
+import { planSteps, resolveOptions, execute, parseWait, quietFor, confirmIdle, DEFAULT_RESUME_PROMPT } from "../../plugins/nereus/skills/handoff/scripts/auto-clear.mjs";
 
 const base = { handle: "term_abc", enabled: true, dirty: false };
 
@@ -61,5 +61,82 @@ describe("auto-clear resolveOptions", () => {
 
   it("honors the config switch", () => {
     expect(resolveOptions({ ...deps, config: { autoClear: { enabled: false } } }).enabled).toBe(false);
+  });
+});
+
+describe("auto-clear idle detection", () => {
+  it("parseWait reads the satisfied flag, not the exit code", () => {
+    expect(parseWait('{"ok":true,"result":{"wait":{"satisfied":true}}}')).toMatchObject({ satisfied: true });
+    // orca 는 조건 미충족에도 종료코드 0 으로 끝난다. 실측된 실제 응답:
+    expect(parseWait('{"ok":true,"result":{"wait":{"satisfied":false,"status":"running","blockedReason":"codex-trust-workspace"}}}'))
+      .toMatchObject({ satisfied: false, blockedReason: "codex-trust-workspace" });
+    expect(parseWait("쓰레기")).toBeNull();
+  });
+
+  it("quietFor reports how long the terminal has produced no output", () => {
+    // 실측 형태는 result.terminal.lastOutputAt 이다.
+    expect(quietFor('{"result":{"terminal":{"lastOutputAt":1000}}}', 4000)).toBe(3000);
+    expect(quietFor('{"result":{"lastOutputAt":1000}}', 4000)).toBe(3000);
+    expect(quietFor("쓰레기", 4000)).toBeNull();
+    expect(quietFor('{"result":{"terminal":{}}}', 4000)).toBeNull();
+  });
+
+  it("confirmIdle accepts a satisfied tui-idle immediately", () => {
+    const exec = () => ({ ok: true, stdout: '{"result":{"wait":{"satisfied":true}}}' });
+    expect(confirmIdle({ handle: "t", exec, sleep: () => {}, now: () => 0 })).toMatchObject({ ok: true, via: "tui-idle" });
+  });
+
+  it("falls back to a quiet window when tui-idle is blocked", () => {
+    let t = 0;
+    const exec = (_c: string, args: string[]) =>
+      args[1] === "wait"
+        ? { ok: true, stdout: '{"result":{"wait":{"satisfied":false,"blockedReason":"codex-trust-workspace"}}}' }
+        : { ok: true, stdout: `{"result":{"terminal":{"lastOutputAt":${t > 8000 ? 0 : t}}}}` };
+    const r = confirmIdle({ handle: "t", exec, sleep: (ms: number) => { t += ms; }, now: () => t, quietMs: 3000, deadlineMs: 60000 });
+    expect(r).toMatchObject({ ok: true, via: "quiet" });
+  });
+
+  it("gives up rather than clearing blind when idle is never confirmed", () => {
+    // 출력이 계속 갱신되는 = 턴이 계속 도는 터미널
+    let t = 0;
+    const exec = (_c: string, args: string[]) =>
+      args[1] === "wait"
+        ? { ok: true, stdout: '{"result":{"wait":{"satisfied":false}}}' }
+        : { ok: true, stdout: `{"result":{"terminal":{"lastOutputAt":${t}}}}` };
+    const r = confirmIdle({ handle: "t", exec, sleep: (ms: number) => { t += ms; }, now: () => t, quietMs: 3000, deadlineMs: 20000 });
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe("auto-clear execute", () => {
+  const steps = () => planSteps(base)!;
+
+  it("never sends /clear when idle could not be confirmed", () => {
+    const sent: string[] = [];
+    const logged: string[] = [];
+    const r = execute(steps(), {
+      exec: (_c: string, args: string[]) => { if (args[1] === "send") sent.push(args[5]); return { ok: true, stdout: "" }; },
+      confirm: () => ({ ok: false, reason: "turn-still-running" }),
+      log: (m: string) => logged.push(m),
+    });
+    expect(sent).toEqual([]);
+    expect(r.some((x: any) => x.aborted)).toBe(true);
+    expect(logged.join("\n")).toContain("turn-still-running");
+  });
+
+  it("sends /clear and the resume prompt once idle is confirmed", () => {
+    const sent: string[] = [];
+    execute(steps(), {
+      exec: (_c: string, args: string[]) => { if (args[1] === "send") sent.push(args[5]); return { ok: true, stdout: "" }; },
+      confirm: () => ({ ok: true, via: "quiet" }),
+      log: () => {},
+    });
+    expect(sent).toEqual(["/clear", DEFAULT_RESUME_PROMPT]);
+  });
+
+  it("logs every run so a background failure is not silent", () => {
+    const logged: string[] = [];
+    execute(steps(), { exec: () => ({ ok: true, stdout: "" }), confirm: () => ({ ok: true, via: "quiet" }), log: (m: string) => logged.push(m) });
+    expect(logged.length).toBeGreaterThan(0);
   });
 });
