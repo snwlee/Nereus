@@ -8,6 +8,17 @@ import { readAll, selectForInjection } from "./lib/learnings.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { readCandidates } from "./session-end.mjs";
 
+// /clear 직후 주입되는 재개 절차. resume 스킬이 하던 검증을 여기서 지시해
+// 사용자가 /nereus:resume 을 따로 칠 필요를 없앤다. compact 는 대화가 그대로
+// 이어지므로 이 체크리스트를 붙이지 않는다(이미 검증된 상태에서 요약만 된 것).
+export const RESUME_CHECKLIST = [
+  "`/nereus:resume` 을 따로 칠 필요 없이 지금 바로 이어서 진행하세요. 이어가기 전에:",
+  "1. \"테스트 상태\"에 적힌 러너를 실제로 실행해 handoff 의 주장과 대조한다. 다르면 handoff 가 아니라 현재 코드가 진실이다. 차이를 사용자에게 알린다.",
+  "2. `git log --oneline -5` 와 `git status` 로 미커밋 변경을 확인한다.",
+  "3. \"열린 질문\"이 있으면 작업을 시작하기 전에 사용자에게 먼저 묻는다.",
+  "4. \"MUST NOT\"에 적힌 접근은 다시 시도하지 않는다. \"완료\" 항목은 반복하지 않는다.",
+].join("\n");
+
 export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "agy", "codex"];
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -33,7 +44,12 @@ export function handle(input, deps = {}) {
   if (exists(hp)) {
     let body = "";
     try { body = readFile(hp); } catch { body = ""; }
-    if (body.trim()) parts.push(`## Baton 재개\n이전 세션이 남긴 handoff입니다. 여기서 이어서 진행하고, 완료된 항목은 반복하지 마세요.\n\n${body.trim()}`);
+    if (body.trim()) {
+      const lead = input.source === "compact"
+        ? "이전 세션이 남긴 handoff입니다. 여기서 이어서 진행하고, 완료된 항목은 반복하지 마세요."
+        : RESUME_CHECKLIST;
+      parts.push(`## Baton 재개\n${lead}\n\n${body.trim()}`);
+    }
   }
 
   const learn = (deps.learnings ?? (() => {

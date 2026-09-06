@@ -45,7 +45,7 @@ flowchart LR
     subgraph Baton [Baton — context handoff]
         direction LR
         W[50% warn:<br/>finish current task] --> H[write handoff.md<br/>commit · stop]
-        H --> N[new session<br/>/nereus:resume]
+        H --> N[/clear<br/>auto-resumes]
     end
 
     B -. context ≥ 50% .-> W
@@ -65,7 +65,7 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 | `/nereus:e2e` | End-to-end checks for `[flow]` tasks |
 | `/nereus:review` | Parallel review, severity gate |
 | `/nereus:finish` | Completion gate (test evidence + integrity scan), then commit, archive, update handoff |
-| `/nereus:handoff` / `/nereus:resume` | Save state for the next session / pick it up |
+| `/nereus:handoff` | Save state for the next session. After `/clear` the SessionStart hook re-injects it and resumes automatically — `/nereus:resume` is only for resuming by hand (e.g. a different tasks file). |
 | `/nereus:loop "goal" --max N` | Autonomous loop with a fresh session per iteration |
 | `/nereus:continue on\|off` | Continue remaining tasks inside the current session (off by default, auto-disarms at the context warning) |
 | `/nereus:learn` | Review and approve what the hooks observed; approved rules are injected next session |

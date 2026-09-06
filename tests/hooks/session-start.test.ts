@@ -16,6 +16,20 @@ describe("session-start hook", () => {
     expect(ctx).toContain("Baton 재개");
     expect(ctx).toContain("목표: X");
   });
+  it("carries the resume checklist so /nereus:resume never has to be typed", () => {
+    const out = handle({ session_id: "s1", cwd: "/r", source: "clear" }, deps({ files: { "/r/.nereus/handoff.md": "# Handoff\n목표: X" } }));
+    const ctx = out!.hookSpecificOutput.additionalContext;
+    // resume 스킬이 하던 검증 단계가 주입에 들어 있어야 사용자가 /clear 한 번만 쳐도 된다.
+    expect(ctx).toContain("테스트 상태");   // 러너 재실행 대조
+    expect(ctx).toContain("git status");    // 미커밋 변경 확인
+    expect(ctx).toContain("열린 질문");     // 작업 전 질문
+    expect(ctx).toContain("MUST NOT");      // 실패한 접근 회피
+    expect(ctx).toMatch(/따로 칠 필요 없|칠 필요 없/);
+  });
+  it("skips the resume checklist after a compact, where the conversation already continues", () => {
+    const out = handle({ cwd: "/r", source: "compact" }, deps({ files: { "/r/.nereus/handoff.md": "H" } }));
+    expect(out!.hookSpecificOutput.additionalContext).not.toContain("git status");
+  });
   it("reports missing codegraph index and missing tools", () => {
     const out = handle({ cwd: "/r", source: "startup" }, deps({ files: {}, tools: { missing: ["ooo", "ocr"] } }));
     const ctx = out!.hookSpecificOutput.additionalContext;

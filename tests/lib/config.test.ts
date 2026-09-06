@@ -7,6 +7,7 @@ describe("config", () => {
     expect(DEFAULTS.baton).toEqual({ warn: 0.5, hard: 0.7 });
     expect(DEFAULTS.pdf.engine).toBe("typst");
     expect(DEFAULTS.image.backend).toBe("auto");
+    expect(DEFAULTS.autoClear.enabled).toBe(true);
   });
   it("deep-merges user then project over defaults without mutating inputs", () => {
     const user = { baton: { warn: 0.4 } };

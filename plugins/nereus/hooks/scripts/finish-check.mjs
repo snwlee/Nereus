@@ -59,7 +59,7 @@ export function handle(input, deps = {}) {
     const progress = (deps.progress ?? (() => taskProgress(cwd)))();
     if (ratio >= cfg.baton.warn) {
       disarm();
-      notes.push(`컨텍스트 ${Math.round(ratio * 100)}% 라 자동 계속을 해제했습니다. handoff.md 를 쓰고 새 세션에서 /nereus:resume 하세요`);
+      notes.push(`컨텍스트 ${Math.round(ratio * 100)}% 라 자동 계속을 해제했습니다. handoff.md 를 쓰고 /clear 하세요 (재개는 자동입니다)`);
     } else if (!progress || progress.complete || (cont.remaining ?? 0) <= 0) {
       disarm();
     } else {

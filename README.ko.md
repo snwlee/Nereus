@@ -45,7 +45,7 @@ flowchart LR
     subgraph Baton [Baton — 컨텍스트 핸드오프]
         direction LR
         W[50% 경고:<br/>현재 태스크만 마무리] --> H[handoff.md 작성<br/>커밋 · 정지]
-        H --> N[새 세션<br/>/nereus:resume]
+        H --> N[/clear<br/>자동 재개]
     end
 
     B -. 컨텍스트 ≥ 50% .-> W
@@ -65,7 +65,7 @@ flowchart LR
 | `/nereus:e2e` | `[flow]` 태스크의 엔드투엔드 검증 |
 | `/nereus:review` | 병렬 리뷰, 심각도 게이트 |
 | `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사) → 커밋, 아카이브, handoff 갱신 |
-| `/nereus:handoff` / `/nereus:resume` | 다음 세션용 상태 저장 / 이어받기 |
+| `/nereus:handoff` | 다음 세션용 상태 저장. `/clear` 하면 SessionStart 훅이 다시 주입해 자동으로 이어집니다 — `/nereus:resume` 은 수동 재개(다른 tasks 파일 지정 등)용입니다. |
 | `/nereus:loop "목표" --max N` | 반복마다 새 세션으로 도는 자율 루프 |
 | `/nereus:continue on\|off` | 같은 세션에서 남은 태스크 자동 계속 (기본 꺼짐, 컨텍스트 경고선에서 자동 해제) |
 | `/nereus:learn` | 훅이 모은 학습 후보를 검토·승인. 승인된 규칙만 다음 세션에 주입 |

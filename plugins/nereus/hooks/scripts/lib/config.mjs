@@ -12,6 +12,7 @@ export const DEFAULTS = Object.freeze({
   commitQuality: { block: ["secret", "env_file"], warn: ["debug_log"], exclude: [], maxReport: 8 }, // 안전 문제만 차단, 스타일은 경고
   learnings: { minConfidence: 0.7, limit: 8, maxChars: 900 }, // SessionStart 주입 예산 (토큰 절약)
   gate: { exclude: [] }, // 완료 무결성 검사에서 제외할 파일 glob (예: 분류기 자체, 픽스처)
+  autoClear: { enabled: true, prompt: "이어서 진행해" }, // handoff 뒤 /clear·재개를 자동 입력 (Orca 터미널 안에서만 동작)
 });
 
 const isPlain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
