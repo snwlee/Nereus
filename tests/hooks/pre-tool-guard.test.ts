@@ -76,3 +76,38 @@ describe("pre-tool-guard", () => {
     expect(handle(bash("git commit --no-verify -m x"), deps({ rules, config: () => ({}) }))).toBeNull();
   });
 });
+
+describe("pre-tool-guard — TDD 강제", () => {
+  const green = { enforce: "block", runner: { command: "npm test" }, exclude: [], allowRefactor: true, evidence: { status: "FRESH", exitCode: 0, passing: true }, hasTest: false, override: null };
+  const tddDeps = (over: any = {}) => deps({ tdd: () => ({ ...green, ...over }) });
+
+  it("blocks implementing a new file while everything is green", () => {
+    const r = handle(edit("/r/src/cart.ts"), tddDeps())!;
+    expect(r.decision).toBe("block");
+    expect(r.reason).toContain("nereus:tdd");
+  });
+
+  it("allows the test file itself so RED can be written first", () => {
+    expect(handle(edit("/r/src/cart.test.ts"), tddDeps())).toBeNull();
+  });
+
+  it("allows implementation once a test is failing", () => {
+    expect(handle(edit("/r/src/cart.ts"), tddDeps({ evidence: { status: "STALE", exitCode: 1, passing: false } }))).toBeNull();
+  });
+
+  it("consumes a one-shot override and lets that edit through", () => {
+    let dropped = false;
+    const r = handle(edit("/r/src/cart.ts"), deps({ tdd: () => ({ ...green, override: "벤더 이식" }), dropOverride: () => { dropped = true; } }));
+    expect(r).toBeNull();
+    expect(dropped).toBe(true);
+  });
+
+  it("stays off unless enforce is block — existing projects are untouched", () => {
+    expect(handle(edit("/r/src/cart.ts"), tddDeps({ enforce: "warn" }))).toBeNull();
+    expect(handle(edit("/r/src/cart.ts"), tddDeps({ runner: null }))).toBeNull();
+  });
+
+  it("does not fire on Bash", () => {
+    expect(handle(bash("npm test"), tddDeps())).toBeNull();
+  });
+});

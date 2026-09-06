@@ -40,7 +40,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/detect.mjs"
 {
   "secondOpinion": "both",
   "baton": { "warn": 0.5, "hard": 0.7 },
-  "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/*.d.ts", "**/generated/**", "**/*.g.dart", "**/*.freezed.dart"] },
+  "tdd": { "enforce": "block", "allowRefactor": true, "exclude": ["**/migrations/**", "**/*.config.*", "**/*.d.ts", "**/generated/**", "**/*.g.dart", "**/*.freezed.dart"] },
   "pdf": { "engine": "typst", "font": "Noto Sans KR" },
   "image": { "backend": "auto" },
   "commitQuality": { "block": ["secret", "env_file"], "warn": ["debug_log"], "exclude": [] }

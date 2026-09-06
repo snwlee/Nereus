@@ -10,6 +10,9 @@ import { run } from "./lib/exec.mjs";
 import { parseDiff } from "./lib/integrity.mjs";
 import { globToRegExp } from "./tdd-guard.mjs";
 import { loadConfig } from "./lib/config.mjs";
+import { tddVerdict, findTestFor, OVERRIDE_FILE } from "./lib/tdd-gate.mjs";
+import { detectTestRunner } from "./lib/stack.mjs";
+import { evidenceStatus } from "./lib/evidence.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_RULES = JSON.parse(fs.readFileSync(path.join(HERE, "..", "rules.default.json"), "utf8"));
@@ -69,6 +72,35 @@ function defaultStaged(cwd) {
   return { files, diff };
 }
 
+// TDD 강제에 필요한 사실을 모은다. 순수 판정은 tdd-gate.mjs 가 한다.
+function defaultTddInputs(cwd, rel) {
+  const tdd = loadConfig({ cwd }).tdd ?? {};
+  const files = run("git", ["ls-files"], { cwd }).stdout.split("\n").filter(Boolean);
+  let override = null;
+  try { override = fs.readFileSync(path.join(cwd, OVERRIDE_FILE), "utf8").trim() || "사유 없음"; } catch { /* 없으면 null */ }
+  return {
+    enforce: tdd.enforce ?? "warn",
+    runner: detectTestRunner(cwd),
+    exclude: tdd.exclude ?? [],
+    allowRefactor: tdd.allowRefactor !== false,
+    evidence: evidenceStatus(cwd),
+    hasTest: Boolean(findTestFor(rel, files)),
+    override,
+  };
+}
+
+const dropOverride = (cwd) => { try { fs.unlinkSync(path.join(cwd, OVERRIDE_FILE)); } catch { /* 이미 없음 */ } };
+
+export function tddCheck(input, cwd, deps = {}) {
+  const fp = input.tool_input?.file_path;
+  if (!fp) return null;
+  const rel = (path.isAbsolute(fp) ? path.relative(cwd, fp) : fp).replace(/\\/g, "/");
+  const v = tddVerdict({ rel, ...(deps.tdd ?? defaultTddInputs)(cwd, rel) });
+  if (v.consumeOverride) (deps.dropOverride ?? dropOverride)(cwd);
+  if (v.allow) return null;
+  return { decision: "block", reason: v.reason };
+}
+
 export function handle(input, deps = {}) {
   const cwd = input.cwd || process.cwd();
   const tool = input.tool_name;
@@ -81,6 +113,10 @@ export function handle(input, deps = {}) {
     let re;
     try { re = new RegExp(r.pattern); } catch { continue; } // 잘못된 규칙은 무시(fail-open)
     if (re.test(target)) return { decision: "block", reason: `[nereus:${r.id}] ${r.message}` };
+  }
+  if (["Edit", "Write", "MultiEdit"].includes(tool)) {
+    const t = tddCheck(input, cwd, deps);
+    if (t) return t;
   }
   if (tool === "Bash" && /\bgit\s+commit\b/.test(target)) {
     // rules.json 에 {"id":"commit-quality","enabled":false} 를 넣으면 통째로 끌 수 있다
