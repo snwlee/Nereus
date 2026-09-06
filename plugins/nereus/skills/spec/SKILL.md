@@ -29,6 +29,15 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/classify.mjs" "$PWD"
 2. `/opsx:propose <변경 이름>` — intake 목표를 입력. proposal, specs 델타, design, tasks가 생긴다.
 3. tasks.md에 아래 "태스크 규칙" 적용.
 
+## 디자인 방향 (UI 가 있으면 게이트)
+
+화면·컴포넌트가 생기는 스펙이면 태스크를 쪼개기 전에 방향을 Gemini 에게 비평받고 그 결과를 스펙에 적는다.
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" direction --brief <방향 브리프 파일>
+```
+브리프에는 스타일 방향(에디토리얼·라이트 럭셔리·벤토 등 구체적으로), 팔레트, 타이포 페어링, 레퍼런스를 적는다.
+verdict 가 REVISE 면 방향을 고쳐 다시 돌린다. 이 라운드가 없으면 신규 디자인 파일이 finish 게이트에서 차단된다.
+
 ## 태스크 규칙 (게이트)
 
 - 모든 태스크는 체크박스 `- [ ]`와 **완료 조건** 한 줄을 가진다. 완료 조건은 실행 가능한 검증(테스트 이름, 명령, 관찰 가능한 결과)이어야 한다.

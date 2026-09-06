@@ -78,3 +78,18 @@ describe("HUD", () => {
     expect(hudLine({ progress: null, evidence: { status: "MISSING" }, ctxPct: null })).toBe("⚓ -");
   });
 });
+
+describe("Stop 알림 — 디자인 피드백", () => {
+  it("디자인 미이행이 있으면 알림에 넣는다", () => {
+    const out = finishCheck({ cwd: "/r" }, {
+      ...base, continuation: () => null,
+      designGate: () => ({ pass: false, findings: [{ category: "design_feedback_missing", file: "src/hero.css", message: "없음" }] }),
+    })!;
+    expect(out.systemMessage).toContain("디자인");
+    expect(out.systemMessage).toContain("src/hero.css");
+    expect(out.decision).toBeUndefined();
+  });
+  it("디자인 게이트가 통과면 아무 말도 하지 않는다", () => {
+    expect(finishCheck({ cwd: "/r" }, { ...base, continuation: () => null, designGate: () => ({ pass: true, findings: [] }) })).toBeNull();
+  });
+});

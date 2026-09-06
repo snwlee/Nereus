@@ -63,8 +63,9 @@ flowchart LR
 | `/nereus:spec` | 스펙과 태스크 생성 (신규/기존 자동 판별) |
 | `/nereus:build` | TDD로 태스크 구현 |
 | `/nereus:e2e` | `[flow]` 태스크의 엔드투엔드 검증 |
+| `/nereus:design` | 디자인·UI·UX 작업의 Gemini 피드백 2라운드(방향·렌더). finish 하드 게이트 |
 | `/nereus:review` | 병렬 리뷰, 심각도 게이트 |
-| `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사) → 커밋, 아카이브, handoff 갱신 |
+| `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사 + 디자인 피드백) → 커밋, 아카이브, handoff 갱신 |
 | `/nereus:handoff` | 다음 세션용 상태 저장. `/clear` 하면 SessionStart 훅이 다시 주입해 자동으로 이어집니다 — `/nereus:resume` 은 수동 재개(다른 tasks 파일 지정 등)용입니다. |
 | `/nereus:loop "목표" --max N` | 반복마다 새 세션으로 도는 자율 루프 |
 | `/nereus:continue on\|off` | 같은 세션에서 남은 태스크 자동 계속 (기본 꺼짐, 컨텍스트 경고선에서 자동 해제) |

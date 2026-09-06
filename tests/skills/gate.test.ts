@@ -76,3 +76,32 @@ describe("finish gate — wiring", () => {
     expect(refs.map((r: any) => r.file)).toEqual(["a/SKILL.md", "b/hooks.json"]);
   });
 });
+
+describe("finish gate — 디자인 피드백", () => {
+  const ok = { status: "FRESH", passing: true, command: "npm test" };
+  it("blocks when the injected design gate failed, and names the finding", () => {
+    const r = gateReport({
+      diff: diff("src/hero.css", [".hero{}"]),
+      evidence: ok,
+      design: { pass: false, findings: [{ category: "design_feedback_missing", file: "src/hero.css", message: "Gemini 미감 피드백이 없습니다" }] },
+    });
+    expect(r.pass).toBe(false);
+    expect(r.markdown).toContain("[design_feedback_missing] src/hero.css");
+    expect(r.markdown).toContain("디자인 피드백");
+  });
+  it("passes when the design gate passed", () => {
+    const r = gateReport({ diff: diff("src/hero.css", [".hero{}"]), evidence: ok, design: { pass: true, findings: [] } });
+    expect(r.pass).toBe(true);
+  });
+  it("reports warn-mode design findings without blocking", () => {
+    const r = gateReport({
+      diff: "", evidence: ok,
+      design: { pass: true, enforce: "warn", findings: [{ category: "design_feedback_missing", file: "a.css", message: "없음" }] },
+    });
+    expect(r.pass).toBe(true);
+    expect(r.markdown).toContain("a.css");
+  });
+  it("omits the design line entirely when no design surface was involved", () => {
+    expect(gateReport({ diff: "", evidence: ok }).markdown).not.toContain("디자인 피드백");
+  });
+});

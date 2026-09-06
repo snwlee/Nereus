@@ -61,4 +61,8 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/build/scripts/run-tests.mjs" --cmd "./gradlew
 
 - 전체 테스트 실행 → 전부 통과. 출력을 인용한다.
 - `ooo qa`로 기계 검증(빌드·린트·테스트)을 한 번 더 돌린다. `ooo`가 없으면 스택별 빌드 명령(`flutter analyze`, `./gradlew build`, `npm run build` 또는 `tsc --noEmit`)으로 대체한다.
+- 디자인 표면(스타일시트·디자인 토큰·시각 마크업)을 만졌으면 `nereus:design` 의 렌더 라운드를 돌린다. 스크린샷을 확보해 Gemini 비평을 받고 `--files` 로 커버한다. 건너뛰면 finish 게이트가 차단한다.
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" status   # 무엇이 미이행인지 먼저 확인
+```
 - `[flow]` 태스크가 포함됐으면 `nereus:e2e`를 먼저 실행한 뒤 `nereus:review`로 넘어간다. 아니면 바로 review.

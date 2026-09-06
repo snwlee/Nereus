@@ -6,6 +6,7 @@ import { readStdinJson, emit } from "./lib/io.mjs";
 import { run } from "./lib/exec.mjs";
 import { handoffPath, projectStateDir } from "./lib/paths.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
+import { gateNow } from "../../skills/design/scripts/design-feedback.mjs";
 import { taskProgress } from "./lib/tasks.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { officialRatio } from "./ctx-sink.mjs";
@@ -78,6 +79,9 @@ export function handle(input, deps = {}) {
   if (!updated) notes.push(".nereus/handoff.md가 이 세션에서 갱신되지 않았습니다");
   if (status.trim() && ev.status !== "FRESH") notes.push(`테스트 evidence가 ${ev.status === "MISSING" ? "없습니다" : "STALE 입니다(코드가 바뀐 뒤 테스트를 다시 돌리지 않음)"}`);
   else if (ev.status === "FRESH" && !ev.passing) notes.push(`마지막 테스트가 실패 상태입니다(${ev.command})`);
+  // 워크플로(finish) 를 안 거치는 즉석 디자인 수정도 세션 끝에는 한 번 알린다. 차단은 하지 않는다.
+  const design = (deps.designGate ?? (() => gateNow(cwd)))();
+  if (design.findings?.length) notes.push(`디자인 피드백 미이행 ${design.findings.length}건 (${design.findings.map((f) => f.file).slice(0, 3).join(", ")}) — /nereus:design 으로 Gemini 비평을 받으세요`);
   if (!notes.length) return null;
   return { systemMessage: `[Nereus] ${notes.join(". ")}. 작업 단위가 끝났다면 /nereus:finish 로 마무리하세요.` };
 }

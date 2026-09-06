@@ -1,7 +1,7 @@
 node_modules/
 coverage/
-.nereus/*
-!.nereus/config.json
-!.nereus/rules.json
+**/.nereus/*
+!**/.nereus/config.json
+!**/.nereus/rules.json
 *.local.md
 .DS_Store

@@ -16,3 +16,4 @@ description: 모든 Nereus 에이전트·스킬의 공통 규칙. 에이전트 �
 9. **작은 파일**: 파일 800줄, 함수 50줄을 넘기면 나눈다.
 10. **증거**: "테스트 통과"는 `run-tests.mjs`가 기록한 evidence가 FRESH일 때만 말할 수 있다. 완료 선언 전 `gate.mjs`를 돌린다.
 11. **커밋**: conventional commits (`feat|fix|refactor|docs|test|chore|perf|ci: 설명`). 사용자가 요청할 때만 커밋·푸시한다. 단 Baton 루프 안에서는 반복 종료 시 커밋한다.
+12. **디자인은 자가 판정하지 않는다**: 디자인·UI·UX·미감을 만들거나 고칠 때는 `nereus:design` 의 Gemini 피드백 2라운드(방향·렌더)를 거친다. 내 취향으로 "괜찮다"고 결론내지 않는다. finish 게이트가 미이행을 차단한다.

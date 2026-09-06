@@ -4,6 +4,7 @@ import { run } from "../../../hooks/scripts/lib/exec.mjs";
 import { checkIntegrity, parseDiff } from "../../../hooks/scripts/lib/integrity.mjs";
 import { checkWiring } from "../../../hooks/scripts/lib/wiring.mjs";
 import { evidenceStatus } from "../../../hooks/scripts/lib/evidence.mjs";
+import { designTouched, fileHashes, readRounds, designGate } from "../../../hooks/scripts/lib/design.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 import { globToRegExp } from "../../../hooks/scripts/tdd-guard.mjs";
 import fs from "node:fs";
@@ -34,7 +35,7 @@ export function listRepoRefs(cwd, tracked, readFile = (p) => fs.readFileSync(p, 
     .filter(Boolean);
 }
 
-export function gateReport({ diff, evidence, exclude = [], listRefs = null, readHandoff = () => null }) {
+export function gateReport({ diff, evidence, exclude = [], listRefs = null, readHandoff = () => null, design = null }) {
   const found = checkIntegrity(diff);
   const wiring = listRefs ? checkWiring({ files: parseDiff(diff), listRefs, readHandoff }) : { findings: [] };
   const findings = excludeFindings([...found.findings, ...wiring.findings], exclude);
@@ -43,7 +44,11 @@ export function gateReport({ diff, evidence, exclude = [], listRefs = null, read
   lines.push(`- 테스트 evidence: **${evidence.status}**${evidence.status === "MISSING" ? " (run-tests.mjs 로 테스트를 실행해 기록하세요)" : evidence.status === "STALE" ? " (코드가 바뀐 뒤 테스트를 다시 돌리지 않았음)" : evidence.passing ? ` (${evidence.command} 통과)` : ` (${evidence.command} **실패**)`}`);
   lines.push(`- 완료 무결성: **${integrity.pass ? "통과" : `${integrity.findings.length}건 발견`}**`);
   for (const f of integrity.findings) lines.push(`  - [${f.category}] ${f.file}${f.line ? `: \`${f.line}\`` : ""} — ${f.message}`);
-  const pass = integrity.pass && evidence.status === "FRESH" && evidence.passing === true;
+  if (design && (design.findings?.length || design.pass === false)) {
+    lines.push(`- 디자인 피드백: **${design.pass ? `${design.findings.length}건 (경고, enforce=${design.enforce ?? "warn"})` : `${design.findings.length}건 미이행`}**`);
+    for (const f of design.findings ?? []) lines.push(`  - [${f.category}] ${f.file} — ${f.message}`);
+  }
+  const pass = integrity.pass && evidence.status === "FRESH" && evidence.passing === true && design?.pass !== false;
   lines.push("", pass ? "**판정: 통과** — finish 로 진행 가능." : "**판정: 차단** — 위 항목을 해결한 뒤 다시 실행.");
   return { pass, integrity, evidence, markdown: lines.join("\n") };
 }
@@ -61,7 +66,16 @@ if (process.argv[1] && /gate\.mjs$/.test(process.argv[1])) {
   }
   const cfg = loadConfig({ cwd });
   const tracked = run("git", ["ls-files"], { cwd }).stdout.split("\n").filter(Boolean);
-  const r = gateReport({ diff, evidence: evidenceStatus(cwd), exclude: cfg.gate?.exclude ?? [], listRefs: () => listRepoRefs(cwd, tracked), readHandoff: () => { try { return fs.readFileSync(path.join(cwd, ".nereus/handoff.md"), "utf8"); } catch { return null; } } });
+  // 디자인 표면을 만졌으면 Gemini 피드백 라운드를 요구한다 (design.enforce="block" 기본).
+  const touched = designTouched(diff, { exclude: cfg.design?.exclude ?? [] });
+  const design = designGate({
+    touched,
+    hashes: fileHashes(cwd, touched.map((t) => t.file)),
+    created: touched.filter((t) => t.created).map((t) => t.file),
+    rounds: readRounds(cwd),
+    enforce: cfg.design?.enforce ?? "block",
+  });
+  const r = gateReport({ diff, evidence: evidenceStatus(cwd), exclude: cfg.gate?.exclude ?? [], design, listRefs: () => listRepoRefs(cwd, tracked), readHandoff: () => { try { return fs.readFileSync(path.join(cwd, ".nereus/handoff.md"), "utf8"); } catch { return null; } } });
   process.stdout.write(r.markdown + "\n");
   process.exit(r.pass ? 0 : 1);
 }
