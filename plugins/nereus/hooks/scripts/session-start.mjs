@@ -7,6 +7,7 @@ import { which } from "./lib/exec.mjs";
 import { readAll, selectForInjection } from "./lib/learnings.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { readCandidates } from "./session-end.mjs";
+import { skillMapBlock } from "./lib/router.mjs";
 
 // /clear 직후 주입되는 재개 절차. resume 스킬이 하던 검증을 여기서 지시해
 // 사용자가 /nereus:resume 을 따로 칠 필요를 없앤다. compact 는 대화가 그대로
@@ -57,6 +58,10 @@ export function handle(input, deps = {}) {
     return selectForInjection(readAll(cwd), cfg.learnings);
   }))();
   if (learn) parts.push(`## 이 프로젝트에서 배운 것\n${learn}`);
+
+  // 스킬 맵: 압축된 description 만으로는 모델이 스킬을 떠올리지 못한다. 새 컨텍스트마다 한 번 심는다.
+  // compact 는 대화가 이어지므로 다시 넣지 않는다.
+  if (input.source !== "compact") parts.push(skillMapBlock());
 
   if (input.source !== "compact") {
     const notes = [];

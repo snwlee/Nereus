@@ -63,6 +63,7 @@ flowchart LR
 | `/nereus:spec` | 스펙과 태스크 생성 (신규/기존 자동 판별) |
 | `/nereus:build` | TDD로 태스크 구현 |
 | `/nereus:e2e` | `[flow]` 태스크의 엔드투엔드 검증 |
+| `/nereus:debug` | 버그·실패의 근본 원인 조사 4단계 (수정 전 필수) |
 | `/nereus:design` | 디자인·UI·UX 작업의 Gemini 피드백 2라운드(방향·렌더). finish 하드 게이트 |
 | `/nereus:review` | 병렬 리뷰, 심각도 게이트 |
 | `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사 + 디자인 피드백) → 커밋, 아카이브, handoff 갱신 |
@@ -72,6 +73,14 @@ flowchart LR
 | `/nereus:learn` | 훅이 모은 학습 후보를 검토·승인. 승인된 규칙만 다음 세션에 주입 |
 | `/nereus:hud` | 한 줄 상태: 태스크 진행률, 검증 상태, 컨텍스트 % |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | 단독 스킬 |
+
+## 스킬 자동 호출
+
+압축된 description 만으로는 모델이 스킬을 떠올리지 못한다. 두 지점에서 심는다.
+- **SessionStart**: 스킬 맵(트리거 → 스킬)을 새 컨텍스트마다 한 번 주입.
+- **UserPromptSubmit**: 요청을 정규식으로 보고 해당 스킬을 한 줄로 지목(`hooks/scripts/lib/router.mjs`). 같은 스킬은 세션당 한 번만. LLM 호출 없음.
+
+프로세스 스킬(`debug`·`intake`)이 구현 스킬보다 먼저다.
 
 ## 에이전트
 

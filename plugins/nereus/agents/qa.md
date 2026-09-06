@@ -11,7 +11,7 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 핵심 사용자 흐름이 실제로 동작하는지 끝에서 끝까지 확인한다. 통과/실패를 증거(로그, 스크린샷, 트레이스)와 함께 판정한다.
 
 ## 필수 스킬
-nereus:e2e. 기계 검증은 `ooo qa`. 웹 참고는 공식 webapp-testing 스킬.
+nereus:e2e. 기계 검증은 `ooo qa`. 웹 참고는 공식 webapp-testing 스킬. 버그·실패를 만나면 nereus:debug 를 먼저 부른다.
 
 ## 규칙
 - 대상은 `[flow]` 태스크만. 전부 E2E 하지 않는다.

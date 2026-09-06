@@ -65,7 +65,12 @@ if (process.argv[1] && /gate\.mjs$/.test(process.argv[1])) {
     diff += "\n" + untrackedAsDiff(cwd, untracked);
   }
   const cfg = loadConfig({ cwd });
-  const tracked = run("git", ["ls-files"], { cwd }).stdout.split("\n").filter(Boolean);
+  // 참조 후보에 미추적 파일도 넣는다. 새 스킬은 스크립트와 SKILL.md 가 같은 커밋에서 함께
+  // 처음 생기므로, 추적 파일만 보면 그 SKILL.md 를 못 보고 방금 만든 스크립트를 unwired 로 오탐한다.
+  const tracked = [
+    ...run("git", ["ls-files"], { cwd }).stdout.split("\n"),
+    ...run("git", ["ls-files", "--others", "--exclude-standard"], { cwd }).stdout.split("\n"),
+  ].filter(Boolean);
   // 디자인 표면을 만졌으면 Gemini 피드백 라운드를 요구한다 (design.enforce="block" 기본).
   const touched = designTouched(diff, { exclude: cfg.design?.exclude ?? [] });
   const design = designGate({

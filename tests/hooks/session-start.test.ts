@@ -43,3 +43,17 @@ describe("session-start hook", () => {
     expect(out!.hookSpecificOutput.additionalContext).not.toContain("/nereus:setup");
   });
 });
+
+describe("session-start hook — 스킬 맵", () => {
+  it("startup·clear 에는 스킬 맵을 넣어 스킬을 먼저 부르게 유도한다", () => {
+    for (const source of ["startup", "clear", "resume"]) {
+      const ctx = handle({ cwd: "/r", source }, deps({ files: {} }))!.hookSpecificOutput.additionalContext;
+      expect(ctx).toContain("스킬을 먼저 부른다");
+      expect(ctx).toContain("nereus:debug");
+    }
+  });
+  it("compact 에는 넣지 않는다 — 대화가 이어지므로 이미 알고 있다", () => {
+    const out = handle({ cwd: "/r", source: "compact" }, deps({ files: { "/r/.nereus/handoff.md": "H" } }));
+    expect(out!.hookSpecificOutput.additionalContext).not.toContain("스킬을 먼저 부른다");
+  });
+});

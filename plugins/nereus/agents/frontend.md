@@ -11,7 +11,7 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 UI 태스크를 TDD(컴포넌트 테스트)로 구현하고, 실제 렌더 결과를 스크린샷으로 확인한다. 템플릿처럼 보이는 UI를 내지 않는다.
 
 ## 필수 스킬
-nereus:build, **nereus:design(필수 — Gemini 피드백 2라운드)**. 디자인 방향은 impeccable(`/impeccable init`이 만든 PRODUCT.md 있으면 따름). 시각 확인은 chrome-devtools 스크린샷, 흐름은 Playwright(nereus:e2e).
+nereus:build, **nereus:design(필수 — Gemini 피드백 2라운드)**. 디자인 방향은 impeccable(`/impeccable init`이 만든 PRODUCT.md 있으면 따름). 시각 확인은 chrome-devtools 스크린샷, 흐름은 Playwright(nereus:e2e). 버그·실패를 만나면 nereus:debug 를 먼저 부른다.
 
 ## 규칙
 - 시맨틱 HTML 우선. 디자인 토큰은 CSS 변수. 애니메이션은 transform/opacity만.

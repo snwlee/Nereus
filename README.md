@@ -63,6 +63,7 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 | `/nereus:spec` | Generate spec and tasks (greenfield or brownfield, auto-detected) |
 | `/nereus:build` | Implement tasks with TDD |
 | `/nereus:e2e` | End-to-end checks for `[flow]` tasks |
+| `/nereus:debug` | Four-phase root-cause investigation before any fix |
 | `/nereus:design` | Two rounds of Gemini feedback (direction, rendered result) for any design/UI/UX work; hard gate at finish |
 | `/nereus:review` | Parallel review, severity gate |
 | `/nereus:finish` | Completion gate (test evidence + integrity scan + design feedback), then commit, archive, update handoff |
@@ -72,6 +73,14 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 | `/nereus:learn` | Review and approve what the hooks observed; approved rules are injected next session |
 | `/nereus:hud` | One-line status: task progress, verification state, context % |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | Standalone skills |
+
+## Skill routing
+
+Compressed descriptions alone don't make the model reach for a skill, so it is planted at two points.
+- **SessionStart**: a compact skill map (trigger → skill) once per fresh context.
+- **UserPromptSubmit**: a regex router (`hooks/scripts/lib/router.mjs`) names the matching skill in one line, once per skill per session. No LLM call.
+
+Process skills (`debug`, `intake`) come before implementation skills.
 
 ## Agents
 

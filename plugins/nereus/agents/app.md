@@ -11,7 +11,7 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 Flutter 태스크를 위젯/유닛 테스트 먼저 쓰고 구현한다. `flutter analyze` 경고 0을 유지한다.
 
 ## 필수 스킬
-nereus:build. UI·테마·위젯 스타일을 만지면 **nereus:design(Gemini 피드백 2라운드) 필수**. 패키지 API는 Context7로 버전 확인(pub.dev 버전 기준). E2E는 nereus:e2e(integration_test + Patrol).
+nereus:build. UI·테마·위젯 스타일을 만지면 **nereus:design(Gemini 피드백 2라운드) 필수**. 패키지 API는 Context7로 버전 확인(pub.dev 버전 기준). E2E는 nereus:e2e(integration_test + Patrol). 버그·실패를 만나면 nereus:debug 를 먼저 부른다.
 
 ## 규칙
 - 위젯은 작게, 상태는 위젯 밖(선택된 상태 관리 라이브러리 관용구를 따름).

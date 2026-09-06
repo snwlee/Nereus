@@ -105,3 +105,12 @@ describe("finish gate — 디자인 피드백", () => {
     expect(gateReport({ diff: "", evidence: ok }).markdown).not.toContain("디자인 피드백");
   });
 });
+
+describe("listRepoRefs — 미추적 파일", () => {
+  it("미추적 SKILL.md 도 참조 후보로 받아들인다 (새 스킬은 스크립트와 SKILL.md 가 함께 새로 생긴다)", () => {
+    const refs = listRepoRefs("/r", ["plugins/x/skills/a/SKILL.md", "plugins/x/skills/b/SKILL.md"], (p: string) =>
+      p.includes("/a/") ? "node scripts/tool.mjs" : "무관");
+    expect(refs.map((r) => r.file)).toEqual(["plugins/x/skills/a/SKILL.md", "plugins/x/skills/b/SKILL.md"]);
+    expect(refs[0].text).toContain("tool.mjs");
+  });
+});
