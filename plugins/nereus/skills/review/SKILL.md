@@ -15,7 +15,15 @@ nereus:common 규칙을 따른다. 담당 에이전트: reviewer. 인증·입력
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 ```
-설정 `secondOpinion`(both/codex/gemini)과 설치 상태로 어떤 리뷰어가 돌지 나온다. `skipped`가 있으면 사용자에게 알린다(차단은 아님).
+설정 `secondOpinion`과 설치 상태로 어떤 리뷰어가 돌지 나온다. `skipped`가 있으면 사용자에게 알린다(차단은 아님).
+
+| 설정값 | 도는 리뷰어 |
+|---|---|
+| `"both"` (기본) | OCR + Codex + Gemini |
+| `"codex"` | OCR + Codex |
+| `"gemini"` | OCR + Gemini |
+| `"none"` | OCR만 (2차 의견 없음) |
+| `["ocr", "gemini"]` | 배열로 직접 지정. 빈 배열이면 리뷰 자체를 건너뛴다 |
 
 ## 2. 병렬 실행
 
@@ -25,7 +33,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 - **Codex**: `codex review` (또는 codex 플러그인의 `/codex:adversarial-review`). 결과를 파일·줄·심각도·메시지로 정리한다.
 - **Gemini (Antigravity CLI)**: `agy -p "다음 diff를 리뷰하고 file:line, severity(CRITICAL/HIGH/MEDIUM/LOW), message 형식의 JSON 배열로만 답하라: $(git diff ...)"`.
 
-세 결과를 `{source, file, line, severity, message}` 배열로 정규화한다.
+계획에 포함된 리뷰어만 실행하고, 결과를 `{source, file, line, severity, message}` 배열로 정규화한다.
 
 ## 3. 병합과 게이트
 

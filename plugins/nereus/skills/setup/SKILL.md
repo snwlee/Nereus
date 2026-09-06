@@ -47,7 +47,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/detect.mjs"
 }
 ```
 
-각 키의 의미를 한 줄씩 설명하고 바꿀 것이 있는지 묻는다.
+각 키의 의미를 한 줄씩 설명하고 바꿀 것이 있는지 묻는다. `secondOpinion` 은 `"both"`(기본) / `"codex"` / `"gemini"` / `"none"`(2차 의견 없음) 중 하나이거나 `["ocr","gemini"]` 같은 배열이다. Codex 를 쓰지 않으려면 `"gemini"` 또는 `["ocr","gemini"]` 로 둔다.
 
 도구 호출 차단 규칙은 별도 파일이다. 기본 규칙(`--no-verify`, 루트 재귀 삭제, force push, 작업 폐기 git 명령, 시크릿 파일 편집)은 플러그인에 내장되어 있고, 사용자 규칙은 같은 디렉터리의 `rules.json`, 프로젝트 규칙은 `.nereus/rules.json`에 둔다. 형식은 `[{ "id", "tools": ["Bash"], "pattern": "<regex>", "message": "<되돌릴 문구>", "enabled": true }]`. 커밋 검사를 통째로 끄려면 `{"id": "commit-quality", "enabled": false}` 를 넣는다. 같은 id를 다시 쓰면 기본 규칙을 덮어쓰거나 `"enabled": false`로 끌 수 있다. 잘못된 regex는 무시된다(fail-open). 프로젝트별로 다르게 하려면 `.nereus/config.json`에 같은 형식으로 둔다.
 

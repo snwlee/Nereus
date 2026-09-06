@@ -105,6 +105,9 @@ All hooks are Node scripts. No bash, zero runtime dependencies, identical on mac
 }
 ```
 
+`secondOpinion` picks the reviewers: `"both"` (default), `"codex"`, `"gemini"`, `"none"` (deterministic OCR pass only), or an explicit array such as `["ocr", "gemini"]`.
+
+
 Baton runs ahead of Claude Code's own auto-compaction (a lossy summary). `/nereus:setup` offers to set `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` so the order is 50% warn → 70% hard stop → 80% compaction as a last resort.
 
 ## Development

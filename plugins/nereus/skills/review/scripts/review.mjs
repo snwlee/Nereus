@@ -6,13 +6,33 @@ import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 const ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
 const norm = (s) => { const u = String(s ?? "INFO").toUpperCase(); return ORDER.includes(u) ? u : u === "ERROR" ? "HIGH" : u === "WARNING" ? "MEDIUM" : "INFO"; };
 
-export function planRunners(mode, available = (b) => !!which(b)) {
-  const want = { ocr: true, codex: mode === "both" || mode === "codex", gemini: mode === "both" || mode === "gemini" };
-  const bins = { ocr: "ocr", codex: "codex", gemini: "agy" }; // Gemini 2차 의견은 Antigravity CLI(agy)로 실행
+// 리뷰어 정의. gemini 2차 의견은 Antigravity CLI(agy)로 실행한다.
+export const REVIEWERS = {
+  ocr: { bin: "ocr", label: "Open Code Review" },
+  codex: { bin: "codex", label: "Codex" },
+  gemini: { bin: "agy", label: "Gemini (Antigravity)" },
+};
+
+const SHORTHAND = {
+  both: ["ocr", "codex", "gemini"],
+  codex: ["ocr", "codex"],
+  gemini: ["ocr", "gemini"],
+  none: ["ocr"], // 2차 의견 없이 결정론적 리뷰만
+};
+
+/** 설정값을 리뷰어 id 배열로 편다. 문자열 단축형과 배열을 모두 받는다. */
+export function normalizeReviewers(value) {
+  if (Array.isArray(value)) return value.filter((v) => v in REVIEWERS);
+  if (typeof value === "string" && value in SHORTHAND) return SHORTHAND[value];
+  return SHORTHAND.both;
+}
+
+export function planRunners(value, available = (b) => !!which(b)) {
+  const want = normalizeReviewers(value);
   const plan = { ocr: false, codex: false, gemini: false, skipped: [] };
-  for (const k of Object.keys(want)) {
-    if (!want[k]) continue;
-    if (available(bins[k])) plan[k] = true; else plan.skipped.push(k);
+  for (const id of Object.keys(REVIEWERS)) {
+    if (!want.includes(id)) continue;
+    if (available(REVIEWERS[id].bin)) plan[id] = true; else plan.skipped.push(id);
   }
   return plan;
 }

@@ -105,6 +105,9 @@ flowchart LR
 }
 ```
 
+`secondOpinion` 은 리뷰어를 고른다. `"both"`(기본), `"codex"`, `"gemini"`, `"none"`(결정론적 OCR 리뷰만), 또는 `["ocr", "gemini"]` 같은 배열.
+
+
 Baton은 Claude Code 자체 자동 압축(손실 요약)보다 먼저 작동한다. `/nereus:setup`이 `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` 설정을 제안해 50% 경고 → 70% 하드 스톱 → 80% 압축(최후 수단) 순서를 만든다.
 
 ## 개발

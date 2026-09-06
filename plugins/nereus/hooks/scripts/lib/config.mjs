@@ -4,7 +4,7 @@ import path from "node:path";
 import { userConfigDir, projectStateDir } from "./paths.mjs";
 
 export const DEFAULTS = Object.freeze({
-  secondOpinion: "both", // codex | gemini | both
+  secondOpinion: "both", // "both" | "codex" | "gemini" | "none" | ["ocr","gemini"] 같은 배열
   baton: { warn: 0.5, hard: 0.7 }, // Claude Code 자동 압축(기본 약 83%, CLAUDE_AUTOCOMPACT_PCT_OVERRIDE) 보다 앞서야 의미가 있다
   tdd: { exclude: ["**/migrations/**", "**/*.config.*", "**/*.d.ts", "**/generated/**", "**/*.g.dart", "**/*.freezed.dart"] },
   pdf: { engine: "typst", font: "Noto Sans KR" },
