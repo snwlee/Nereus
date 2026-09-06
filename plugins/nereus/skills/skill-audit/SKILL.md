@@ -49,7 +49,16 @@ skillevaluator context-optimization-check "${CLAUDE_PLUGIN_ROOT}/skills"
 claude plugin details nereus@nereus     # Always-on 토큰과 컴포넌트별 비용
 ```
 
-## 4. 실제로 발동하고 도움이 되는가
+## 4. 실제로 발동하는가 (키 없이, 항상 가능)
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/skill-audit/scripts/coverage.mjs" [--limit 20] [--json]
+```
+이 프로젝트의 최근 세션 트랜스크립트를 읽어 **스킬이 한 번이라도 발동한 세션 비율**과 **한 번도 안 뜬 스킬**을 낸다. `Skill` 도구 호출과 슬래시 커맨드(`/nereus:build`) 둘 다 센다. 아무것도 업로드하지 않고 로컬 파일만 읽는다.
+
+착안은 Warp의 [Skill Doctor](https://github.com/warpdotdev/common-skills)(MIT)의 `skill_coverage` 지표다. 진단 규칙도 같다. **설치돼 있는데 한 번도 안 걸렸다면 그건 스킬 내용이 아니라 description(트리거)의 문제다.**
+
+## 5. 도움이 되는가 (얼리 액세스)
 
 ```bash
 claude plugin eval nereus@nereus --ablation with-without --threshold 0.7
