@@ -26,6 +26,33 @@ export function redact(text) {
   return out;
 }
 
+// 세션마다 달라지는 임시 경로. 그대로 서명에 들어가면 재발 불가한 명령이 "반복"으로 승격된다.
+const TMP_PATH = [
+  [/(?:\/private)?\/tmp\/claude-[0-9]+\/[^\s/]+\/[0-9a-f-]{8,}\/scratchpad/g, "$SCRATCH"],
+  [/(?:\/private)?\/var\/folders\/[^\s]*/g, "$TMP"],
+  [/(?:\/private)?\/tmp\/[^\s]*/g, "$TMP"],
+];
+
+// 명령 앞머리의 노이즈. 이것들이 SIG_MAX 를 잡아먹어 정작 실행한 명령이 잘렸다.
+const LEADING_NOISE = [
+  /^\s*cd\s+\S+\s*&&\s*/,        // cd <path> && <실제 명령>
+  /^\s*[A-Za-z_][A-Za-z0-9_]*=\S*\s+/, // FOO=1 <실제 명령>
+  /^\s*[A-Za-z_][A-Za-z0-9_]*=\S*\n+/, // VAR=값 개행 후 실제 명령
+];
+
+/** 반복·인과 판정에 쓸 명령 서명. 시크릿 제거 + 임시 경로 정규화 + 앞머리 노이즈 제거 후 상한 적용. */
+export function commandSignature(cmd) {
+  let out = redact(String(cmd ?? ""));
+  for (const [re, to] of TMP_PATH) out = out.replace(re, to);
+  // 접두가 겹쳐 붙을 수 있으므로(VAR=… 뒤에 또 cd …) 더 벗겨지지 않을 때까지 반복한다
+  for (let i = 0; i < 5; i++) {
+    const before = out;
+    for (const re of LEADING_NOISE) out = out.replace(re, "");
+    if (out === before) break;
+  }
+  return out.trim().slice(0, SIG_MAX);
+}
+
 // 관찰하지 않는 경로: 우리 상태 파일, 메모리 플러그인, 잠금·빌드 산출물
 const SKIP_PATH = /(^|\/)(\.nereus|\.claude-mem|node_modules|dist|build|coverage|\.git)(\/|$)/;
 const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
@@ -43,7 +70,7 @@ export function toolObservation(input, { now = Date.now() } = {}) {
     const cmd = input?.tool_input?.command;
     if (!cmd) return null;
     const exit = input?.tool_response?.exit_code ?? input?.tool_response?.exitCode;
-    return { ...base, tool: "Bash", ok: exit === undefined ? true : exit === 0, sig: redact(String(cmd)).slice(0, SIG_MAX) };
+    return { ...base, tool: "Bash", ok: exit === undefined ? true : exit === 0, sig: commandSignature(cmd) };
   }
   if (EDIT_TOOLS.has(tool)) {
     const fp = input?.tool_input?.file_path;

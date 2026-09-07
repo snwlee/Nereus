@@ -6,6 +6,14 @@ const NEAR_MS = 10 * 60 * 1000;
 
 const head = (sig) => String(sig ?? "").split(/\s+/).slice(0, 3).join(" ");
 
+// heredoc·인라인 스크립트. 앞머리가 같아 서로 다른 작업이 한 서명으로 합쳐지므로
+// 반복·인과 신호에서 제외한다. "스크립트로 만들 거리"라는 신호의 취지에도 맞지 않는다 — 이미 스크립트다.
+const INLINE_SCRIPT = /<<-?\s*['"]?\w+|(^|\s)(node|python3?|ruby|perl|deno|bun|osascript)\s+-(e|c)\b/;
+
+export function isInlineScript(sig) {
+  return INLINE_SCRIPT.test(String(sig ?? ""));
+}
+
 export function detectSignals(observations) {
   const obs = [...observations].sort((a, b) => (a.t ?? 0) - (b.t ?? 0));
   const out = [];
@@ -13,7 +21,7 @@ export function detectSignals(observations) {
   // (a) 같은 명령이 실패했다가 성공 — 그 사이에 고친 파일이 원인일 가능성이 높다
   const byCmd = new Map();
   for (const o of obs) {
-    if (o.k !== "tool" || o.tool !== "Bash" || !o.sig) continue;
+    if (o.k !== "tool" || o.tool !== "Bash" || !o.sig || isInlineScript(o.sig)) continue;
     if (!byCmd.has(o.sig)) byCmd.set(o.sig, []);
     byCmd.get(o.sig).push(o);
   }
@@ -29,7 +37,7 @@ export function detectSignals(observations) {
   // (b) 한 세션에서 반복된 명령 — 스크립트나 별칭으로 만들 후보
   const counts = new Map();
   for (const o of obs) {
-    if (o.k !== "tool" || o.tool !== "Bash" || !o.sig) continue;
+    if (o.k !== "tool" || o.tool !== "Bash" || !o.sig || isInlineScript(o.sig)) continue;
     counts.set(o.sig, (counts.get(o.sig) ?? 0) + 1);
   }
   for (const [sig, n] of counts) {

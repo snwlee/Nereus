@@ -40,10 +40,13 @@ describe("finish-check (Stop)", () => {
 describe("session-end", () => {
   it("only logs a note and never emits context", () => {
     const notes: string[] = [];
-    expect(sessionEnd({ cwd: "/r" }, { note: (m: string) => notes.push(m), hasClaudeMem: () => false })).toBeNull();
+    // aggregate 를 반드시 주입한다 — 빼면 실제 집계가 돌고, cwd "/r" 쓰기가 성공하는 플랫폼(Windows)에서
+    // 학습 후보 노트가 먼저 들어와 notes[0] 이 밀린다
+    const noAgg = { aggregate: () => ({ added: 0, open: 0 }) };
+    expect(sessionEnd({ cwd: "/r" }, { ...noAgg, note: (m: string) => notes.push(m), hasClaudeMem: () => false })).toBeNull();
     expect(notes[0]).toContain("claude-mem");
     notes.length = 0;
-    expect(sessionEnd({ cwd: "/r" }, { note: (m: string) => notes.push(m), hasClaudeMem: () => true })).toBeNull();
+    expect(sessionEnd({ cwd: "/r" }, { ...noAgg, note: (m: string) => notes.push(m), hasClaudeMem: () => true })).toBeNull();
     expect(notes).toEqual([]);
   });
 });

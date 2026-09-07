@@ -108,8 +108,9 @@ describe("finish gate — 디자인 피드백", () => {
 
 describe("listRepoRefs — 미추적 파일", () => {
   it("미추적 SKILL.md 도 참조 후보로 받아들인다 (새 스킬은 스크립트와 SKILL.md 가 함께 새로 생긴다)", () => {
+    // Windows 에서 listRepoRefs 가 path.join 으로 "\\a\\" 를 만들기 때문에 구분자에 의존하지 않고 본다
     const refs = listRepoRefs("/r", ["plugins/x/skills/a/SKILL.md", "plugins/x/skills/b/SKILL.md"], (p: string) =>
-      p.includes("/a/") ? "node scripts/tool.mjs" : "무관");
+      /[\\/]a[\\/]/.test(p) ? "node scripts/tool.mjs" : "무관");
     expect(refs.map((r) => r.file)).toEqual(["plugins/x/skills/a/SKILL.md", "plugins/x/skills/b/SKILL.md"]);
     expect(refs[0].text).toContain("tool.mjs");
   });

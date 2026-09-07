@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import path from "node:path";
 import {
   ENGINE_CANDIDATES,
   resolveEngine,
@@ -9,28 +10,31 @@ import {
   planGenerate,
 } from "../../plugins/nereus/skills/design/scripts/design-system.mjs";
 
-const exists = (allowed: string[]) => (p: string) => allowed.includes(p);
+// 기대 경로는 POSIX 로 쓰고, 비교 직전에 플랫폼 구분자로 정규화한다 (Windows CI 는 "\\" 를 낸다)
+const j = (...seg: string[]) => path.join(...seg);
+const norm = (p: string) => p.split(/[\\/]+/).join(path.sep);
+const exists = (allowed: string[]) => (p: string) => allowed.map(norm).includes(p);
 
 describe("resolveEngine", () => {
   it("prefers NEREUS_UIUX_HOME when its search.py is present", () => {
     const home = "/opt/uupm";
-    const script = "/opt/uupm/scripts/search.py";
+    const script = j("/opt/uupm", "scripts", "search.py");
     const r = resolveEngine({ env: { NEREUS_UIUX_HOME: home }, home: "/home/u", exists: exists([script]) });
     expect(r).toEqual({ root: home, script });
   });
 
   it("falls back to the sparse clone under ~/.local/share/nereus", () => {
-    const root = "/home/u/.local/share/nereus/ui-ux-pro-max/.claude/skills/ui-ux-pro-max";
-    const r = resolveEngine({ env: {}, home: "/home/u", exists: exists([`${root}/scripts/search.py`]) });
+    const root = j("/home/u", ".local", "share", "nereus", "ui-ux-pro-max", ".claude", "skills", "ui-ux-pro-max");
+    const r = resolveEngine({ env: {}, home: "/home/u", exists: exists([j(root, "scripts", "search.py")]) });
     expect(r?.root).toBe(root);
   });
 
   it("also accepts a global or project skill install", () => {
-    const global = "/home/u/.claude/skills/ui-ux-pro-max";
-    expect(resolveEngine({ env: {}, home: "/home/u", exists: exists([`${global}/scripts/search.py`]) })?.root).toBe(global);
+    const globalRoot = j("/home/u", ".claude", "skills", "ui-ux-pro-max");
+    expect(resolveEngine({ env: {}, home: "/home/u", exists: exists([j(globalRoot, "scripts", "search.py")]) })?.root).toBe(globalRoot);
 
-    const project = "/repo/.claude/skills/ui-ux-pro-max";
-    expect(resolveEngine({ env: {}, home: "/home/u", cwd: "/repo", exists: exists([`${project}/scripts/search.py`]) })?.root).toBe(project);
+    const project = j("/repo", ".claude", "skills", "ui-ux-pro-max");
+    expect(resolveEngine({ env: {}, home: "/home/u", cwd: "/repo", exists: exists([j(project, "scripts", "search.py")]) })?.root).toBe(project);
   });
 
   it("returns null when no candidate holds the entry script", () => {
@@ -40,7 +44,8 @@ describe("resolveEngine", () => {
   it("never looks outside the declared candidates", () => {
     const seen: string[] = [];
     resolveEngine({ env: {}, home: "/home/u", cwd: "/repo", exists: (p: string) => { seen.push(p); return false; } });
-    const roots = seen.map((p) => p.replace(/\/scripts\/search\.py$/, ""));
+    const suffix = j("scripts", "search.py");
+    const roots = seen.map((p) => p.slice(0, p.length - suffix.length - 1));
     expect(roots).toEqual(ENGINE_CANDIDATES({ env: {}, home: "/home/u", cwd: "/repo" }));
   });
 });
@@ -91,7 +96,7 @@ describe("slugify / briefPath", () => {
   });
 
   it("writes under docs/design as <slug>-system.md", () => {
-    expect(briefPath({ cwd: "/repo", slug: "hero" })).toBe("/repo/docs/design/hero-system.md");
+    expect(briefPath({ cwd: "/repo", slug: "hero" })).toBe(j("/repo", "docs", "design", "hero-system.md"));
   });
 });
 
@@ -111,19 +116,19 @@ describe("planGenerate", () => {
       query: "harness dashboard",
       projectName: "Nereus",
       cwd: "/repo",
-      engine: { root: "/opt/uupm", script: "/opt/uupm/scripts/search.py" },
+      engine: { root: "/opt/uupm", script: j("/opt/uupm", "scripts", "search.py") },
     });
     expect(plan.ok).toBe(true);
     expect(plan.cmd).toBe("python3");
-    expect(plan.args[0]).toBe("/opt/uupm/scripts/search.py");
+    expect(plan.args[0]).toBe(j("/opt/uupm", "scripts", "search.py"));
     expect(plan.args).toContain("--design-system");
     expect(plan.cwd).toBe("/opt/uupm");
-    expect(plan.out).toBe("/repo/docs/design/nereus-system.md");
+    expect(plan.out).toBe(j("/repo", "docs", "design", "nereus-system.md"));
   });
 
   it("derives the slug from the query when no project name is given", () => {
-    const plan = planGenerate({ query: "Payment Hero", cwd: "/repo", engine: { root: "/e", script: "/e/scripts/search.py" } });
-    expect(plan.out).toBe("/repo/docs/design/payment-hero-system.md");
+    const plan = planGenerate({ query: "Payment Hero", cwd: "/repo", engine: { root: "/e", script: j("/e", "scripts", "search.py") } });
+    expect(plan.out).toBe(j("/repo", "docs", "design", "payment-hero-system.md"));
   });
 
   it("reports the notice instead of a command when the engine is absent", () => {
