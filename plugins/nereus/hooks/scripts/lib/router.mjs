@@ -18,6 +18,7 @@ export const ROUTES = Object.freeze([
   { skill: "nereus:pdf", why: "PDF·문서 산출", re: /(pdf|보고서로|문서로\s?(만들|뽑)|타이포스트|typst)/i },
   { skill: "nereus:seo", why: "검색 노출·메타", re: /(seo|검색\s?(노출|엔진)|메타\s?태그|사이트맵|lighthouse)/i },
   { skill: "nereus:handoff", why: "컨텍스트 인계", re: /(핸드오프|handoff|여기까지\s?(저장|정리)|인계|컨텍스트\s?(정리|저장))/i },
+  { skill: "nereus:resume", why: "이전 세션 이어받기", re: /(^|\s)(이어서|이어받|재개|resume)(\s|$)|이어서\s?(진행|해|하자|가)/i },
   { skill: "nereus:learn", why: "규칙으로 학습", re: /(다음부터|앞으로(는)?\s?이렇게|기억해\s?줘|규칙으로|학습\s?후보)/i },
 ]);
 

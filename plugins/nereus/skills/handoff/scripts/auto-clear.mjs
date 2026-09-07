@@ -10,10 +10,10 @@ import path from "node:path";
 import { run } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 
-// 슬래시 커맨드("/nereus:resume")를 보내면 TUI 자동완성 팝업이 뜬 상태로 --enter 가 눌려
-// /nereus:research 가 실행된다(실측 확인). 그래서 슬래시 대신 스킬 호출을 문장으로 지시한다 —
-// SessionStart 주입이 실패한 상황에서도 resume 스킬이 스스로 handoff 를 검증하고, 없으면 멈춘다.
-export const DEFAULT_RESUME_PROMPT = "nereus:resume 을 Skill 로 불러 그 절차대로 이어서 진행해";
+// 슬래시 커맨드("/nereus:resume")는 보내지 않는다 — TUI 자동완성 팝업이 뜬 상태로 --enter 가
+// 눌려 /nereus:research 가 실행된다(실측 확인). 프롬프트에 지시문을 박아 넣지도 않는다:
+// 스킬 발동은 skill-router 의 nereus:resume 라우트가 보장하므로 여기는 짧은 자연어로 둔다.
+export const DEFAULT_RESUME_PROMPT = "이어서 진행해";
 const TURN_END_TIMEOUT_MS = 600_000; // 현재 턴이 끝나기를 기다린다(도구 실행이 길 수 있다)
 const CLEAR_TIMEOUT_MS = 60_000;
 const QUIET_MS = 3_000;      // 이만큼 출력이 없으면 턴이 끝난 것으로 본다
