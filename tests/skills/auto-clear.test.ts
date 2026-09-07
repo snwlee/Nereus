@@ -15,6 +15,16 @@ describe("auto-clear", () => {
     for (const s of steps) expect(s.args).toContain("term_abc");
   });
 
+  it("재개 프롬프트는 resume 스킬 호출을 명시하되 슬래시로 시작하지 않는다", () => {
+    // 실측: "/nereus:resume" 을 orca terminal send 로 넣으면 TUI 자동완성 팝업이
+    // /nereus:research 를 선택 상태로 잡는다(preview 에 "시장·기술 조사 절차" 가 떴다).
+    // --enter 를 붙이면 엉뚱한 스킬이 실행되므로 슬래시 커맨드는 이 경로로 보낼 수 없다.
+    expect(DEFAULT_RESUME_PROMPT.startsWith("/")).toBe(false);
+    // 목표는 문법이 아니라 resume 스킬이 실제로 발동되는 것이다
+    expect(DEFAULT_RESUME_PROMPT).toContain("nereus:resume");
+    expect(DEFAULT_RESUME_PROMPT).toMatch(/Skill/);
+  });
+
   it("does nothing outside an Orca terminal", () => {
     expect(planSteps({ ...base, handle: "" })).toBeNull();
     expect(planSteps({ ...base, handle: undefined })).toBeNull();
