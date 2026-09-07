@@ -1,5 +1,9 @@
 // 외부 도구 설치 상태 감지. 설치 명령은 플랫폼별 문자열이며 실행은 SKILL이 사용자 승인 후 한다.
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 import { which } from "../../../hooks/scripts/lib/exec.mjs";
+import { ENGINE_CANDIDATES } from "../../design/scripts/design-system.mjs";
 
 const npm = (pkg) => ({ darwin: `npm install -g ${pkg}`, win32: `npm install -g ${pkg}`, linux: `npm install -g ${pkg}` });
 
@@ -24,6 +28,35 @@ export const TOOLS = [
   { bin: "java", label: "JDK 21", required: false, group: "스택", install: { darwin: "brew install openjdk@21", win32: "winget install EclipseAdoptium.Temurin.21.JDK", linux: "apt install openjdk-21-jdk" } },
 ];
 
+// PATH 의 실행 파일이 아니라 디렉터리로 설치되는 도구. bin 탐색으로는 찾을 수 없다.
+export const DIR_TOOLS = [
+  {
+    key: "ui-ux-pro-max",
+    label: "ui-ux-pro-max (디자인 방향 생성기, 데이터 엔진으로만)",
+    required: false,
+    group: "선택",
+    entry: path.join("scripts", "search.py"),
+    dirs: ({ env, home, cwd }) => ENGINE_CANDIDATES({ env, home, cwd }),
+    install:
+      "mkdir -p ~/.local/share/nereus && cd ~/.local/share/nereus && git clone --depth 1 --filter=blob:none --sparse https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git ui-ux-pro-max && cd ui-ux-pro-max && git sparse-checkout set .claude/skills/ui-ux-pro-max",
+    note: "스킬로 설치하지 않는다 — 상류 번들에 nereus:design 과 트리거가 겹치는 design 스킬이 함께 들어 있다",
+  },
+];
+
+export function detectDirs({ env = process.env, home = os.homedir(), cwd = process.cwd(), exists } = {}) {
+  const has = exists ?? ((p) => { try { return fs.statSync(p).isFile(); } catch { return false; } });
+  return DIR_TOOLS.map((t) => ({
+    bin: t.key,
+    label: t.label,
+    required: t.required,
+    group: t.group,
+    present: t.dirs({ env, home, cwd }).some((d) => has(path.join(d, t.entry))),
+    installCmd: t.install,
+    plugin: null,
+    note: t.note ?? null,
+  }));
+}
+
 export const OFFICIAL_PLUGINS = ["skill-creator", "plugin-dev", "hookify", "mcp-server-dev", "claude-security", "security-guidance", "code-simplifier", "typescript-lsp", "jdtls-lsp", "kotlin-lsp"];
 export const COMPANION_MARKETPLACES = [
   "thedotmack/claude-mem → /plugin install claude-mem (메모리)",
@@ -45,7 +78,7 @@ export function renderTable(rows) {
 }
 
 if (process.argv[1] && /detect\.mjs$/.test(process.argv[1])) {
-  const rows = detect();
+  const rows = [...detect(), ...detectDirs()];
   process.stdout.write(renderTable(rows) + "\n\n");
   const missing = rows.filter((r) => !r.present);
   process.stdout.write(missing.length ? `미설치 ${missing.length}개: ${missing.map((m) => m.bin).join(", ")}\n` : "모든 도구 설치됨\n");

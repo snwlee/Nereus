@@ -73,6 +73,53 @@ diff --git a/lib/hero.dart b/lib/hero.dart
 `));
     expect(t.map((f) => f.file)).toEqual(["lib/hero.dart"]);
   });
+  it("keeps counting real token files: a token name plus a visual decision in the added lines", () => {
+    const tailwind = designTouched(d(`
+diff --git a/tailwind.config.js b/tailwind.config.js
+--- a/tailwind.config.js
++++ b/tailwind.config.js
++      colors: { brand: "#0F172A" },
+`));
+    expect(tailwind.map((f) => f.file)).toEqual(["tailwind.config.js"]);
+    expect(tailwind[0].why).toBe("design-tokens");
+
+    // camelCase 토큰 키 — 하이픈 CSS 속성이 아니어서 예전 VISUAL_SIGNAL 로는 잡히지 않았다
+    const theme = designTouched(d(`
+diff --git a/src/theme.ts b/src/theme.ts
+--- a/src/theme.ts
++++ b/src/theme.ts
++  fontFamily: { sans: ["IBM Plex Sans"] },
+`));
+    expect(theme.map((f) => f.file)).toEqual(["src/theme.ts"]);
+
+    const palette = designTouched(d(`
+diff --git a/src/palette.ts b/src/palette.ts
+--- a/src/palette.ts
++++ b/src/palette.ts
++export const accent = oklch(68% 0.21 250);
+`));
+    expect(palette.map((f) => f.file)).toEqual(["src/palette.ts"]);
+  });
+
+  it("does not treat a script as a design surface just because its name looks like a token file", () => {
+    // 회귀: design-system.mjs 는 경로 탐색·인자 조립 래퍼이고 시각 결정이 없다
+    const script = designTouched(d(`
+diff --git a/plugins/nereus/skills/design/scripts/design-system.mjs b/plugins/nereus/skills/design/scripts/design-system.mjs
+--- a/plugins/nereus/skills/design/scripts/design-system.mjs
++++ b/plugins/nereus/skills/design/scripts/design-system.mjs
++  const args = [String(query).trim(), "--design-system", "--format", "markdown"];
+`));
+    expect(script).toEqual([]);
+
+    const themeScript = designTouched(d(`
+diff --git a/scripts/theme.mjs b/scripts/theme.mjs
+--- a/scripts/theme.mjs
++++ b/scripts/theme.mjs
++  return JSON.parse(fs.readFileSync(file, "utf8"));
+`));
+    expect(themeScript).toEqual([]);
+  });
+
   it("ignores tests, docs and excluded globs", () => {
     const diff = d(`
 diff --git a/tests/Card.test.tsx b/tests/Card.test.tsx

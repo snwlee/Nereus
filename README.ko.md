@@ -64,7 +64,7 @@ flowchart LR
 | `/nereus:build` | TDD로 태스크 구현 |
 | `/nereus:e2e` | `[flow]` 태스크의 엔드투엔드 검증 |
 | `/nereus:debug` | 버그·실패의 근본 원인 조사 4단계 (수정 전 필수) |
-| `/nereus:design` | 디자인·UI·UX 작업의 Gemini 피드백 2라운드(방향·렌더). finish 하드 게이트 |
+| `/nereus:design` | 디자인·UI·UX 작업 3단계 — 방향 후보 생성(ui-ux-pro-max) → 방향 비평 → 렌더 비평. finish 하드 게이트 |
 | `/nereus:review` | 병렬 리뷰, 심각도 게이트 |
 | `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사 + 디자인 피드백) → 커밋, 아카이브, handoff 갱신 |
 | `/nereus:handoff` | 다음 세션용 상태 저장. `/clear` 하면 SessionStart 훅이 다시 주입해 자동으로 이어집니다 — `/nereus:resume` 은 수동 재개(다른 tasks 파일 지정 등)용입니다. |

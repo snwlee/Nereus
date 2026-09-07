@@ -22,6 +22,10 @@ const VISUAL_SIGNAL = new RegExp([
   ":root", "--[a-z][a-z0-9-]*\\s*:", "@media", "@keyframes", "keyframes",
   "(grid-template|flex-direction|font-size|font-family|line-height|letter-spacing|padding|margin|border-radius|box-shadow|background|opacity|transform|transition|z-index|gap)\\s*:",
   "(TextStyle|BoxDecoration|EdgeInsets|BorderRadius|ThemeData|TextTheme|ColorScheme|Color\\(0x)",
+  // 토큰 파일(tailwind.config·theme.ts·palette.ts)은 하이픈 CSS 속성이 아니라 camelCase 키를 쓴다
+  "(colors|fontFamily|fontSize|fontWeight|lineHeight|letterSpacing|borderRadius|boxShadow|spacing|screens|zIndex)\\s*:",
+  // 색 리터럴 자체. 팔레트 정의는 거의 항상 이것을 담는다
+  "#[0-9a-fA-F]{3,8}\\b", "oklch\\(", "rgba?\\(", "hsla?\\(",
 ].join("|"), "i");
 
 /** diff 를 파싱하되 "새 파일인가"까지 판정한다. 미추적 파일의 가짜 diff(--- 헤더 없음)도 신규로 본다. */
@@ -48,9 +52,12 @@ export function designTouched(diff, { exclude = [] } = {}) {
   for (const f of parseDesignDiff(diff)) {
     if (TEST_FILE.test(f.file) || SKIP_DIR.test(f.file) || DOC_EXT.test(f.file)) continue;
     if (res.some((re) => re.test(f.file))) continue;
+    const visual = f.added.some((l) => VISUAL_SIGNAL.test(l));
     const why = STYLESHEET.test(f.file) ? "stylesheet"
-      : TOKENS.test(f.file) ? "design-tokens"
-      : SURFACE.test(f.file) && f.added.some((l) => VISUAL_SIGNAL.test(l)) ? "visual-markup"
+      // 토큰도 시각 신호를 요구한다 — 이름이 theme/tokens/design-system 계열인 실행 스크립트는
+      // 토큰 정의 파일이 아니다(design-system.mjs 오탐). 확장자로 추측하지 않고 내용으로 판정한다.
+      : TOKENS.test(f.file) && visual ? "design-tokens"
+      : SURFACE.test(f.file) && visual ? "visual-markup"
       : null;
     if (why) out.push({ file: f.file, why, created: f.created });
   }

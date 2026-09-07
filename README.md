@@ -64,7 +64,7 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 | `/nereus:build` | Implement tasks with TDD |
 | `/nereus:e2e` | End-to-end checks for `[flow]` tasks |
 | `/nereus:debug` | Four-phase root-cause investigation before any fix |
-| `/nereus:design` | Two rounds of Gemini feedback (direction, rendered result) for any design/UI/UX work; hard gate at finish |
+| `/nereus:design` | Three stages for any design/UI/UX work — generate direction candidates (ui-ux-pro-max), critique the direction, critique the render; hard gate at finish |
 | `/nereus:review` | Parallel review, severity gate |
 | `/nereus:finish` | Completion gate (test evidence + integrity scan + design feedback), then commit, archive, update handoff |
 | `/nereus:handoff` | Save state for the next session. After `/clear` the SessionStart hook re-injects it and resumes automatically — `/nereus:resume` is only for resuming by hand (e.g. a different tasks file). |

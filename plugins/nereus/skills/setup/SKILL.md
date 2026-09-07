@@ -25,6 +25,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/mcp-doctor.mjs"
 - 승인된 명령만 실행한다. 표의 명령이 `winget`/`brew`/`npm`/`uv`이면 그대로 실행하고, URL 안내형이면 사용자에게 링크를 보여준다.
 - 파이프 설치 스크립트(`curl ... | sh`, `irm ... | iex`)는 실행 전에 원문 URL을 한 번 더 보여주고 승인받는다.
 - 선택 도구는 목록만 보여주고 묻지 않는다. 사용자가 원하면 설치한다.
+- `ui-ux-pro-max`(디자인 방향 생성기)는 표의 설치 명령 그대로 **데이터 엔진으로만** 넣는다. `npx ui-ux-pro-max-cli init` 은 쓰지 않는다 — 스킬 7개가 전역에 설치되고 그 중 `design` 스킬이 `nereus:design` 과 트리거가 겹친다.
 - 설치 후 `detect.mjs`를 다시 실행해 결과를 확인한다. 새 터미널이 필요한 도구(codegraph 등)는 그렇게 안내한다.
 
 ## 3. 동반 플러그인 안내

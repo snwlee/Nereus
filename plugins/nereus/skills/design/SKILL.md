@@ -1,6 +1,6 @@
 ---
 name: design
-description: 디자인·UI·UX·미감 작업은 Gemini 피드백을 반드시 거친다. 방향(코드 전)과 렌더 결과(코드 후) 2라운드, finish 하드 게이트. "디자인", "화면 만들어", "UI 수정", "예쁘게" 요청 시.
+description: 디자인·UI·UX·미감 작업은 Gemini 피드백을 반드시 거친다. 방향 후보 생성 → 방향 비평(코드 전) → 렌더 비평(코드 후), finish 하드 게이트. "디자인", "화면 만들어", "UI 수정", "예쁘게" 요청 시.
 ---
 
 # design
@@ -17,7 +17,22 @@ description: 디자인·UI·UX·미감 작업은 Gemini 피드백을 반드시 �
 
 로직만 바뀐 컴포넌트 편집, 테스트, 문서, `node_modules`·`dist`·`vendor` 는 걸리지 않는다.
 
-## 2라운드
+## 3단계
+
+### 0. generate — 방향 **후보**를 만든다
+빈 종이에서 방향을 쓰면 "깔끔하고 미니멀"이 나오고, 그건 디자인 언어가 아니라 기획 공백의 기본값이다.
+`ui-ux-pro-max` 데이터셋(스타일 79종·팔레트 192종·폰트 페어링 74종·UX 가이드 119종)에서 후보를 뽑아 시작한다.
+```bash
+D="${CLAUDE_PLUGIN_ROOT}/skills/design/scripts"
+node "$D/design-system.mjs" "결제 완료 히어로, 신뢰감, B2B SaaS" \
+  --project-name checkout --stack nextjs --variance 7 --density 3
+# → docs/design/checkout-system.md (스타일·팔레트 16역할·타이포 페어링·안티패턴·사전 배포 체크리스트)
+```
+다이얼: `--variance` 1=중앙정렬/미니멀 ~ 10=대담/비대칭, `--motion` 1=은은 ~ 10=복합, `--density` 1=여유 ~ 10=대시보드.
+
+**이 파일은 후보다. 그대로 구현하지 않는다.** 1단계 브리프의 출발점이고, 제품 맥락·톤·레퍼런스는 직접 얹는다.
+생성기가 없으면 이 단계를 건너뛰고 브리프를 직접 쓰되, 무색 기본값은 1단계에서 반려된다(설치 안내는 스크립트가 출력).
+끄려면 `.nereus/config.json` 에 `{ "design": { "systemGenerator": "none" } }`.
 
 ### 1. direction — 코드 쓰기 **전**
 신규 화면·컴포넌트를 만들 때 필수. 방향 브리프(스타일 방향, 팔레트, 타이포 페어링, 레퍼런스)를 먼저 적고 비평받는다.
@@ -25,7 +40,9 @@ description: 디자인·UI·UX·미감 작업은 Gemini 피드백을 반드시 �
 D="${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs"
 node "$D" direction --brief docs/design/hero-brief.md --target web
 ```
+0단계를 돌렸으면 그 파일을 그대로 먹인다 — `--brief docs/design/checkout-system.md`.
 브리프가 "깔끔하고 미니멀" 수준이면 Gemini 가 그 자체를 지적한다. REVISE 면 방향을 고쳐 다시 돌린다.
+REVISE 를 받으면 브리프를 직접 고치거나, 0단계를 다른 다이얼로 다시 생성한다.
 
 ### 2. visual — 렌더 결과 **후**
 구현 후 실제 스크린샷을 첨부해 미감을 판정받는다. 폭은 `design.widths`(기본 320/768/1440).
@@ -50,13 +67,14 @@ node "$D" status            # 종료코드 0=통과, 1=차단
 - 신규 디자인 파일이 있는데 direction 라운드가 한 번도 없으면 `design_direction_missing` 으로 차단된다.
 
 ## 채널
+- **generate**: `ui-ux-pro-max` 로컬 데이터셋(python3, 네트워크·API 키 불필요). 스킬이 아니라 데이터 엔진으로만 설치한다 — 상류 번들에 `nereus:design` 과 트리거가 겹치는 `design` 스킬이 함께 들어 있다.
 - **direction**: `agy`(Antigravity CLI) → 없으면 Gemini 웹세션 CLI
 - **visual**: Gemini 웹세션 CLI(`skills/image/scripts/gemini_cli.py ask --file`). `agy` 는 이미지 첨부를 못 받으므로 쓰지 않는다.
 - 웹세션이 죽으면 `SESSION DEAD` — Chrome 에서 gemini.google.com 로그인 상태를 확인한다(image 스킬 참조).
 
 ## 설정 (`.nereus/config.json` 또는 사용자 전역)
 ```json
-{ "design": { "enforce": "block", "exclude": ["src/legacy/**"], "widths": [320, 768, 1440] } }
+{ "design": { "enforce": "block", "exclude": ["src/legacy/**"], "widths": [320, 768, 1440], "systemGenerator": "ui-ux-pro-max" } }
 ```
 `enforce: "warn"` 으로 낮추면 findings 는 보고하되 차단하지 않는다. 기본은 `block`.
 
