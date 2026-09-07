@@ -58,7 +58,7 @@ flowchart LR
 
 | 커맨드 | 역할 |
 |---|---|
-| `/nereus:setup` | 도구 감지·설치, 설정 파일 생성 |
+| `/nereus:setup` | 도구 감지·설치, 설정 파일 생성, MCP 상주 비용 진단 |
 | `/nereus:intake [--quick]` | 요구사항이 명확해질 때까지 인터뷰 |
 | `/nereus:spec` | 스펙과 태스크 생성 (신규/기존 자동 판별) |
 | `/nereus:build` | TDD로 태스크 구현 |

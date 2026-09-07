@@ -1,6 +1,6 @@
 {
   "name": "nereus",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "개인 개발 하네스: intake → spec → build(TDD) → review → finish 워크플로, 전문가 에이전트, Baton 컨텍스트 핸드오프",
   "author": { "name": "snwlee", "email": "PGRRR119@gmail.com" },
   "homepage": "https://github.com/snwlee/Nereus",

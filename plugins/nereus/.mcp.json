@@ -1,6 +1,16 @@
 {
   "mcpServers": {
-    "browser": { "command": "npx", "args": ["-y", "chrome-devtools-mcp@latest"] },
-    "context7": { "command": "npx", "args": ["-y", "@upstash/context7-mcp@latest"] }
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@1.8.0"],
+      "env": {
+        "CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS": "1",
+        "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@4.0.5"]
+    }
   }
 }

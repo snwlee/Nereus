@@ -58,7 +58,7 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 
 | Command | Purpose |
 |---|---|
-| `/nereus:setup` | Detect and install tools, write config |
+| `/nereus:setup` | Detect and install tools, write config, report MCP resident cost |
 | `/nereus:intake [--quick]` | Interview until requirements are unambiguous |
 | `/nereus:spec` | Generate spec and tasks (greenfield or brownfield, auto-detected) |
 | `/nereus:build` | Implement tasks with TDD |

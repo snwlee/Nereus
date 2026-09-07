@@ -11,7 +11,13 @@ description: 외부 도구 감지·설치, 동반 플러그인 안내, 설정 �
 node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/detect.mjs"
 ```
 
-출력된 표를 사용자에게 그대로 보여준다. `--check` 인자만 있으면 여기서 끝낸다.
+출력된 표를 사용자에게 그대로 보여준다.
+
+MCP 상주 비용도 함께 본다 — 세션마다 서버가 뜨는데 그 비용이 평소 아무 데도 안 보인다.
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/mcp-doctor.mjs"
+```
+계열별 RSS·개수, 유령 프로세스(부모가 죽어 init 에 재부모된 것), `~/.npm/_npx` 캐시 크기, 설정 문제(버전 미고정·텔레메트리 on)를 보여준다. `--check` 인자만 있으면 여기까지 하고 끝낸다.
 
 ## 2. 설치
 
@@ -78,6 +84,26 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/autocompact.mjs" --set 80   # �
 
 현재 값을 보여주고 80으로 설정할지 묻는다. 승인하면 실행한다. `~/.claude/settings.json`의 `env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`에 쓰고 변경 전 파일을 백업한다. Claude Code 내부 상한이 약 83%라 그 위 값은 자동으로 조정된다. 새 세션부터 적용된다.
 
-## 7. 마무리
+## 7. MCP 서버 개별로 끄기
+
+nereus 는 MCP 서버 두 개를 제공한다 — `browser`(chrome-devtools-mcp), `context7`. 세션마다 둘 다 상주하므로 세션이 많으면 비용이 배수로 붙는다.
+
+**끄는 방법은 사용자 설정이다.** `~/.claude/settings.json` 에 넣는다 — 플러그인 업데이트가 `.mcp.json` 을 덮어써도 살아남는다.
+```json
+{ "deniedMcpServers": ["plugin:nereus:browser"] }
+```
+- 서버 이름 형식은 `plugin:<플러그인>:<서버>` 이고 **정확히 일치**해야 한다. 커맨드·URL 은 정규식으로도 쓸 수 있다(`"npx.*chrome-devtools-mcp"`).
+- `enabledPlugins` 로 끄면 nereus 하네스 전체를 잃는다. `disabledMcpjsonServers` 는 프로젝트 `.mcp.json` 전용이라 플러그인 서버에는 듣지 않는다.
+
+**끄면 잃는 것**
+
+| 서버 | 잃는 것 |
+|---|---|
+| `plugin:nereus:browser` | 스크린샷·Lighthouse·콘솔 로그 → **nereus:design 의 렌더 라운드**, qa 의 브라우저 검증, seo 감사가 막힌다 |
+| `plugin:nereus:context7` | 라이브러리 버전별 문서 조회. common 규칙 5번(기억으로 API 쓰지 않기)의 근거가 사라진다 |
+
+`.mcp.json` 쪽에서 이미 해둔 것: 버전 고정(`@latest` 금지 — 세션마다 레지스트리 조회 + `~/.npm/_npx` 무한 증식), `CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS=1`(텔레메트리 watchdog 자식 프로세스 제거, 실측 51MB/서버).
+
+## 8. 마무리
 
 무엇을 설치했고 무엇이 남았는지 표로 요약한다. 남은 필수 도구가 있으면 어떤 워크플로 단계가 영향을 받는지 알려준다 (예: `ooo` 없음 → intake 인터뷰 불가, `ocr` 없음 → review는 2차 의견만).
