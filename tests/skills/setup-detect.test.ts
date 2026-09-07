@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
+import path from "node:path";
 import { detect, detectDirs, renderTable, TOOLS, DIR_TOOLS } from "../../plugins/nereus/skills/setup/scripts/detect.mjs";
+
+// detectDirs 는 path.join 으로 후보를 만든다 — 기대 경로는 POSIX 로 쓰고 플랫폼 구분자로 정규화해 비교한다
+const j = (...seg: string[]) => path.join(...seg);
 
 describe("setup detect", () => {
   it("declares required and optional tools with per-platform installers", () => {
@@ -40,7 +44,7 @@ describe("setup detectDirs", () => {
 
   it("reports present when any candidate directory holds the entry file", () => {
     const home = "/home/u";
-    const engine = `${home}/.local/share/nereus/ui-ux-pro-max/.claude/skills/ui-ux-pro-max/scripts/search.py`;
+    const engine = j(home, ".local", "share", "nereus", "ui-ux-pro-max", ".claude", "skills", "ui-ux-pro-max", "scripts", "search.py");
     const rows = detectDirs({ home, cwd: "/repo", exists: (p: string) => p === engine });
     const row = rows.find((r: any) => r.bin === "ui-ux-pro-max");
     expect(row.present).toBe(true);
