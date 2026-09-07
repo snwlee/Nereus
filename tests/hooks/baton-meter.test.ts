@@ -39,6 +39,25 @@ describe("baton-meter hook", () => {
     expect(a.hookSpecificOutput.additionalContext).toContain("하드 스톱");
     expect(b).not.toBeNull();
   });
+
+  it("hard stop routes through the handoff skill so its auto-clear step runs", () => {
+    // 예전 문구는 절차를 직접 서술하고 "사용자가 /clear 를 친다"로 끝나 SKILL 6단계(auto-clear)가
+    // 통째로 빠졌다. auto-clear.log 가 한 번도 생기지 않은 원인이다.
+    const { input, deps } = mk(0.85);
+    const ctx = handle(input, deps)!.hookSpecificOutput.additionalContext;
+    expect(ctx).toContain("nereus:handoff");
+    expect(ctx).toMatch(/Skill/);
+    expect(ctx).toMatch(/auto-clear|자동/);
+    // 사용자에게 /clear 를 치라고 떠넘기지 않는다
+    expect(ctx).not.toMatch(/\/clear 만 치면/);
+  });
+
+  it("the warn message also names the skill rather than restating the steps", () => {
+    const { input, deps } = mk(0.55);
+    const ctx = handle(input, deps)!.hookSpecificOutput.additionalContext;
+    expect(ctx).toContain("nereus:handoff");
+    expect(ctx).toMatch(/70%/); // 강제 정지 지점을 알려준다
+  });
   it("is silent when transcript unreadable", () => {
     const { input, deps } = mk(0.9);
     expect(handle(input, { ...deps, usage: () => null })).toBeNull();

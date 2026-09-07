@@ -36,16 +36,18 @@ export function handle(input, deps = {}) {
   const pct = Math.round(ratio * 100);
   const sid = input.session_id || "nosession";
 
+  // 절차를 여기서 서술하지 않고 nereus:handoff 스킬로 넘긴다 — 서술하면 SKILL 의 마지막 단계
+  // (auto-clear: /clear·재개 자동 입력)가 빠진다. 실제로 그래서 auto-clear 가 한 번도 돌지 않았다.
   if (ratio >= cfg.baton.hard) {
     return contextPayload("PostToolUse",
-      `[Baton 하드 스톱 ${pct}%] 진행 중단. 지금 .nereus/handoff.md 전체 재작성(nereus:baton 형식) → 커밋 → 사용자에게 "/clear 만 치면 자동으로 이어집니다" 안내 후 정지.`);
+      `[Baton 하드 스톱 ${pct}%] 진행 중단. 새 작업을 시작하지 말고 지금 Skill 로 nereus:handoff 를 불러 그 절차를 끝까지 따르세요 — handoff.md 전체 재작성 → 커밋 → auto-clear(/clear·재개 자동 입력)까지. 절차를 기억으로 재현하지 마세요.`);
   }
   if (ratio >= cfg.baton.warn) {
     const key = `warn-${sid}`;
     if (marks.hasMark(key)) return null;
     marks.setMark(key);
     return contextPayload("PostToolUse",
-      `[Baton ${pct}%] 새 태스크 시작 금지. 현재 태스크만 끝내고 handoff.md 재작성 → 커밋 → 정지. ${Math.round(cfg.baton.hard * 100)}%에서 강제 정지.`);
+      `[Baton ${pct}%] 새 태스크 시작 금지. 현재 태스크를 끝낸 뒤 Skill 로 nereus:handoff 를 부르세요. ${Math.round(cfg.baton.hard * 100)}%에서 강제 정지합니다.`);
   }
   return null;
 }
