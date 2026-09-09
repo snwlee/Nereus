@@ -117,3 +117,11 @@ nereus 는 MCP 서버 두 개를 제공한다 — `browser`(chrome-devtools-mcp)
 ## 8. 마무리
 
 무엇을 설치했고 무엇이 남았는지 표로 요약한다. 남은 필수 도구가 있으면 어떤 워크플로 단계가 영향을 받는지 알려준다 (예: `ooo` 없음 → intake 인터뷰 불가, `ocr` 없음 → review는 2차 의견만).
+
+## 9. Codex에서 쓰기 (하네스 공용 어댑터)
+
+저장소 루트의 `.codex/hooks.json`이 같은 Node 스크립트를 Codex 이벤트에 연결한다 (입력 차이는 `hooks/scripts/lib/harness.mjs`가 흡수). Codex 세션에서 쓰는 순서:
+
+1. `codex` 실행 후 `/hooks`에서 Nereus 훅을 검토·신뢰한다. 프로젝트 훅은 trust 전에는 건너뛰어진다.
+2. 버전 주의: Codex 빌드에 따라 PreToolUse deny가 `apply_patch`에 안 먹을 수 있다(상류 이슈). 그 경우 TDD 강제(block)는 PostToolUse 경고 + finish 게이트가 대신 막는다 — `tdd.enforce`를 `"warn"`으로 두고 gate 통과를 완료 조건으로 삼는다.
+3. 스킬·MCP는 Codex 설정을 따로 잡는다 (`~/.codex/config.toml`의 skills·mcp_servers). 훅 매핑만으로 스킬이 따라오지 않는다.

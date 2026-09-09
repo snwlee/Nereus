@@ -1,0 +1,118 @@
+{
+  "description": "Nereus 하네스 훅 (Codex 매핑). 같은 Node 스크립트를 Claude·Codex가 공유한다. 입력 차이는 hooks/scripts/lib/harness.mjs 가 흡수한다. 프로젝트 훅은 trust 필요: codex 실행 후 /hooks 에서 검토·신뢰할 것.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/pre-tool-guard.mjs\"",
+            "timeout": 10,
+            "statusMessage": "[nereus] pre-tool guard"
+          }
+        ]
+      },
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/pre-tool-guard.mjs\"",
+            "timeout": 10,
+            "statusMessage": "[nereus] pre-tool guard"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/tdd-guard.mjs\"",
+            "timeout": 10,
+            "statusMessage": "[nereus] tdd guard"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/baton-meter.mjs\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/observe.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/skill-router.mjs\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/learn-watch.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/session-start.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/pre-compact.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/finish-check.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/plugins/nereus/hooks/scripts/session-end.mjs\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
