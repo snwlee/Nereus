@@ -11,6 +11,7 @@ import { parseDiff } from "./lib/integrity.mjs";
 import { globToRegExp } from "./tdd-guard.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { tddVerdict, findTestFor, OVERRIDE_FILE } from "./lib/tdd-gate.mjs";
+import { normalizeToolEvent } from "./lib/harness.mjs";
 import { detectTestRunner } from "./lib/stack.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
 
@@ -92,7 +93,7 @@ function defaultTddInputs(cwd, rel) {
 const dropOverride = (cwd) => { try { fs.unlinkSync(path.join(cwd, OVERRIDE_FILE)); } catch { /* 이미 없음 */ } };
 
 export function tddCheck(input, cwd, deps = {}) {
-  const fp = input.tool_input?.file_path;
+  const fp = normalizeToolEvent(input).files[0];
   if (!fp) return null;
   const rel = (path.isAbsolute(fp) ? path.relative(cwd, fp) : fp).replace(/\\/g, "/");
   const v = tddVerdict({ rel, ...(deps.tdd ?? defaultTddInputs)(cwd, rel) });
@@ -102,9 +103,10 @@ export function tddCheck(input, cwd, deps = {}) {
 }
 
 export function handle(input, deps = {}) {
-  const cwd = input.cwd || process.cwd();
-  const tool = input.tool_name;
-  const target = tool === "Bash" ? input.tool_input?.command ?? "" : input.tool_input?.file_path ?? "";
+  const ev = normalizeToolEvent(input); // Claude·Codex·OpenCode(브릿지) 입력을 하나로. 아래는 정규형만 본다.
+  const cwd = ev.cwd;
+  const tool = ev.tool;
+  const target = ev.kind === "exec" ? ev.command ?? "" : ev.files[0] ?? "";
   if (!target) return null;
   const rules = (deps.rules ?? (() => loadRules(cwd)))();
   for (const r of rules) {

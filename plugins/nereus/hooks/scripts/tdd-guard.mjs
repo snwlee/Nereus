@@ -5,6 +5,7 @@ import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
 import { detectTestRunner, isSourceFile, isTestFile } from "./lib/stack.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
+import { normalizeToolEvent } from "./lib/harness.mjs";
 
 export function globToRegExp(glob) {
   let out = "";
@@ -31,9 +32,10 @@ function fileHistory(cwd, sid) {
 }
 
 export function handle(input, deps = {}) {
-  const cwd = input.cwd || process.cwd();
-  const filePath = input.tool_input?.file_path;
+  const ev = normalizeToolEvent(input); // Claude·Codex·OpenCode(브릿지) 입력을 하나로. 아래는 정규형만 본다.
+  const filePath = ev.files[0];
   if (!filePath) return null;
+  const cwd = ev.cwd;
   const rel = path.relative(cwd, filePath).replace(/\\/g, "/");
   if (!isSourceFile(rel) && !isTestFile(rel)) return null;
 
@@ -43,7 +45,7 @@ export function handle(input, deps = {}) {
   const runner = (deps.runner ?? (() => detectTestRunner(cwd)))();
   if (!runner) return null;
 
-  const store = deps.loadHistory ? deps : fileHistory(cwd, input.session_id || "nosession");
+  const store = deps.loadHistory ? deps : fileHistory(cwd, ev.sessionId);
   const history = store.loadHistory();
   const next = [...history, rel];
   store.saveHistory(next);
