@@ -14,7 +14,8 @@ python3 "$S" image --prompt-file p.txt --file ref.png --out ./out --name icon   
 python3 "$S" image ... --backend api                        # API 강제
 python3 "$S" image --prompt "flat orca icon" --out ./assets --name orca --transparent   # 투명 배경(크로마키)
 python3 "$S" image --prompt "product photo" --out ./assets --name cup --transparent=rembg  # 사진형은 rembg
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/chrome_cookies.py"          # (macOS) 쿠키 갱신
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/chrome_cookies.py"          # (macOS) 쿠키 자동 갱신
+pbpaste | node "${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/cookies-import.mjs" -   # (Windows/Linux) 확장 Export → 쿠키 파일
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/remove_watermark.py" out/icon.png  # 워터마크 인페인팅
 ```
 첫 실행 시 venv(`<nereus 설정 디렉터리>/cache/gemini-venv`)를 만들고 `gemini_webapi`, `google-genai`를 설치한다. `browser_cookie3`는 Keychain 프롬프트에 걸리므로 절대 설치하지 않는다.
@@ -37,7 +38,26 @@ Gemini는 알파 채널을 내지 못한다. 스킬이 두 단계로 만든다.
 ## 백엔드 (`--backend auto|web|api`, 설정 `image.backend`)
 - **web**: 로그인된 Gemini 웹 세션. 무료. macOS에서 Chrome 쿠키(`__Secure-1PSID`, `__Secure-1PSIDTS`)를 자동으로 읽고, 세션이 죽으면 스스로 다시 읽는다.
 - **api**: `GEMINI_API_KEY`로 google-genai 호출. 이미지 모델 `gemini-2.5-flash-image`. 소액 과금.
-- **auto**: macOS→web, 그 외→키 있으면 api, 없으면 쿠키 파일이 있을 때만 web, 아니면 안내 후 종료. Windows Chrome은 App-Bound Encryption으로 쿠키 자동 추출이 안 된다.
+- **auto**: macOS→web, 그 외→키 있으면 api, 없으면 쿠키 파일이 있을 때만 web, 아니면 안내 후 종료.
+
+### Windows/Linux 쿠키 (App-Bound Encryption 우회 아님)
+Chrome 127+ 는 쿠키 키를 SYSTEM 권한 Elevation Service 가 들고 **서명된 chrome.exe 만** 복호화하게 한다.
+그래서 `chrome_cookies.py`(macOS Keychain 방식)를 Windows 로 옮길 길이 없다 — 정당한 경로는 브라우저
+안에서 `chrome.cookies` API 를 쓰는 **확장 프로그램**뿐이다(App-Bound 와 무관하고 HTTPOnly 도 읽는다).
+
+확장 설치는 자동화할 수 없다(웹스토어 확장은 CLI 설치 불가). `Export` 이후를 스크립트가 받는다:
+```bash
+C="${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/cookies-import.mjs"
+node "$C" ~/Downloads/google.com_cookies.txt   # Get cookies.txt LOCALLY (Netscape)
+pbpaste | node "$C" -                          # Cookie-Editor (Export 는 클립보드에 복사한다)
+```
+포맷은 확장자가 아니라 **내용으로** 판별한다(JSON 배열 / `{name: value}` / Netscape, `#HttpOnly_` 접두 포함).
+`__Secure-1PSID`(`g.` 시작)와 `__Secure-1PSIDTS`(`sidts-` 시작) 두 개만 골라 검증 후 `0600` 으로 쓴다.
+값은 출력하지 않는다 — 이름과 길이만 보고한다.
+
+**남는 제약**: Chrome 이 `__Secure-1PSIDTS` 를 주기적으로 회전시키므로 `SESSION DEAD` 가 나면
+다시 Export 해야 한다. 확장은 그 회전을 해결하지 못한다. 재추출이 번거로우면 `GEMINI_API_KEY`(api 백엔드)가
+원리적으로 이 문제가 없다.
 - 쿠키 파일 위치: macOS `~/.config/nereus/secrets/gemini-web-cookies.json`, Windows `%APPDATA%\nereus\secrets\...`. 이 파일은 시크릿이다. 내용을 출력하지 않는다.
 
 ## 운영 지식 (실측)

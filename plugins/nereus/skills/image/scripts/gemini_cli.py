@@ -83,9 +83,14 @@ def choose_backend(requested: str) -> str:
         return "api"
     if COOKIES.is_file():
         return "web"
-    print("[backend] Windows/Linux에서는 Chrome 쿠키를 자동으로 읽을 수 없습니다 (App-Bound Encryption).\n"
-          "  1) GEMINI_API_KEY 를 설정하면 API 백엔드를 씁니다 (소액 과금)\n"
-          f"  2) 또는 브라우저 개발자도구에서 __Secure-1PSID, __Secure-1PSIDTS 값을 복사해\n     {COOKIES} 에 {{\"__Secure-1PSID\": \"...\", \"__Secure-1PSIDTS\": \"...\"}} 형식으로 저장하세요",
+    here = Path(__file__).parent
+    print("[backend] Windows/Linux에서는 Chrome 쿠키를 자동으로 읽을 수 없습니다 (App-Bound Encryption:\n"
+          "  Chrome 127+ 는 쿠키 키를 SYSTEM 서비스가 들고 서명된 chrome.exe 만 복호화하게 합니다).\n"
+          "  1) GEMINI_API_KEY 를 설정하면 API 백엔드를 씁니다 — 쿠키 회전 문제가 없어 가장 견고합니다\n"
+          "  2) 또는 쿠키 확장(Get cookies.txt LOCALLY / Cookie-Editor)으로 gemini.google.com 에서 Export 한 뒤:\n"
+          f"       node \"{here / 'cookies-import.mjs'}\" <내려받은 파일>\n"
+          "     클립보드로 복사했다면 파일 대신 - 를 넘기세요 (pbpaste | node ... -).\n"
+          "     확장은 브라우저 안에서 동작하므로 App-Bound Encryption 과 무관하고 HTTPOnly 쿠키도 읽습니다.",
           file=sys.stderr)
     sys.exit(2)
 

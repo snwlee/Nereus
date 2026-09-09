@@ -27,6 +27,15 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/mcp-doctor.mjs"
 - 선택 도구는 목록만 보여주고 묻지 않는다. 사용자가 원하면 설치한다.
 - `ui-ux-pro-max`(디자인 방향 생성기)는 표의 설치 명령 그대로 **데이터 엔진으로만** 넣는다. `npx ui-ux-pro-max-cli init` 은 쓰지 않는다 — 스킬 7개가 전역에 설치되고 그 중 `design` 스킬이 `nereus:design` 과 트리거가 겹친다.
 - 설치 후 `detect.mjs`를 다시 실행해 결과를 확인한다. 새 터미널이 필요한 도구(codegraph 등)는 그렇게 안내한다.
+- **Windows/Linux 에서 Gemini 웹세션을 쓸 경우** 쿠키 확장을 안내한다(감지 불가 — 브라우저 안에 있다).
+  Chrome 127+ App-Bound Encryption 때문에 `chrome_cookies.py` 자동 추출이 macOS 전용이기 때문이다.
+  둘 중 하나만 설치하면 된다:
+  - [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) — 원클릭으로 `cookies.txt` 다운로드
+  - [Cookie-Editor](https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm) — Export 를 클립보드에 JSON 으로 복사
+
+  설치 후 `gemini.google.com` 로그인 탭에서 Export 하고
+  `node "${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/cookies-import.mjs" <파일|->` 로 넘긴다.
+  재추출이 번거로우면 `GEMINI_API_KEY`(api 백엔드)를 권한다 — 쿠키 회전 문제가 원리적으로 없다.
 
 ## 3. 동반 플러그인 안내
 
