@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { handle } from "../../plugins/nereus/hooks/scripts/baton-meter.mjs";
+import { handle, DEFAULT_USAGE_READER } from "../../plugins/nereus/hooks/scripts/baton-meter.mjs";
 
 const mk = (ratio: number, over: any = {}) => {
   const marks = new Set<string>(over.marks ?? []);
@@ -89,10 +89,52 @@ describe("baton-meter hook", () => {
     expect(out.hookSpecificOutput.additionalContext).toMatch(/하드 스톱 75%/);
   });
 
+  it("transcript 를 주지 않는 하네스에서는 조용히 끝나지 않고 1회 경고한다", () => {
+    // OpenCode 는 세션을 SQLite 에 담아 transcript_path 를 주지 않는다. 예전에는 return null 이라
+    // Baton 이 조용히 무동작했다 — 보호가 0인데 그 사실이 어디에도 드러나지 않았다.
+    const { input, deps } = mk(0.9);
+    const { transcript_path, ...noTranscript } = input;
+    const first = handle(noTranscript, { ...deps, usage: () => null })!;
+    expect(first).not.toBeNull();
+    const ctx = first.hookSpecificOutput.additionalContext;
+    expect(ctx).toMatch(/측정|자동/);
+    expect(ctx).toContain("nereus:handoff");
+    // 매 도구 호출마다 반복하면 노이즈다 — 세션당 한 번
+    expect(handle(noTranscript, { ...deps, usage: () => null })).toBeNull();
+  });
+
+  it("transcript 는 있는데 usage 레코드가 아직 없으면 조용하다 (세션 초반은 정상)", () => {
+    // 실측: 응답 전에 끝난 Codex 세션은 token_count 레코드가 없다(3줄, task_started 만).
+    // 그것을 측정 불가로 경고하면 모든 세션 시작이 노이즈가 된다.
+    const { input, deps } = mk(0.9);
+    expect(handle(input, { ...deps, usage: () => null })).toBeNull();
+    expect([...deps.marks].some((m) => m.includes("nometer"))).toBe(false);
+  });
+
+  it("Codex transcript 가 준 한도를 그대로 분모로 쓴다 (역산·모델 표 추측 없이)", () => {
+    const { input, deps } = mk(0);
+    // input 129200 / window 258400 = 50% → warn(50%) 발화, hard(70%) 미달
+    const usage = () => ({ inputTotal: 129_200, limit: 258_400, model: "gpt-5.4" });
+    const out = handle(input, { ...deps, usage, official: () => null })!;
+    expect(out.hookSpecificOutput.additionalContext).toMatch(/50%/);
+    expect(out.hookSpecificOutput.additionalContext).not.toMatch(/하드 스톱/);
+  });
+
   it("does not cache a limit when the official ratio is zero or usage is missing", () => {
     const { input, deps } = mk(0);
     handle(input, { ...deps, usage: () => ({ inputTotal: 88_917, model: "m" }), official: () => 0 });
     handle(input, { ...deps, usage: () => null, official: () => 0.5 });
     expect(deps.limits["s1"]).toBeUndefined();
+  });
+});
+
+describe("baton-meter 기본 usage 리더", () => {
+  it("두 하네스 포맷을 모두 보는 readUsage 를 쓴다 (Claude 전용 파서가 아니다)", () => {
+    // 파서를 만들어도 여기서 쓰지 않으면 Codex 는 여전히 무동작이다.
+    const codex = JSON.stringify({
+      type: "event_msg",
+      payload: { type: "token_count", info: { last_token_usage: { input_tokens: 999 }, model_context_window: 258400 } },
+    });
+    expect(DEFAULT_USAGE_READER("/x.jsonl", { readFile: () => codex })).toMatchObject({ inputTotal: 999, limit: 258400 });
   });
 });

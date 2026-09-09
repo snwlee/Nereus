@@ -2,10 +2,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
-import { lastAssistantUsage, usageRatio } from "./lib/transcript.mjs";
+import { readUsage, usageRatio } from "./lib/transcript.mjs";
+import { detectHarness } from "./lib/harness.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
 import { officialRatio, cachedLimit, saveLimit, snapLimit } from "./ctx-sink.mjs";
+
+// Claude 와 Codex transcript 를 모두 본다. Claude 전용 파서를 쓰면 Codex 는 무동작이다.
+export const DEFAULT_USAGE_READER = (p, opts) => readUsage(p, opts);
 
 function fileMarks(cwd) {
   const dir = projectStateDir(cwd);
@@ -20,10 +24,24 @@ export function handle(input, deps = {}) {
   const cwd = input.cwd || process.cwd();
   // statusline 이 남긴 공식 비율이 있으면 그것을, 없으면 transcript 추정치를 쓴다.
   const official = (deps.official ?? officialRatio)(input.session_id);
-  const usage = (deps.usage ?? ((p) => lastAssistantUsage(p)))(input.transcript_path);
+  const usage = (deps.usage ?? DEFAULT_USAGE_READER)(input.transcript_path);
+  const marksEarly = deps.hasMark ? deps : fileMarks(cwd);
   let ratio = official;
   if (ratio === null || ratio === undefined) {
-    if (!usage) return null;
+    if (!usage) {
+      // 측정 불가와 "아직 레코드가 없음"을 구분한다.
+      // transcript_path 를 주지 않는 하네스(OpenCode 는 세션을 SQLite 에 담는다)에서는 Baton 이
+      // 원리적으로 측정할 수 없다. 예전에는 여기서 return null 이라 조용히 무동작했다 —
+      // 보호가 0인데 그 사실이 드러나지 않는 것이 가장 나쁜 실패다.
+      // transcript 가 있는데 레코드가 없는 것은 세션 초반이라 정상이므로 조용히 넘어간다.
+      if (input.transcript_path) return null;
+      const key = `nometer-${input.session_id || "nosession"}`;
+      if (marksEarly.hasMark(key)) return null;
+      marksEarly.setMark(key);
+      return contextPayload("PostToolUse",
+        `[Baton] 이 하네스는 transcript 를 주지 않아 컨텍스트 사용률을 자동으로 측정할 수 없습니다(${detectHarness(input)}). ` +
+        "자동 하드 스톱이 걸리지 않으니, 작업이 길어지면 스스로 판단해 Skill 로 nereus:handoff 를 부르세요.");
+    }
     // 학습해 둔 실제 한도가 있으면 그것을 쓴다. 모델 표는 1M 세션을 200k 로 오판한다.
     ratio = usageRatio(usage, { limit: (deps.loadLimit ?? cachedLimit)(input.session_id) });
   } else if (usage && official > 0) {
@@ -32,7 +50,7 @@ export function handle(input, deps = {}) {
     if (learned) (deps.saveLimit ?? saveLimit)(input.session_id, learned);
   }
   const cfg = (deps.config ?? (() => loadConfig({ cwd })))();
-  const marks = deps.hasMark ? deps : fileMarks(cwd);
+  const marks = marksEarly;
   const pct = Math.round(ratio * 100);
   const sid = input.session_id || "nosession";
 
