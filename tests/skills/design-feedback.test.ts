@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { directionPrompt, visualPrompt, parseCritique, planRunner, feedbackReport } from "../../plugins/nereus/skills/design/scripts/design-feedback.mjs";
+import { directionPrompt, visualPrompt, parseCritique, planRunner, feedbackReport, MCP_SOURCE, promptFor, planRecord } from "../../plugins/nereus/skills/design/scripts/design-feedback.mjs";
 
 describe("prompts", () => {
   it("direction prompt carries the brief and demands a verdict line", () => {
@@ -73,5 +73,64 @@ describe("feedbackReport", () => {
   });
   it("says 통과 when nothing is outstanding", () => {
     expect(feedbackReport({ pass: true, findings: [] })).toContain("통과");
+  });
+});
+
+describe("promptFor — MCP 로 내보낼 프롬프트", () => {
+  it("phase 에 맞는 프롬프트를 그대로 돌려준다", () => {
+    const d = promptFor({ phase: "direction", brief: "결제 히어로. 라이트 럭셔리." });
+    expect(d).toBe(directionPrompt({ brief: "결제 히어로. 라이트 럭셔리.", target: "web", refs: "" }));
+
+    const v = promptFor({ phase: "visual", shots: [{ path: "s.png", width: 320 }], context: "히어로" });
+    expect(v).toBe(visualPrompt({ shots: [{ path: "s.png", width: 320 }], context: "히어로" }));
+  });
+
+  it("알 수 없는 phase 는 거부한다", () => {
+    expect(() => promptFor({ phase: "nope" })).toThrow(/direction|visual/);
+  });
+
+  it("visual 은 스크린샷이 없으면 거부한다 — 첨부 없는 미감 비평은 성립하지 않는다", () => {
+    expect(() => promptFor({ phase: "visual", shots: [] })).toThrow(/스크린샷/);
+  });
+});
+
+describe("planRecord — MCP 응답을 라운드로", () => {
+  const hashOf = (files: string[]) => Object.fromEntries(files.map((f) => [f, "h:" + f]));
+
+  it("MCP 채널을 별도 source 로 남긴다 — 나중에 어느 채널이 판정했는지 추적한다", () => {
+    const r = planRecord({ phase: "direction", critique: "- [LOW] x\nVERDICT: OK", hashOf });
+    expect(r.round.source).toBe(MCP_SOURCE);
+    expect(MCP_SOURCE).toMatch(/mcp/);
+  });
+
+  it("verdict 를 기존 파서로 읽는다 (fail-closed 유지)", () => {
+    expect(planRecord({ phase: "direction", critique: "VERDICT: OK", hashOf }).round.verdict).toBe("OK");
+    // VERDICT 줄이 없으면 REVISE — MCP 경로가 게이트를 느슨하게 만들면 안 된다
+    expect(planRecord({ phase: "direction", critique: "좋아 보입니다", hashOf }).round.verdict).toBe("REVISE");
+    expect(planRecord({ phase: "direction", critique: "- [HIGH] 대비 부족\nVERDICT: OK", hashOf }).round.verdict).toBe("REVISE");
+  });
+
+  it("visual 은 --files 를 해시로 바꿔 커버 대상을 남긴다", () => {
+    const r = planRecord({ phase: "visual", critique: "VERDICT: OK", files: ["src/a.css", " src/b.tsx "], hashOf });
+    expect(Object.keys(r.round.files)).toEqual(["src/a.css", "src/b.tsx"]);
+    expect(r.round.phase).toBe("visual");
+  });
+
+  it("direction 라운드는 파일을 커버하지 않는다", () => {
+    expect(planRecord({ phase: "direction", critique: "VERDICT: OK", files: ["src/a.css"], hashOf }).round.files).toEqual({});
+  });
+
+  it("visual 에 파일이 없으면 경고를 붙인다 — 게이트가 계속 차단하기 때문", () => {
+    const r = planRecord({ phase: "visual", critique: "VERDICT: OK", files: [], hashOf });
+    expect(r.warning).toMatch(/files|커버/i);
+  });
+
+  it("빈 비평은 거부한다 — 빈 기록은 게이트 우회다", () => {
+    expect(() => planRecord({ phase: "visual", critique: "   ", hashOf })).toThrow(/비평/);
+    expect(() => planRecord({ phase: "direction", critique: "", hashOf })).toThrow(/비평/);
+  });
+
+  it("알 수 없는 phase 는 거부한다", () => {
+    expect(() => planRecord({ phase: "nope", critique: "VERDICT: OK", hashOf })).toThrow(/direction|visual/);
   });
 });

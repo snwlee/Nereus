@@ -36,6 +36,8 @@ node "$D/design-system.mjs" "결제 완료 히어로, 신뢰감, B2B SaaS" \
 
 ### 1. direction — 코드 쓰기 **전**
 신규 화면·컴포넌트를 만들 때 필수. 방향 브리프(스타일 방향, 팔레트, 타이포 페어링, 레퍼런스)를 먼저 적고 비평받는다.
+
+**채널 1순위는 browser MCP 다** (아래 "채널" 참조). MCP 가 안 되면 CLI 로 내려간다:
 ```bash
 D="${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs"
 node "$D" direction --brief docs/design/hero-brief.md --target web
@@ -46,6 +48,7 @@ REVISE 를 받으면 브리프를 직접 고치거나, 0단계를 다른 다이�
 
 ### 2. visual — 렌더 결과 **후**
 구현 후 실제 스크린샷을 첨부해 미감을 판정받는다. 폭은 `design.widths`(기본 320/768/1440).
+**채널 1순위는 browser MCP 다.** MCP 가 안 되면 CLI 로 내려간다:
 ```bash
 # 스크린샷은 chrome-devtools MCP(take_screenshot) 또는 Playwright 로 먼저 확보한다
 node "$D" visual \
@@ -67,10 +70,40 @@ node "$D" status            # 종료코드 0=통과, 1=차단
 - 신규 디자인 파일이 있는데 direction 라운드가 한 번도 없으면 `design_direction_missing` 으로 차단된다.
 
 ## 채널
-- **generate**: `ui-ux-pro-max` 로컬 데이터셋(python3, 네트워크·API 키 불필요). 스킬이 아니라 데이터 엔진으로만 설치한다 — 상류 번들에 `nereus:design` 과 트리거가 겹치는 `design` 스킬이 함께 들어 있다.
+
+우선순위: **browser MCP → agy → Gemini 웹세션 CLI**. MCP 를 앞에 두는 이유는 쿠키·플랫폼에
+의존하지 않기 때문이다 — Windows 는 Chrome 127+ App-Bound Encryption 때문에 쿠키 자동 추출이
+안 되고(`image` 스킬 참조), `agy` 는 이미지 첨부를 못 받아 visual 라운드를 아예 못 한다.
+
+### 1순위 — browser MCP (직접 조작)
+스크립트는 MCP 도구를 부를 수 없다. 그래서 **프롬프트를 내보내고 응답을 들여오는** 두 단계로 잇는다.
+```bash
+D="${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs"
+node "$D" prompt direction --brief docs/design/hero-brief.md            # 프롬프트를 stdout 으로
+node "$D" prompt visual --shot 320:/tmp/s320.png --context "결제 히어로"
+```
+그 텍스트를 browser MCP 로 `gemini.google.com` 에 넣는다 — `navigate_page` → `fill`(프롬프트) →
+visual 이면 `upload_file`(스크린샷) → `click`(전송) → `take_snapshot` 으로 응답을 읽는다.
+받은 응답을 그대로 파일에 저장하고 기록한다:
+```bash
+node "$D" record direction --critique-file /tmp/critique.txt
+node "$D" record visual --critique-file /tmp/critique.txt --files src/hero/Hero.tsx,src/hero/hero.css
+```
+`record` 는 `gemini-mcp` source 로 남는다. **verdict 판정은 CLI 경로와 동일한 파서를 쓴다** —
+`VERDICT: OK` 가 없거나 `[HIGH]`·`[CRITICAL]` 이 있으면 REVISE 다. MCP 경로가 게이트를 느슨하게
+만들지 않는다. 빈 비평은 거부한다(빈 기록은 게이트 우회다).
+
+브라우저가 없거나 Gemini 에 로그인되어 있지 않으면 2순위로 내려간다. 억지로 붙들지 않는다.
+
+### 2·3순위 — CLI
 - **direction**: `agy`(Antigravity CLI) → 없으면 Gemini 웹세션 CLI
-- **visual**: Gemini 웹세션 CLI(`skills/image/scripts/gemini_cli.py ask --file`). `agy` 는 이미지 첨부를 못 받으므로 쓰지 않는다.
-- 웹세션이 죽으면 `SESSION DEAD` — Chrome 에서 gemini.google.com 로그인 상태를 확인한다(image 스킬 참조).
+- **visual**: Gemini 웹세션 CLI(`skills/image/scripts/gemini_cli.py ask --file`). `agy` 는 이미지 첨부를 못 받는다.
+- 웹세션이 죽으면 `SESSION DEAD` — Chrome 로그인 상태를 확인한다. Windows/Linux 는 쿠키 재Export 가
+  필요하다(`image` 스킬의 `cookies-import.mjs`).
+
+### generate (0단계)
+`ui-ux-pro-max` 로컬 데이터셋(python3, 네트워크·API 키 불필요). 스킬이 아니라 데이터 엔진으로만
+설치한다 — 상류 번들에 `nereus:design` 과 트리거가 겹치는 `design` 스킬이 함께 들어 있다.
 
 ## 설정 (`.nereus/config.json` 또는 사용자 전역)
 ```json

@@ -102,6 +102,42 @@ export function planRunner({ phase, shots = [], promptFile = "", has = (b) => !!
   return { error: `알 수 없는 phase: ${phase}` };
 }
 
+// browser MCP 로 Gemini 웹을 직접 조작한 라운드. agy·웹세션 CLI 와 구분해 남긴다 —
+// 나중에 어느 채널이 판정했는지 추적할 수 있어야 한다.
+export const MCP_SOURCE = "gemini-mcp";
+
+const PHASES = ["direction", "visual"];
+
+/** MCP 로 Gemini 에 넣을 프롬프트. planRunner 를 타지 않는 경로여서 프롬프트만 따로 뽑는다. */
+export function promptFor({ phase, brief = "", target = "web", refs = "", shots = [], context = "" } = {}) {
+  if (!PHASES.includes(phase)) throw new Error(`phase 는 direction 또는 visual 이어야 합니다 (받은 값: ${phase})`);
+  if (phase === "direction") return directionPrompt({ brief, target, refs });
+  if (!shots.length) throw new Error("visual 프롬프트에는 스크린샷이 최소 1장 필요합니다 (--shot 320:path.png)");
+  return visualPrompt({ shots, context });
+}
+
+/**
+ * MCP 에서 받아온 비평 텍스트를 라운드 레코드로 만든다. verdict 판정은 기존 parseCritique 를
+ * 그대로 쓴다 — MCP 경로가 게이트를 느슨하게 만들면 안 된다(VERDICT 줄이 없으면 REVISE).
+ */
+export function planRecord({ phase, critique = "", files = [], hashOf } = {}) {
+  if (!PHASES.includes(phase)) throw new Error(`phase 는 direction 또는 visual 이어야 합니다 (받은 값: ${phase})`);
+  if (!String(critique).trim()) throw new Error("비평 내용이 비어 있습니다 — 빈 기록은 게이트를 우회합니다");
+  const parsed = parseCritique(critique);
+  const list = phase === "visual" ? files.map((f) => String(f).trim()).filter(Boolean) : [];
+  const round = {
+    phase,
+    source: MCP_SOURCE,
+    verdict: parsed.verdict,
+    files: list.length ? hashOf(list) : {},
+    notes: parsed.summary,
+  };
+  const warning = phase === "visual" && !list.length
+    ? "--files 를 주지 않아 어떤 파일도 이 비평으로 커버되지 않습니다. 게이트는 계속 차단합니다."
+    : null;
+  return { round, parsed, warning };
+}
+
 export function feedbackReport({ pass, findings = [] }) {
   const lines = ["## 디자인 피드백 게이트", ""];
   if (!findings.length) lines.push("- 미이행 없음");
@@ -156,8 +192,42 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
     process.exit(r.pass ? 0 : 1);
   }
 
+  // MCP 경로: prompt 로 내보내고 record 로 들여온다. 스크립트는 MCP 도구를 부를 수 없으므로
+  // 에이전트가 그 사이에서 browser MCP 로 Gemini 웹을 조작한다.
+  if (cmd === "prompt" || cmd === "record") {
+    const phase = argv[1];
+    try {
+      if (cmd === "prompt") {
+        const bf = flag(argv, "--brief");
+        process.stdout.write(promptFor({
+          phase,
+          brief: bf ? fs.readFileSync(bf, "utf8") : flag(argv, "--text", "") ?? "",
+          target: flag(argv, "--target", "web") ?? "web",
+          refs: flag(argv, "--refs", "") ?? "",
+          shots: parseShots(argv),
+          context: flag(argv, "--context", "") ?? "",
+        }) + "\n");
+        process.exit(0);
+      }
+      const cf = flag(argv, "--critique-file");
+      const { round, parsed, warning } = planRecord({
+        phase,
+        critique: cf ? fs.readFileSync(cf, "utf8") : flag(argv, "--critique", "") ?? "",
+        files: (flag(argv, "--files", "") ?? "").split(",").map((x) => x.trim()).filter(Boolean),
+        hashOf: (list) => fileHashes(cwd, list),
+      });
+      recordRound(cwd, round);
+      process.stdout.write(`[design] ${phase} 라운드 기록 (${MCP_SOURCE}) — verdict=${round.verdict}, 대상 ${Object.keys(round.files).length}개 파일\n`);
+      if (warning) process.stderr.write(`[design] 경고: ${warning}\n`);
+      process.exit(round.verdict === "OK" ? 0 : 1);
+    } catch (e) {
+      process.stderr.write(`${e.message}\n`);
+      process.exit(2);
+    }
+  }
+
   if (cmd !== "direction" && cmd !== "visual") {
-    process.stderr.write("사용: design-feedback.mjs direction|visual|status [옵션]\n");
+    process.stderr.write("사용: design-feedback.mjs direction|visual|prompt|record|status [옵션]\n");
     process.exit(2);
   }
 
