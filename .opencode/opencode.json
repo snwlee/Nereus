@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": ["./plugins/nereus/skills"]
+  },
+  "mcp": {
+    "browser": {
+      "type": "local",
+      "command": ["npx", "-y", "chrome-devtools-mcp@1.8.0"],
+      "environment": {
+        "CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS": "1",
+        "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
+      },
+      "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@4.0.5"],
+      "enabled": true
+    }
+  }
+}

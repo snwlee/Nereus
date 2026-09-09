@@ -125,3 +125,13 @@ nereus 는 MCP 서버 두 개를 제공한다 — `browser`(chrome-devtools-mcp)
 1. `codex` 실행 후 `/hooks`에서 Nereus 훅을 검토·신뢰한다. 프로젝트 훅은 trust 전에는 건너뛰어진다.
 2. 버전 주의: Codex 빌드에 따라 PreToolUse deny가 `apply_patch`에 안 먹을 수 있다(상류 이슈). 그 경우 TDD 강제(block)는 PostToolUse 경고 + finish 게이트가 대신 막는다 — `tdd.enforce`를 `"warn"`으로 두고 gate 통과를 완료 조건으로 삼는다.
 3. 스킬·MCP는 Codex 설정을 따로 잡는다 (`~/.codex/config.toml`의 skills·mcp_servers). 훅 매핑만으로 스킬이 따라오지 않는다.
+
+## 10. OpenCode에서 쓰기 (브릿지 플러그인)
+
+저장소 루트의 `.opencode/`가 전부다. 재시작 후 적용된다(실행 중 세션은 옛 설정을 쓴다).
+
+1. **스킬**: `.opencode/opencode.json`의 `skills.paths`가 `plugins/nereus/skills`를 가리킨다. `opencode debug skill`로 목록을 확인한다. 스킬 이름이 전역(`intake`, `build`…)이라 기존 스킬과 충돌하면 프로젝트 설정이 이긴다.
+2. **명령**: `.opencode/commands/`의 8개 (`/intake`, `/spec`, `/build`, `/e2e`, `/review`, `/finish`, `/resume`, `/setup`). 본문은 SKILL.md를 읽으라는 지시라 스킬 수정이 그대로 반영된다.
+3. **훅**: `.opencode/plugins/nereus-hooks.js`가 자동 발견된다. `tool.execute.before`(bash·write·edit → pre-tool-guard, throw=차단), `tool.execute.after`(write·edit → tdd-guard, guidance는 `<context_guidance>`로 결과에 덧붙음).
+4. **MCP**: 같은 파일의 `mcp`에 browser·context7이 `.mcp.json`과 같은 핀으로 들어 있다.
+5. 한계: OpenCode에 PreCompact 개념이 없어 Baton 자동 계승이 없다. handoff는 수동으로 쓰고 `/resume`으로 잇는다. `permission.ask`는 건드리지 않는다(사용자 승인 흐름 유지).
