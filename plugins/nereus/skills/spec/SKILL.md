@@ -25,7 +25,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/classify.mjs" "$PWD"
 
 ## 2B. 기존 → OpenSpec
 
-1. `openspec/`가 없으면 `openspec init` 후 `/opsx:onboard`로 현재 코드의 역스펙을 만든다. 처음 한 번만.
+1. `openspec/`가 없으면 `openspec init` 후 현재 코드의 역스펙을 만든다. 처음 한 번만. `/opsx:onboard`가 있으면 써도 되고, 없으면 `references/reverse-spec.md` 절차대로 직접 캔다(읽기 전용, capability 단위로 작게).
 2. `/opsx:propose <변경 이름>` — intake 목표를 입력. proposal, specs 델타, design, tasks가 생긴다.
 3. tasks.md에 아래 "태스크 규칙" 적용.
 
@@ -43,17 +43,33 @@ verdict 가 REVISE 면 방향을 고쳐 다시 돌린다. 이 라운드가 없�
 - 모든 태스크는 체크박스 `- [ ]`와 **완료 조건** 한 줄을 가진다. 완료 조건은 실행 가능한 검증(테스트 이름, 명령, 관찰 가능한 결과)이어야 한다.
 - 핵심 사용자 흐름(로그인, 결제, 데이터 생성·삭제 등)에는 `[flow]` 태그를 붙인다. QA가 E2E 대상을 이걸로 고른다.
 - 태스크 하나는 한 세션 안에 끝날 크기(파일 3개 이내, 테스트 포함)로 쪼갠다.
-- 태스크마다 아래 형식을 채운다. 비어 있는 항목은 "없음"이라고 쓴다. `TBD`, `...`, `<채우기>` 같은 플레이스홀더는 금지.
+- 태스크마다 아래 형식을 채운다. 비어 있는 항목은 "없음"이라고 쓴다.
 
 ```markdown
 - [ ] T3. 토큰 만료 검사 미들웨어 [flow]
   - Files: Create `src/auth/expiry.ts` · Modify `src/app.ts:40-55` · Test `src/auth/expiry.test.ts`
   - Interfaces: Consumes `verifyToken(token): Claims` · Produces `expiryGuard(): Middleware`
-  - Steps: [ ] 실패 테스트 작성 → [ ] 실패 확인 → [ ] 최소 구현 → [ ] 통과 확인 → [ ] 커밋
+  - Steps:
+    - [ ] 실패 테스트 작성:
+      ```ts
+      it("만료 토큰은 401", async () => {
+        await request(app).get("/me").set("Authorization", expired).expect(401);
+      });
+      ```
+    - [ ] 실패 확인: Run `npm test -- expiry` · Expected: FAIL (expiryGuard 없음)
+    - [ ] 최소 구현: `src/auth/expiry.ts`에 위 테스트만 통과하는 가드 작성
+    - [ ] 통과 확인: Run `npm test -- expiry` · Expected: PASS
+    - [ ] 커밋: `git add src/auth/expiry.ts src/auth/expiry.test.ts && git commit -m "feat(auth): token expiry guard"`
   - Done when: 만료 토큰 요청이 401, 유효 토큰은 통과, `npm test` 전부 통과
 ```
+- Steps는 실행자가 그대로 옮기면 되는 축어 내용이다. 코드 단계엔 코드 블록, 실행 단계엔 `Run:` 명령과 `Expected:` FAIL/PASS를 반드시 적는다 (출처: superpowers `writing-plans`).
+- 플레이스홀더 금지 (위반은 계획 실패다): `TBD`·`...`·`<채우기>`·`TODO`는 물론, "적절한 에러 처리를 추가" 같은 뭉뚱그림, 코드 없는 "위 항목 테스트 작성", "Task N과 유사하게" (코드를 반복해 적는다 — 실행자는 태스크를 순서 없이 읽는다), 어떤 태스크에도 정의되지 않은 타입·함수 참조.
 - 태스크 파일 끝에 **Global Constraints**(전 태스크 공통 제약: 스택, 금지 라이브러리, 성능 예산)를 한 번 적는다.
-- 규칙을 만족하지 않으면 tasks 파일을 고친 뒤 넘어간다.
+- tasks 파일을 저장하기 전에 검사기를 돌린다. 위반이 있으면 고친 뒤 넘어간다.
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/lint-tasks.mjs" <tasks파일>
+```
+- 저장 후 **Self-Review** (스스로, 서브에이전트 없이): (1) spec coverage — 스펙의 각 요구를 가리키는 태스크가 있는가, 없으면 태스크 추가. (2) placeholder scan — 위 금지 패턴을 파일에서 검색해 수정. (3) type consistency — 뒤 태스크의 타입·시그니처·이름이 앞 태스크 정의와 일치하는가.
 
 ## 3. 마무리
 

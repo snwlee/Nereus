@@ -62,6 +62,19 @@ export function gate(findings) {
   return { pass: blocking === 0, blocking };
 }
 
+// 수정 루프 상한 (superpowers SDD fix loop 이식).
+// completedRound: 방금 끝난 fix 라운드 번호 (초기 리뷰 직후면 0). openBlocking: 남은 CRITICAL/HIGH 수.
+// R1-3 resume (같은 맥락 이어서) → R4-5 escalate (fresh + 상위 모델) → 그 이후 breaker (사용자 판정).
+// Minor는 루프에 진입하지 않는다 (SKILL이 ledger에 기록).
+export const MAX_FIX_ROUNDS = 5;
+export function fixLoopStep(completedRound, openBlocking) {
+  if (!openBlocking) return { action: "done" };
+  const next = completedRound + 1;
+  if (next <= 3) return { action: "resume", round: next };
+  if (next <= MAX_FIX_ROUNDS) return { action: "escalate", round: next };
+  return { action: "breaker" };
+}
+
 if (process.argv[1] && /review\.mjs$/.test(process.argv[1])) {
   const cfg = loadConfig();
   process.stdout.write(JSON.stringify({ mode: cfg.secondOpinion, plan: planRunners(cfg.secondOpinion) }) + "\n");

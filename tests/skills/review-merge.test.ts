@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS } from "../../plugins/nereus/skills/review/scripts/review.mjs";
+import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS } from "../../plugins/nereus/skills/review/scripts/review.mjs";
 
 describe("review merge", () => {
   it("parses OCR json output into normalized findings", () => {
@@ -56,5 +56,23 @@ describe("review merge", () => {
   it("리뷰어 정의에 실행 바이너리가 붙어 있다", () => {
     expect(REVIEWERS.gemini.bin).toBe("agy");
     expect(REVIEWERS.codex.bin).toBe("codex");
+  });
+  it("수정 루프 상한은 5라운드다", () => {
+    expect(MAX_FIX_ROUNDS).toBe(5);
+  });
+  it("잔여 blocking이 없으면 done", () => {
+    expect(fixLoopStep(0, 0)).toEqual({ action: "done" });
+    expect(fixLoopStep(3, 0)).toEqual({ action: "done" });
+  });
+  it("1~3라운드는 resume (같은 맥락 이어서)", () => {
+    expect(fixLoopStep(0, 2)).toEqual({ action: "resume", round: 1 });
+    expect(fixLoopStep(2, 1)).toEqual({ action: "resume", round: 3 });
+  });
+  it("4~5라운드는 escalate (fresh + 상위 모델)", () => {
+    expect(fixLoopStep(3, 1)).toEqual({ action: "escalate", round: 4 });
+    expect(fixLoopStep(4, 2)).toEqual({ action: "escalate", round: 5 });
+  });
+  it("5라운드를 넘기면 breaker (사용자 판정)", () => {
+    expect(fixLoopStep(5, 1)).toEqual({ action: "breaker" });
   });
 });

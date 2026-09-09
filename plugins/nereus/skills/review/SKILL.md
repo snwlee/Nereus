@@ -33,6 +33,14 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 - **Codex**: `codex review` (또는 codex 플러그인의 `/codex:adversarial-review`). 결과를 파일·줄·심각도·메시지로 정리한다.
 - **Gemini (Antigravity CLI)**: `agy -p "다음 diff를 리뷰하고 file:line, severity(CRITICAL/HIGH/MEDIUM/LOW), message 형식의 JSON 배열로만 답하라: $(git diff ...)"`.
 
+직접 리뷰할 때는 아래 조용한 실패 5항을 반드시 훑는다 (출처: ecc `silent-failure-hunter`. 기계 게이트가 `silent_failure`으로 잡는 것은 빙산의 일각이다):
+
+1. **빈 catch** — `catch {}`·`except: pass`. 에러를 Nothing으로 바꾼 곳.
+2. **부실 로깅** — 맥락 없는 로그·잘못된 심각도·log-and-forget.
+3. **위험한 fallback** — 실패를 감추는 기본값 (`.catch(() => [])`류). 그럴듯해 보여서 하류 진단을 어렵게 한다.
+4. **전파 손실** — 날아간 스택트레이스·뭉뚱그린 rethrow·빠진 async 처리.
+5. **누락된 처리** — 네트워크·파일·DB 경로의 타임아웃/에러 처리 없음, 트랜잭션 작업의 롤백 없음.
+
 계획에 포함된 리뷰어만 실행하고, 결과를 `{source, file, line, severity, message}` 배열로 정규화한다.
 
 ## 3. 병합과 게이트
@@ -40,7 +48,17 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 정규화된 findings를 심각도순으로 병합해 사용자에게 보인다(`mergeFindings` 형식). 같은 위치를 두 리뷰어가 지적하면 신뢰도가 높다고 표시한다.
 
 - **CRITICAL/HIGH 0개** → 통과. `nereus:finish`로.
-- 아니면 각 항목을 고치고(TDD: 회귀 테스트 먼저) 다시 review. 리뷰어 지적이 틀렸다고 판단하면 이유를 적고 사용자에게 확인받는다. 조용히 무시하지 않는다.
+- **MEDIUM 이하만** → 루프에 넣지 않는다. `.nereus/handoff.md`에 한 줄씩 기록하고 `nereus:finish`로 (최종 리뷰가 merge 전 triage한다).
+
+### 3.1 수정 루프 상한 — 5라운드 (출처: superpowers SDD fix loop)
+
+CRITICAL/HIGH가 남으면 fix 1회 + 스코프 재리뷰(고친 diff만, untouched 코드는 Out-of-Scope로 ledger행) 1회를 1라운드로 센다. 라운드 판정은 `review.mjs`의 `fixLoopStep(끝난라운드, 잔여blocking)`을 따른다:
+
+- **R1–3: resume** — 같은 맥락에서 이어서 고친다 (TDD: 회귀 테스트 먼저). 컨텍스트가 끊겼으면 brief·report·findings를 통째로 넘긴 fresh dispatch로 대체한다.
+- **R4–5: escalate** — fresh + 한 티어 위 모델로 바꾼다. 3번 이어 고쳤는데 안 되면 고친 주체가 자기 문제를 못 보는 것이다.
+- **R5 후에도 잔존: breaker** — 그만 고치고 각 항목을 판정해 사용자에게 확인받는다. 리뷰어가 틀렸거나 contestable하면 park + Ruling 기록. 진짜인데 하류가 안 얹히면 park + deferred. 진짜이고 load-bearing이면 (다음 작업이 얹히거나 계획 결함을 드러내면) 최소 변경을 rule로 정해 다음 build에 넘긴다. 조용히 버리지 않는다.
+
+"고치면 될 것 같으니 한 번만 더"는 5라운드 이후의 변명이다. 라운드가 수렴하지 않으면 구조 문제다.
 
 ## 4. 기록
 

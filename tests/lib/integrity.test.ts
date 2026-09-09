@@ -33,4 +33,26 @@ describe("completion integrity", () => {
   it("ignores markers inside markdown docs", () => {
     expect(checkIntegrity(diff("README.md", ["- TODO list feature"])).pass).toBe(true);
   });
+  it("flags empty catch blocks (single-line)", () => {
+    const r = checkIntegrity(diff("src/a.ts", ["try { run(); } catch (e) {}"]));
+    expect(r.findings.some((f: any) => f.category === "silent_failure")).toBe(true);
+  });
+  it("flags swallowing .catch fallbacks", () => {
+    const r = checkIntegrity(diff("src/a.ts", ["fetch(u).catch(() => [])", "load().catch(() => null)"]));
+    expect(r.findings.filter((f: any) => f.category === "silent_failure").length).toBe(2);
+  });
+  it("flags except-pass in python", () => {
+    const r = checkIntegrity(diff("src/a.py", ["try:", "    run()", "except Exception: pass"]));
+    expect(r.findings.some((f: any) => f.category === "silent_failure")).toBe(true);
+  });
+  it("flags multi-line empty catch / bare except-pass", () => {
+    const r = checkIntegrity(diff("src/a.ts", ["} catch (e) {", "}"]));
+    expect(r.findings.some((f: any) => f.category === "silent_failure")).toBe(true);
+    const p = checkIntegrity(diff("src/b.py", ["except ValueError:", "    pass"]));
+    expect(p.findings.some((f: any) => f.category === "silent_failure")).toBe(true);
+  });
+  it("does not flag catch blocks that log or rethrow", () => {
+    const r = checkIntegrity(diff("src/a.ts", ["} catch (e) {", "  console.error('load failed', e);", "  throw e;", "}"]));
+    expect(r.findings.some((f: any) => f.category === "silent_failure")).toBe(false);
+  });
 });
