@@ -1,0 +1,115 @@
+{
+  "description": "Nereus 하네스 훅 (OpenCode 매핑, Claude 스키마). oh-my-opencode 내장 브릿지나 opencode-hooks류 플러그인이 이 파일을 읽어 실행한다. 자사 브릿지 플러그인은 두지 않는다(중복 실행 방지). 입력 차이는 hooks/scripts/lib/harness.mjs 가 흡수한다.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/pre-tool-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/pre-tool-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/tdd-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/baton-meter.mjs",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/observe.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/skill-router.mjs",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/learn-watch.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/session-start.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/pre-compact.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/finish-check.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node plugins/nereus/hooks/scripts/session-end.mjs",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
