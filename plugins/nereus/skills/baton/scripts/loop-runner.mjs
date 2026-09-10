@@ -1,10 +1,11 @@
 // reset 루프: 반복마다 새 `claude -p` 세션이 handoff.md·tasks·스펙만 읽고 시작한다. 상태는 파일과 git에만 있다.
-// 사용: node loop-runner.mjs --goal "작업" --tasks <path> [--spec <path>] [--max 30]
+// 사용: node loop-runner.mjs --goal "작업" --tasks <path> [--spec <path>] [--max 30] [--gate "<cmd>"] [--timeout <sec>]
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
 import { handoffPath } from "../../../hooks/scripts/lib/paths.mjs";
+import { autonomousGate } from "../../../hooks/scripts/lib/autonomous-gate.mjs";
 
 // [wave:N] 태그. [flow] 선례를 따라 대소문자·공백을 관대하게 받는다.
 // 전역 플래그를 쓰지 않는다 — 공유 정규식에 /g 를 붙이면 lastIndex 가 남아 결과가 흔들린다.
@@ -146,6 +147,13 @@ function defaultRunClaude(prompt, cwd) {
   });
 }
 
+/** `--gate "<cmd>"` 를 셸 없이 돌린다. 종료코드 0 만 통과다. */
+function defaultGateCmd(cwd, cmd) {
+  const [bin, ...args] = String(cmd).trim().split(/\s+/);
+  const r = run(bin, args, { cwd, timeoutMs: 10 * 60 * 1000 });
+  return { pass: r.ok, reason: r.ok ? undefined : `게이트 명령 실패: ${cmd}` };
+}
+
 async function defaultEvaluate(cwd) {
   if (!which("ooo")) return { pass: true, skipped: "ooo 없음" };
   const r = run("ooo", ["qa", "--json", "."], { cwd, timeoutMs: 10 * 60 * 1000 });
@@ -160,6 +168,13 @@ export async function runLoop(opts, deps = {}) {
   const commit = deps.commit ?? ((msg) => { run("git", ["add", "-A"], { cwd }); run("git", ["commit", "-q", "-m", msg], { cwd }); });
   const evaluate = deps.evaluate ?? (() => defaultEvaluate(cwd));
   const log = deps.log ?? ((m) => process.stderr.write(`[baton-loop] ${m}\n`));
+  // 게이트는 반복마다 도는 검증이다. `--gate` 가 없으면 수렴 판정과 같은 evaluate 를 쓴다
+  // (ooo 가 없으면 defaultEvaluate 가 skipped:true 로 통과시키므로 기존 동작이 유지된다).
+  const gate = deps.gate ?? (() => (opts.gateCmd ? defaultGateCmd(cwd, opts.gateCmd) : evaluate()));
+  // autonomousGate 는 개수만 본다. gitDirty 를 통해 흐르게 해서 주입 지점을 하나로 유지한다.
+  const changedFiles = deps.changedFiles ?? (() => (gitDirty() ? ["<dirty>"] : []));
+  const now = deps.now ?? (() => Date.now());
+  const deadline = opts.timeoutMs ? now() + opts.timeoutMs : null;
 
   // wave 를 쓰려면 runWave 를 거쳐야 한다. 그룹 크기 1이면 runWave 가 메인 워크트리에서
   // 그대로 돌므로 태그 없는 tasks 는 기존 순차 동작과 동일하다(하위 호환).
@@ -167,6 +182,10 @@ export async function runLoop(opts, deps = {}) {
 
   let sameTaskFails = 0;
   let lastTask = null;
+  // 게이트 실패는 태스크가 아니라 저장소 상태의 문제다. sameTaskFails 는 "같은 태스크" 키로 세는데
+  // 서브세션이 체크박스를 채우면 키가 매번 바뀌어 리셋된다 — 깨진 채로 max 까지 걸어가게 된다.
+  // 그래서 연속 게이트 실패는 따로 센다.
+  let gateFails = 0;
   for (let i = 1; i <= opts.max; i++) {
     const before = parseTasks(readTasks());
     const groups = planWaves(before);
@@ -184,10 +203,30 @@ export async function runLoop(opts, deps = {}) {
       // 병합 충돌은 열린 재시도로 덮지 않는다 — 사람이 브랜치를 보고 풀어야 한다.
       if (wr && wr.ok === false && wr.branch) return { status: "conflict", iterations: i, reason: wr.reason, branch: wr.branch };
     }
-    if (gitDirty()) commit(`chore(baton): 반복 ${i} 체크포인트`);
+    // 자율 게이트(출처: Prime Agent autonomous gate). 무변경이면 게이트를 아예 돌리지 않는다.
+    const changed = changedFiles();
+    const gateResult = changed.length ? await gate() : { pass: true };
+    const decision = autonomousGate({
+      gateResult,
+      changedFiles: changed,
+      // 턴 소진은 루프의 max 가 이미 max_reached 로 처리한다. 여기서는 시간 바운드만 본다.
+      budget: { turnsLeft: opts.max - i + 1, timedOut: deadline !== null && now() > deadline },
+    });
+    if (decision.decision === "return-bounded" && decision.reason === "budget-exhausted") {
+      log(`시간 바운드 소진. 미커밋 변경은 그대로 둡니다 — 사람이 보고 판단하세요.`);
+      return { status: "budget_exhausted", iterations: i };
+    }
+    // 게이트 실패는 커밋을 막지 않는다(작업 유실이 더 나쁘다). 대신 메시지에 남기고,
+    // 아래에서 이 반복을 "진행"으로 세지 않는다 — 체크박스 자기신고를 믿지 않는 지점이다.
+    const gateFailed = decision.decision === "return-bounded";
+    gateFails = gateFailed ? gateFails + 1 : 0;
+    if (gateFailed) log(`게이트 실패(${decision.reason}). 이 반복은 진행으로 세지 않습니다. (연속 ${gateFails}회)`);
+    if (gitDirty()) {
+      commit(gateFailed ? `chore(baton): 반복 ${i} 체크포인트 (게이트 실패: ${decision.reason})` : `chore(baton): 반복 ${i} 체크포인트`);
+    }
 
     const after = parseTasks(readTasks());
-    const progressed = after.filter((t) => t.done).length > before.filter((t) => t.done).length;
+    const progressed = !gateFailed && after.filter((t) => t.done).length > before.filter((t) => t.done).length;
     if (!current) continue;
     if (progressed) { sameTaskFails = 0; lastTask = null; }
     else {
@@ -198,6 +237,12 @@ export async function runLoop(opts, deps = {}) {
         log(`같은 태스크 3회 실패: ${current.text}. ooo unstuck 후 사람에게 인계.`);
         return { status: "stuck", iterations: i, task: current.text };
       }
+    }
+    // stuck 이 먼저다 — 기존 판정을 바꾸지 않는다. 여기 오는 건 체크박스는 넘어가는데
+    // 게이트만 계속 깨지는 경우다(자기신고 진행). 저장소가 깨진 채로 max 까지 걸어가지 않는다.
+    if (gateFails >= 3) {
+      log(`게이트 3회 연속 실패(${decision.reason}). 저장소가 깨진 채로 더 돌지 않습니다.`);
+      return { status: "gate_blocked", iterations: i, reason: decision.reason };
     }
     if (!after.some((t) => !t.done)) {
       const ev = await evaluate();
@@ -210,7 +255,8 @@ export async function runLoop(opts, deps = {}) {
 if (process.argv[1] && /loop-runner\.mjs$/.test(process.argv[1])) {
   const arg = (k, d) => { const i = process.argv.indexOf(k); return i > -1 ? process.argv[i + 1] : d; };
   const cwd = process.cwd();
-  const result = await runLoop({ cwd, max: parseInt(arg("--max", "30"), 10), goal: arg("--goal", "tasks 완료"), paths: { handoff: path.relative(cwd, handoffPath(cwd)), tasks: arg("--tasks", "tasks.md"), spec: arg("--spec", undefined) } });
+  const timeoutSec = parseInt(arg("--timeout", "0"), 10);
+  const result = await runLoop({ cwd, max: parseInt(arg("--max", "30"), 10), goal: arg("--goal", "tasks 완료"), gateCmd: arg("--gate", undefined), timeoutMs: Number.isFinite(timeoutSec) && timeoutSec > 0 ? timeoutSec * 1000 : undefined, paths: { handoff: path.relative(cwd, handoffPath(cwd)), tasks: arg("--tasks", "tasks.md"), spec: arg("--spec", undefined) } });
   process.stdout.write(JSON.stringify(result) + "\n");
   process.exit(result.status === "converged" ? 0 : 2);
 }

@@ -45,3 +45,82 @@ describe("loop-runner", () => {
     expect(commits.length).toBe(3);
   });
 });
+
+// --- 자율 게이트 배선 (autonomousGate) ---
+// 지금까지 루프는 서브세션이 체크박스를 채웠다는 것만으로 "진행"으로 쳤고, 검증 없이 커밋했다.
+// 게이트는 반복마다 검증을 돌려 (1) 실패한 반복을 진행으로 세지 않고 (2) 커밋 메시지에 실패를 남긴다.
+describe("loop-runner — 자율 게이트", () => {
+  const base = { max: 10, goal: "g", paths: { handoff: "h", tasks: "t", spec: "s" } };
+  // 반복마다 체크박스가 하나씩 늘어나는 tasks — 게이트가 없으면 항상 "진행"으로 보인다.
+  const growingTasks = () => {
+    let done = 0;
+    return {
+      readTasks: () => Array.from({ length: 100 }, (_, i) => `- [${i < done ? "x" : " "}] T${i}`).join("\n"),
+      tick: () => { done++; },
+    };
+  };
+
+  // sameTaskFails 는 "같은 태스크" 키로 센다. 서브세션이 체크박스를 채우면 키가 매번 바뀌어
+  // 리셋되므로, 게이트가 계속 실패해도 max 까지 걸어간다. 연속 게이트 실패는 따로 세야 한다.
+  it("stops with gate_blocked after 3 consecutive gate failures, even as checkboxes advance", async () => {
+    const t = growingTasks();
+    const r = await runLoop(base, {
+      readTasks: t.readTasks,
+      runClaude: async () => { t.tick(); return { ok: true }; },
+      gitDirty: () => true, commit: () => {},
+      gate: async () => ({ pass: false, reason: "npm test 실패" }),
+      evaluate: async () => ({ pass: false }), log: () => {},
+    });
+    // 게이트가 없었다면 progressed=true 로 계속 돌아 max_reached 였다.
+    expect(r).toEqual({ status: "gate_blocked", iterations: 3, reason: "npm test 실패" });
+  });
+
+  it("records the gate failure reason in the checkpoint commit message", async () => {
+    const commits: string[] = [];
+    await runLoop({ ...base, max: 1 }, {
+      readTasks: () => "- [ ] A",
+      runClaude: async () => ({ ok: true }),
+      gitDirty: () => true, commit: (m: string) => commits.push(m),
+      gate: async () => ({ pass: false, reason: "npm test 실패" }),
+      evaluate: async () => ({ pass: false }), log: () => {},
+    });
+    expect(commits).toHaveLength(1);
+    expect(commits[0]).toContain("npm test 실패");
+  });
+
+  it("skips the gate entirely when the iteration changed nothing", async () => {
+    let gateCalls = 0;
+    await runLoop({ ...base, max: 1 }, {
+      readTasks: () => "- [ ] A",
+      runClaude: async () => ({ ok: true }),
+      gitDirty: () => false, commit: () => {},
+      gate: async () => { gateCalls++; return { pass: false }; },
+      evaluate: async () => ({ pass: false }), log: () => {},
+    });
+    expect(gateCalls).toBe(0);
+  });
+
+  it("falls back to evaluate when no gate command is configured", async () => {
+    let evalCalls = 0;
+    await runLoop({ ...base, max: 1 }, {
+      readTasks: () => "- [ ] A",
+      runClaude: async () => ({ ok: true }),
+      gitDirty: () => true, commit: () => {},
+      evaluate: async () => { evalCalls++; return { pass: true }; }, log: () => {},
+    });
+    expect(evalCalls).toBeGreaterThan(0);
+  });
+
+  it("stops with budget_exhausted once the deadline passes", async () => {
+    let t = 0;
+    const r = await runLoop({ ...base, timeoutMs: 100 }, {
+      readTasks: () => "- [ ] A",
+      runClaude: async () => ({ ok: true }),
+      gitDirty: () => true, commit: () => {},
+      gate: async () => ({ pass: true }),
+      evaluate: async () => ({ pass: false }), log: () => {},
+      now: () => (t += 1000),  // 첫 반복 안에서 데드라인을 넘긴다
+    });
+    expect(r).toEqual({ status: "budget_exhausted", iterations: 1 });
+  });
+});

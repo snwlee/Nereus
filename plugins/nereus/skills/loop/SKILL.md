@@ -13,7 +13,7 @@ description: 장기 자율 reset 루프. 반복마다 새 세션이 태스크 �
 ## 실행
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/baton/scripts/loop-runner.mjs" --goal "<목표 한 줄>" --tasks <tasks 경로> [--spec <스펙 경로>] [--max 30]
+node "${CLAUDE_PLUGIN_ROOT}/skills/baton/scripts/loop-runner.mjs" --goal "<목표 한 줄>" --tasks <tasks 경로> [--spec <스펙 경로>] [--max 30] [--gate "<검증 명령>"] [--timeout <초>]
 ```
 
 러너는 반복마다 `claude -p`를 새로 띄운다(컨텍스트 리셋). 각 반복은 handoff.md → 첫 미완료 태스크 → TDD → 체크 → handoff 재작성 → 커밋. 반복 끝에 미커밋 변경이 있으면 러너가 체크포인트 커밋을 만든다.
@@ -54,6 +54,8 @@ wave 1 의 두 태스크가 동시에 돌고 **둘 다 끝난 뒤** wave 2 가 �
 - `max_reached`: 진행은 있으나 끝나지 않음. handoff를 보고 max를 늘리거나 태스크를 쪼갠다.
 - `conflict`: wave 병합 충돌. 저장소는 되돌아갔고 `baton/wave-*` 브랜치가 남아 있다. 그 브랜치를 보고 수동 병합하거나 태스크를 다시 쪼갠다.
 - `stuck`: 같은 태스크(또는 같은 wave 조합) 3회 실패. `ooo unstuck`을 그 태스크에 대해 실행하고 결과를 사용자에게 보인다. 자동으로 재시작하지 않는다.
+- `gate_blocked`: 게이트 3회 **연속** 실패. 체크박스는 넘어가는데 검증이 계속 깨지는 경우다 — 저장소가 깨진 채로 max 까지 걸어가지 않는다. 커밋은 남아 있으니 `git log` 에서 `(게이트 실패: ...)` 표시된 체크포인트부터 본다.
+- `budget_exhausted`: `--timeout` 소진. 미커밋 변경을 그대로 두고 멈춘다.
 
 ## 주의
 - 루프는 사용자가 명시적으로 요청할 때만. 비용이 크다(반복당 세션 1개).
@@ -61,4 +63,22 @@ wave 1 의 두 태스크가 동시에 돌고 **둘 다 끝난 뒤** wave 2 가 �
 
 ## 자율 게이트 (출처: Prime Agent autonomous gate)
 
-매 반복 끝에 게이트 명령을 돌린다. 실패하면 열린 재시도가 아니라 bounded 반환(Bounded 경로·1회 수정)으로 돌아간다. 변경 파일이 없으면 skip. turns/tokens/timeout 바운드 소진 시 중단하고 ledger에 Ruling을 남긴다. 판정 기준은 `hooks/scripts/lib/autonomous-gate.mjs`의 `autonomousGate()`가 유일한 진실원천이다.
+매 반복 끝, **커밋 직전**에 게이트를 돌린다. 판정은 `hooks/scripts/lib/autonomous-gate.mjs` 의
+`autonomousGate()` 가 유일한 진실원천이고, `loop-runner.mjs` 의 `runLoop` 이 이를 호출한다.
+
+- **게이트 명령**: `--gate "<cmd>"` (종료코드 0만 통과). 없으면 수렴 판정과 같은 `ooo qa` 를 쓴다.
+  `ooo` 도 없으면 통과 처리한다 — 검증 도구가 없으면 게이트도 없다.
+- **무변경이면 skip**. 게이트를 아예 돌리지 않는다.
+- **게이트 실패는 커밋을 막지 않는다.** 작업 유실이 더 나쁘다. 대신 커밋 메시지에
+  `(게이트 실패: <이유>)` 를 남기고, **그 반복을 "진행"으로 세지 않는다** — 서브세션이 채운
+  체크박스를 그대로 믿지 않는 지점이다.
+- **연속 3회 실패면 `gate_blocked` 로 멈춘다.** 기존 `stuck`(같은 태스크 3회)은 태스크 키로 세기
+  때문에, 체크박스가 넘어가면 키가 바뀌어 리셋된다. 게이트 실패는 태스크가 아니라 저장소 상태의
+  문제라 따로 센다. 판정 순서는 `stuck` 이 먼저다.
+- **`--timeout <초>` 소진 시 `budget_exhausted`.** 토큰 바운드는 루프에서 측정할 수 없어 쓰지 않고,
+  턴 바운드는 `--max`(`max_reached`)가 이미 담당한다.
+
+### 한계 (알고 쓸 것)
+wave 병렬(태스크 2개 이상)에서는 각 워크트리가 **먼저 커밋·병합된 뒤** 게이트가 돈다. 즉 병렬
+경로에서 게이트는 사후 검증이고, 깨진 커밋이 들어오는 것 자체를 막지 못한다. 막으려면 게이트를
+`runWave` 안 워크트리별 커밋 앞으로 내려야 한다 — 아직 하지 않았다.
