@@ -4,7 +4,13 @@ import { runLoop, parseTasks, buildPrompt } from "../../plugins/nereus/skills/ba
 describe("loop-runner", () => {
   it("parses tasks with checkbox state", () => {
     const t = parseTasks("- [ ] A [flow]\n- [x] B\n  - [ ] C\ntext\n- [X] D");
-    expect(t).toEqual([{ text: "A [flow]", done: false }, { text: "B", done: true }, { text: "C", done: false }, { text: "D", done: true }]);
+    // wave 태그가 없으면 wave: null — [flow] 등 다른 태그는 텍스트에 그대로 남는다
+    expect(t).toEqual([
+      { text: "A [flow]", done: false, wave: null },
+      { text: "B", done: true, wave: null },
+      { text: "C", done: false, wave: null },
+      { text: "D", done: true, wave: null },
+    ]);
   });
   it("prompt references only handoff, tasks and spec paths", () => {
     const p = buildPrompt({ handoff: ".nereus/handoff.md", tasks: "openspec/changes/x/tasks.md", spec: "openspec/changes/x/proposal.md", goal: "작업" });

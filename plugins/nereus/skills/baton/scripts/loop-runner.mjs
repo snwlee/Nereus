@@ -6,13 +6,124 @@ import { spawn } from "node:child_process";
 import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
 import { handoffPath } from "../../../hooks/scripts/lib/paths.mjs";
 
+// [wave:N] 태그. [flow] 선례를 따라 대소문자·공백을 관대하게 받는다.
+// 전역 플래그를 쓰지 않는다 — 공유 정규식에 /g 를 붙이면 lastIndex 가 남아 결과가 흔들린다.
+export const WAVE_RE = /\[\s*wave\s*:\s*(\d+)\s*\]\s*/i;
+
 export function parseTasks(text) {
   const out = [];
   for (const line of text.split("\n")) {
     const m = line.match(/^\s*-\s*\[([ xX])\]\s*(.+?)\s*$/);
-    if (m) out.push({ text: m[2], done: m[1] !== " " });
+    if (!m) continue;
+    let body = m[2];
+    let wave = null;
+    const w = body.match(WAVE_RE);
+    if (w) {
+      const n = Number(w[1]);
+      if (Number.isInteger(n) && n >= 1) {  // wave 는 1부터. 0·비정수는 오타로 보고 무시한다
+        wave = n;
+        body = (body.slice(0, w.index) + body.slice(w.index + w[0].length)).trim();
+      }
+    }
+    out.push({ text: body, done: m[1] !== " ", wave });
   }
   return out;
+}
+
+/**
+ * 미완료 태스크를 실행 그룹으로 나눈다. **인접한** 같은 wave 번호만 묶는다 —
+ * 선언 순서에 의존성이 암묵적으로 들어 있어서, 떨어져 있는 같은 번호를 합치면
+ * 사이에 있는 태스크를 앞질러 실행한다. 태그가 없으면 단독 그룹(= 기존 순차 동작).
+ */
+export function planWaves(tasks) {
+  const groups = [];
+  for (const t of tasks) {
+    if (t.done) continue;
+    const last = groups[groups.length - 1];
+    const joinable = last && t.wave !== null && last[0].wave === t.wave;
+    if (joinable) last.push(t);
+    else groups.push([t]);
+  }
+  return groups;
+}
+
+const slug = (s, fallback = "task") =>
+  String(s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32) || fallback;
+
+/** 태스크 하나를 격리 실행할 워크트리 계획. 부수 효과 없음. */
+export function planWorktree({ task, index, root, base }) {
+  const name = `wave-${index}-${slug(task?.text)}`;
+  const dir = path.join(root, ".nereus", "worktrees", name);
+  const branch = `baton/${name}`;
+  return { name, dir, branch, base, args: ["worktree", "add", "-b", branch, dir, base] };
+}
+
+/**
+ * wave 하나를 실행한다.
+ * - 태스크가 1개면 메인 워크트리에서 그대로 돈다(격리 비용 0, 기존 동작과 동일).
+ * - 2개 이상이면 **반드시 워크트리로 격리**한다. 같은 워크트리에서 claude -p 를 동시에 띄우면
+ *   두 프로세스가 같은 파일을 편집하고 서로의 변경을 커밋한다(실제로 겪은 사고다).
+ * - 병합은 순차다. 동시에 merge 하면 인덱스가 깨진다.
+ * - 워크트리는 실패해도 반드시 정리한다. 남으면 다음 실행의 add 가 경로 충돌로 실패한다.
+ */
+export async function runWave(group, opts, deps = {}) {
+  const root = opts.root ?? opts.cwd ?? process.cwd();
+  const log = deps.log ?? (() => {});
+  const runClaudeIn = deps.runClaude ?? ((prompt, cwd) => defaultRunClaude(prompt, cwd));
+  const prompt = buildPrompt({ ...opts.paths, goal: opts.goal });
+
+  if (group.length === 1) {
+    const r = await runClaudeIn(prompt, root);
+    return { ok: r.ok !== false, parallel: false, tasks: 1 };
+  }
+
+  const base = (deps.head ?? (() => run("git", ["rev-parse", "HEAD"], { cwd: root }).stdout.trim() || null))();
+  if (!base) return { ok: false, reason: "git HEAD 를 읽을 수 없어 격리 기준을 정할 수 없습니다", parallel: false };
+
+  const addWorktree = deps.addWorktree ?? ((w) => run("git", w.args, { cwd: root }));
+  const removeWorktree = deps.removeWorktree ?? ((w) => run("git", ["worktree", "remove", "--force", w.dir], { cwd: root }));
+  const commitIn = deps.commitIn ?? ((cwd, msg) => { run("git", ["add", "-A"], { cwd }); return run("git", ["commit", "-q", "-m", msg], { cwd }); });
+  const mergeBranch = deps.mergeBranch ?? ((b) => {
+    const r = run("git", ["merge", "--no-ff", "-m", `merge(baton): ${b}`, b], { cwd: root });
+    return r.ok ? r : { ...r, conflict: true, branch: b };
+  });
+  // 충돌을 그대로 두면 MERGE_HEAD 와 UU 가 남아 다음 실행이 깨진다(실측으로 확인).
+  // 되돌려 저장소를 깨끗하게 남기고, 태스크 브랜치는 지우지 않는다 — 그 작업을 살릴 수 있어야 한다.
+  const abortMerge = deps.abortMerge ?? (() => run("git", ["merge", "--abort"], { cwd: root }));
+
+  const plans = group.map((task, i) => ({ task, w: planWorktree({ task, index: i, root, base }) }));
+  const created = [];
+  try {
+    for (const { w } of plans) {
+      const r = addWorktree(w);
+      if (r && r.ok === false) return { ok: false, reason: `워크트리 생성 실패: ${w.dir}`, parallel: true };
+      created.push(w);
+    }
+    // 여기서만 병렬이다. 각자 자기 워크트리에서만 쓴다.
+    const results = await Promise.all(plans.map(({ w }) => runClaudeIn(prompt, w.dir)));
+    // 커밋은 병합 전에 끝나야 한다 — 커밋 없는 워크트리는 병합해도 아무것도 오지 않는다.
+    for (const [i, { w, task }] of plans.entries()) {
+      if (results[i] && results[i].ok === false) { log(`태스크 실패, 병합 건너뜀: ${task.text}`); continue; }
+      commitIn(w.dir, `chore(baton): wave 태스크 — ${task.text.slice(0, 60)}`);
+    }
+    for (const [i, { w }] of plans.entries()) {
+      if (results[i] && results[i].ok === false) continue;
+      const m = mergeBranch(w.branch);
+      if (m && m.ok === false) {
+        abortMerge();
+        return {
+          ok: false,
+          reason: `병합 충돌(conflict): ${w.branch} — 저장소는 되돌렸고 브랜치는 남겨뒀습니다`,
+          branch: w.branch,
+          parallel: true,
+        };
+      }
+    }
+    const failed = results.filter((r) => r && r.ok === false).length;
+    return { ok: failed === 0, parallel: true, tasks: group.length, failed };
+  } finally {
+    for (const w of created) { try { removeWorktree(w); } catch { /* 정리 실패가 결과를 바꾸지 않는다 */ } }
+  }
 }
 
 export function buildPrompt({ handoff, tasks, spec, goal }) {
@@ -50,18 +161,29 @@ export async function runLoop(opts, deps = {}) {
   const evaluate = deps.evaluate ?? (() => defaultEvaluate(cwd));
   const log = deps.log ?? ((m) => process.stderr.write(`[baton-loop] ${m}\n`));
 
+  // wave 를 쓰려면 runWave 를 거쳐야 한다. 그룹 크기 1이면 runWave 가 메인 워크트리에서
+  // 그대로 돌므로 태그 없는 tasks 는 기존 순차 동작과 동일하다(하위 호환).
+  const wave = deps.runWave ?? ((group) => runWave(group, { ...opts, root: cwd }, { ...deps, runClaude: deps.runClaude }));
+
   let sameTaskFails = 0;
   let lastTask = null;
   for (let i = 1; i <= opts.max; i++) {
     const before = parseTasks(readTasks());
-    const current = before.find((t) => !t.done);
+    const groups = planWaves(before);
+    const group = groups[0] ?? null;
+    const current = group?.[0] ?? null;
     if (!current) {
       const ev = await evaluate();
       if (ev.pass) return { status: "converged", iterations: i - 1 };
       log(`태스크는 전부 체크됐지만 evaluate 실패. 반복 계속.`);
     }
-    log(`반복 ${i}/${opts.max}: ${current?.text ?? "(evaluate 재시도)"}`);
-    await runClaude(buildPrompt({ ...opts.paths, goal: opts.goal }));
+    const label = group ? group.map((t) => t.text).join(" | ") : "(evaluate 재시도)";
+    log(`반복 ${i}/${opts.max}${group && group.length > 1 ? ` [wave ${current.wave}, ${group.length}개 병렬]` : ""}: ${label}`);
+    if (group) {
+      const wr = await wave(group);
+      // 병합 충돌은 열린 재시도로 덮지 않는다 — 사람이 브랜치를 보고 풀어야 한다.
+      if (wr && wr.ok === false && wr.branch) return { status: "conflict", iterations: i, reason: wr.reason, branch: wr.branch };
+    }
     if (gitDirty()) commit(`chore(baton): 반복 ${i} 체크포인트`);
 
     const after = parseTasks(readTasks());
@@ -69,8 +191,9 @@ export async function runLoop(opts, deps = {}) {
     if (!current) continue;
     if (progressed) { sameTaskFails = 0; lastTask = null; }
     else {
-      sameTaskFails = lastTask === current.text ? sameTaskFails + 1 : 1;
-      lastTask = current.text;
+      const key = group ? group.map((t) => t.text).join("|") : current.text;
+      sameTaskFails = lastTask === key ? sameTaskFails + 1 : 1;
+      lastTask = key;
       if (sameTaskFails >= 3) {
         log(`같은 태스크 3회 실패: ${current.text}. ooo unstuck 후 사람에게 인계.`);
         return { status: "stuck", iterations: i, task: current.text };
