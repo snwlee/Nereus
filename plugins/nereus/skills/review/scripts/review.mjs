@@ -75,6 +75,14 @@ export function fixLoopStep(completedRound, openBlocking) {
   return { action: "breaker" };
 }
 
+// 심각도별 액션: CRITICAL/HIGH는 수정 루프 진입, MEDIUM 이하는 연기+ledger, unknown은 defer 기본값.
+export function severityAction(severity) {
+  const s = String(severity ?? "").toUpperCase();
+  if (s === "CRITICAL") return "fix-now";
+  if (s === "HIGH") return "must-resolve";
+  return "defer-ledger";
+}
+
 if (process.argv[1] && /review\.mjs$/.test(process.argv[1])) {
   const cfg = loadConfig();
   process.stdout.write(JSON.stringify({ mode: cfg.secondOpinion, plan: planRunners(cfg.secondOpinion) }) + "\n");

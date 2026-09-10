@@ -21,6 +21,8 @@ nereus:common 규칙을 따른다. 담당 에이전트: 스택에 따라 backend
 tasks 파일에서 첫 미완료 태스크를 고른다. 태스크마다:
 
 1. **RED**: 완료 조건을 테스트로 옮긴다. 실행해서 **실패를 확인**한다. 실패 출력 첫 줄을 기록한다. 실패하지 않으면 테스트가 잘못된 것이다.
+   > **Iron Law — NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.**
+   > 실패하는 테스트 없이 프로덕션 코드를 쓰지 않는다.
 2. **GREEN**: 테스트를 통과시키는 최소 구현. 처음 쓰는 API는 Context7로 확인.
 3. **REFACTOR**: 중복 제거, 이름 정리. 테스트 다시 실행.
 4. tasks 체크박스를 채우고 handoff.md의 "완료"와 "다음"을 갱신한다.
@@ -62,3 +64,13 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/build/scripts/run-tests.mjs" --cmd "./gradlew
 node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" status   # 무엇이 미이행인지 먼저 확인
 ```
 - `[flow]` 태스크가 포함됐으면 `nereus:e2e`를 먼저 실행한 뒤 `nereus:review`로 넘어간다. 아니면 바로 review.
+
+## 5. 비용 티어 (출처: oh-my-openagent category + superpowers tiering)
+
+| 작업 등급 | 예 | 티어 |
+|---|---|---|
+| 기계적 (mechanical) | 포맷·린트·재테스트·단순 수정 | 가장 낮은 가용 티어 |
+| 통합 (integration) | 다파일 기능 구현·리뷰 반영 | 표준 티어 |
+| 설계·최종판단 (design/final) | 아키텍처 결정·R4–5 escalate·breaker 판정 | 가장 높은 티어 |
+
+fix 4라운드 이후는 무조건 한 티어 위로 올린다 (고친 주체가 자기 문제를 못 본다).

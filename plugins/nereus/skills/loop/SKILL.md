@@ -26,3 +26,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/baton/scripts/loop-runner.mjs" --goal "<목�
 ## 주의
 - 루프는 사용자가 명시적으로 요청할 때만. 비용이 크다(반복당 세션 1개).
 - 사용자가 자리를 비우는 실행이면 `--max`를 10 이하로 시작하라고 권한다.
+
+## 자율 게이트 (출처: Prime Agent autonomous gate)
+
+매 반복 끝에 게이트 명령을 돌린다. 실패하면 열린 재시도가 아니라 bounded 반환(Bounded 경로·1회 수정)으로 돌아간다. 변경 파일이 없으면 skip. turns/tokens/timeout 바운드 소진 시 중단하고 ledger에 Ruling을 남긴다. 판정 기준은 `hooks/scripts/lib/autonomous-gate.mjs`의 `autonomousGate()`가 유일한 진실원천이다.

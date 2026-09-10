@@ -15,6 +15,16 @@ nereus:common 규칙을 따른다. 담당 에이전트: architect.
 - **large**: 새 모듈·새 프로젝트·여러 시스템 → 전체 인터뷰.
 사용자가 `--quick`을 명시하면 크기와 무관하게 빠른 경로.
 
+## 0.5 Three paths + HARD-GATE (출처: superpowers brainstorming)
+
+| 경로 | 언제 | 산출물 |
+|---|---|---|
+| Spike | 답을 모르겠으면 — throwaway 조사 | 메모, 버린다 |
+| Bounded (기본) | 범위 고정 가능 — 승인 전 구현·코드 전면금지 | intake.md 승인 |
+| Architectural | 여러 시스템 — 설계 우선 | intake.md + 설계 스케치 |
+
+<HARD-GATE> 승인 전에는 구현도 코드 수정도 하지 않는다. Bounded 경로에서 intake.md 사용자 승인 없는 코드 변경은 금지다. 병렬 실행이 필요하면 `nereus:loop`로 넘긴다 (라우터 IntentGate).
+
 ## 1. 도구 확인
 
 `ooo` 명령이 있는지 확인한다. 없으면 ouroboros 플러그인의 `ooo interview` 스킬(MCP `ouroboros_interview`)을 시도한다. 둘 다 없으면 사용자에게 `/nereus:setup`을 안내하고, 대신 아래 "수동 인터뷰"를 진행한다.

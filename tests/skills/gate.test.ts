@@ -106,6 +106,15 @@ describe("finish gate — 디자인 피드백", () => {
   });
 });
 
+describe("finish gate VBC iron law", () => {
+  const ok = { status: "FRESH", passing: true, command: "npm test" };
+  it("gate report markdown cites VBC iron law", () => {
+    const r = gateReport({ diff: "", evidence: ok });
+    expect(r.markdown).toContain("NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION");
+    expect(r.markdown).toContain("FRESH VERIFICATION");
+  });
+});
+
 describe("listRepoRefs — 미추적 파일", () => {
   it("미추적 SKILL.md 도 참조 후보로 받아들인다 (새 스킬은 스크립트와 SKILL.md 가 함께 새로 생긴다)", () => {
     // Windows 에서 listRepoRefs 가 path.join 으로 "\\a\\" 를 만들기 때문에 구분자에 의존하지 않고 본다

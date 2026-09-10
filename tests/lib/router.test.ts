@@ -113,3 +113,33 @@ describe("resume 라우트", () => {
     }
   });
 });
+
+describe("loop 라우트", () => {
+  const skills = (t: string) => routePrompt(t).map((r: any) => r.skill);
+
+  it("병렬·자율 반복 키워드를 nereus:loop 으로 잡는다", () => {
+    for (const t of ["ulw로 병렬 실행해줘", "hyperplan으로 계획해줘", "병렬로 돌려줘"]) {
+      expect(skills(t)).toContain("nereus:loop");
+    }
+  });
+
+  it("코드 경로 안의 loop 언급에는 뜨지 않는다", () => {
+    expect(skills("src/loop/runner.ts 열어줘")).not.toContain("nereus:loop");
+  });
+});
+
+describe("continue 라우트", () => {
+  const skills = (t: string) => routePrompt(t).map((r: any) => r.skill);
+
+  it("명시적 continue 표현을 nereus:continue 로 잡는다", () => {
+    for (const t of ["continue on 해줘", "continue off 해줘", "자동으로 계속 해줘"]) {
+      expect(skills(t)).toContain("nereus:continue");
+    }
+  });
+
+  it("무관한 요청에는 뜨지 않는다", () => {
+    for (const t of ["로그인 버그 고쳐줘", "이 화면 예쁘게 해줘"]) {
+      expect(skills(t)).not.toContain("nereus:continue");
+    }
+  });
+});

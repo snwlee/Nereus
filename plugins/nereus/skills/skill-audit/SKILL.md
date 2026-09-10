@@ -36,6 +36,8 @@ skillspector scan <저장소 URL | 디렉터리 | zip> --json
 ```
 설치 전에 반드시 돌린다. 프롬프트 인젝션, 은닉 명령, 위험한 스크립트를 찾는다. 심각한 지적이 하나라도 있으면 설치하지 말고 사용자에게 근거와 함께 보고한다. 이미 검토한 지적은 baseline으로 억제해 재스캔에서 새 항목만 보이게 한다.
 
+설치 게이트: `skillspector scan --json` 결과를 `scripts/scan-gate.mjs`의 `scanGate(report)`로 판정한다. critical/high이 하나라도 있으면 설치 차단(`install: false`), 그 외는 경고로 통과한다. 보고서가 비어 있거나 형식이 깨지면 fail-closed(설치 차단)한다. 설치 여부의 유일 진실원천은 `scanGate` 반환값이다.
+
 ## 3. 중복·토큰 낭비 (임베딩 제공자 필요, 기본 비활성)
 
 ```bash

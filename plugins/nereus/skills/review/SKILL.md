@@ -50,16 +50,25 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 - **CRITICAL/HIGH 0개** → 통과. `nereus:finish`로.
 - **MEDIUM 이하만** → 루프에 넣지 않는다. `.nereus/handoff.md`에 한 줄씩 기록하고 `nereus:finish`로 (최종 리뷰가 merge 전 triage한다).
 
+심각도별 액션 (`review.mjs`의 `severityAction`):
+
+| 심각도 | 액션 | 의미 |
+|---|---|---|
+| CRITICAL | `fix-now` | 즉시수정. 수정 루프에 진입한다 |
+| HIGH | `must-resolve` | 해결 전 진행금지. 수정 루프에 진입한다 |
+| MEDIUM 이하 | `defer-ledger` | 연기 + ledger에 기록하고 `nereus:finish`로 |
+| unknown | `defer-ledger` | 알 수 없는 심각도는 연기 기본값 |
+
 ### 3.1 수정 루프 상한 — 5라운드 (출처: superpowers SDD fix loop)
 
 CRITICAL/HIGH가 남으면 fix 1회 + 스코프 재리뷰(고친 diff만, untouched 코드는 Out-of-Scope로 ledger행) 1회를 1라운드로 센다. 라운드 판정은 `review.mjs`의 `fixLoopStep(끝난라운드, 잔여blocking)`을 따른다:
 
 - **R1–3: resume** — 같은 맥락에서 이어서 고친다 (TDD: 회귀 테스트 먼저). 컨텍스트가 끊겼으면 brief·report·findings를 통째로 넘긴 fresh dispatch로 대체한다.
-- **R4–5: escalate** — fresh + 한 티어 위 모델로 바꾼다. 3번 이어 고쳤는데 안 되면 고친 주체가 자기 문제를 못 보는 것이다.
+- **R4–5: escalate** — fresh + 한 티어 위 모델로 바꾼다. 3번 이어 고쳤는데 안 되면 고친 주체가 자기 문제를 못 보는 것이다. 티어는 build §5 비용 티어표를 따른다.
 - **R5 후에도 잔존: breaker** — 그만 고치고 각 항목을 판정해 사용자에게 확인받는다. 리뷰어가 틀렸거나 contestable하면 park + Ruling 기록. 진짜인데 하류가 안 얹히면 park + deferred. 진짜이고 load-bearing이면 (다음 작업이 얹히거나 계획 결함을 드러내면) 최소 변경을 rule로 정해 다음 build에 넘긴다. 조용히 버리지 않는다.
 
 "고치면 될 것 같으니 한 번만 더"는 5라운드 이후의 변명이다. 라운드가 수렴하지 않으면 구조 문제다.
 
 ## 4. 기록
 
-`.nereus/review.md`에 findings와 처리 결과를 남긴다. handoff.md 현재 단계를 갱신한다.
+`.nereus/review.md`에 findings와 처리 결과를 남긴다. handoff.md 현재 단계를 갱신한다. 판정·연기는 common의 Ruling 형식으로 기록한다.

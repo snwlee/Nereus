@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS } from "../../plugins/nereus/skills/review/scripts/review.mjs";
+import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction } from "../../plugins/nereus/skills/review/scripts/review.mjs";
 
 describe("review merge", () => {
   it("parses OCR json output into normalized findings", () => {
@@ -74,5 +74,23 @@ describe("review merge", () => {
   });
   it("5라운드를 넘기면 breaker (사용자 판정)", () => {
     expect(fixLoopStep(5, 1)).toEqual({ action: "breaker" });
+  });
+});
+
+describe("severityAction", () => {
+  it("CRITICAL enters loop as fix-now", () => {
+    expect(severityAction("CRITICAL")).toBe("fix-now");
+  });
+  it("HIGH enters loop as must-resolve", () => {
+    expect(severityAction("HIGH")).toBe("must-resolve");
+  });
+  it("MEDIUM and below defer to ledger", () => {
+    expect(severityAction("MEDIUM")).toBe("defer-ledger");
+    expect(severityAction("LOW")).toBe("defer-ledger");
+    expect(severityAction("INFO")).toBe("defer-ledger");
+  });
+  it("unknown defaults to defer-ledger", () => {
+    expect(severityAction("UNKNOWN")).toBe("defer-ledger");
+    expect(severityAction(undefined)).toBe("defer-ledger");
   });
 });

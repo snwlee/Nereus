@@ -49,6 +49,7 @@ export function gateReport({ diff, evidence, exclude = [], listRefs = null, read
     for (const f of design.findings ?? []) lines.push(`  - [${f.category}] ${f.file} — ${f.message}`);
   }
   const pass = integrity.pass && evidence.status === "FRESH" && evidence.passing === true && design?.pass !== false;
+  lines.push("- Iron law: NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION.");
   lines.push("", pass ? "**판정: 통과** — finish 로 진행 가능." : "**판정: 차단** — 위 항목을 해결한 뒤 다시 실행.");
   return { pass, integrity, evidence, markdown: lines.join("\n") };
 }
