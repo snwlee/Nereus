@@ -11,7 +11,8 @@ const REQUIRED = ["Files:", "Interfaces:", "Steps:", "Done when:"];
 const PLACEHOLDER_RES = [
   /\bTBD\b/i,
   /<[^>\n]{1,30}>/,
-  /\.\.\./,
+  // 산문 말줄임만 잡는다. JS 스프레드(`{ ...base }`, `[...xs]`, `f(...args)`)는 정상 코드다.
+  /\.\.\.(?![A-Za-z_$[{])/,
   /\b(TODO|FIXME)\b/,
   /(적절한|알맞은|필요한|충분한)\s*(에러 처리|검증|테스트|추가|구현|수정)/,
   /위\s*(항목|내용|코드|테스트).*(테스트|작성|확인)/,

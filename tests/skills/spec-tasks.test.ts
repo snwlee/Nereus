@@ -44,3 +44,27 @@ describe("lintTasks", () => {
     expect(r.findings.some((f: any) => f.task === "T4. 빈 태스크")).toBe(true);
   });
 });
+
+// JS 스프레드(`{ ...base }`)는 뭉뚱그림이 아니라 정상 코드다. 산문 말줄임만 잡아야 한다.
+// 실제로 add-plugin-doctor tasks.md 의 정상 테스트 코드가 이 규칙에 걸려 spec 게이트가 막혔다.
+describe("lintTasks — 말줄임 규칙은 스프레드를 오탐하지 않는다", () => {
+  const wrap = (line: string) => [
+    "- [ ] T1. x",
+    "  - Files: Create `a.ts`",
+    "  - Interfaces: Produces `f()`",
+    "  - Steps:",
+    `    - [ ] ${line}`,
+    "  - Done when: 통과",
+  ].join("\n");
+
+  it("accepts object and array spread", () => {
+    expect(lintTasks(wrap("`const r = fn({ ...base, id: 1 });`")).pass).toBe(true);
+    expect(lintTasks(wrap("`const a = [...xs, 1];`")).pass).toBe(true);
+    expect(lintTasks(wrap("`fn(...args)`")).pass).toBe(true);
+  });
+
+  it("still rejects prose ellipsis", () => {
+    expect(lintTasks(wrap("- **WHEN** ...")).pass).toBe(false);
+    expect(lintTasks(wrap("구현은 ... 로 한다")).pass).toBe(false);
+  });
+});
