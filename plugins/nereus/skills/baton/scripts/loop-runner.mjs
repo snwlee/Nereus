@@ -150,11 +150,45 @@ export function buildPrompt({ handoff, tasks, spec, goal }) {
   ].join("\n");
 }
 
-function defaultRunClaude(prompt, cwd) {
+/**
+ * 서브세션이 **자기 일을 끝내는 데 필요한 만큼만** 허용하는 목록.
+ *
+ * `--permission-mode acceptEdits` 는 파일 편집만 자동 승인한다. Bash 는 승인을 묻는데
+ * 비대화형 `-p` 세션에서 그 물음은 곧 거부다. 그래서 wave 서브세션이 테스트를 한 번도
+ * 돌리지 못하고 tdd-override 로 RED 없이 구현하는 사고가 났다(add-plugin-doctor 사이클).
+ *
+ * 그렇다고 bypassPermissions 로 올리지 않는다. 루프는 사람이 안 보는 동안 도는데, 거기서
+ * 전권을 주면 되돌릴 수 없는 일이 조용히 일어난다. 러너·git 커밋까지만 연다 —
+ * **push 는 넣지 않는다.** 원격에 나가는 것은 사람이 보고 결정할 일이다.
+ */
+export const LOOP_ALLOWED_TOOLS = Object.freeze([
+  "Bash(node:*)",
+  "Bash(npx vitest:*)",
+  "Bash(npm test:*)",
+  "Bash(npm run:*)",
+  "Bash(./gradlew:*)",
+  "Bash(mvn test:*)",
+  "Bash(flutter test:*)",
+  "Bash(flutter analyze:*)",
+  "Bash(git add:*)",
+  "Bash(git commit:*)",
+  "Bash(git status:*)",
+  "Bash(git diff:*)",
+  "Bash(git log:*)",
+]);
+
+/** `claude -p` 인자 조립. 순수 함수라 무엇을 허용했는지 테스트가 직접 검사한다. */
+export function claudeArgs(prompt, { allowedTools } = {}) {
+  const args = ["-p", prompt, "--permission-mode", "acceptEdits"];
+  if (allowedTools?.length) args.push("--allowedTools", allowedTools.join(" "));
+  return args;
+}
+
+function defaultRunClaude(prompt, cwd, allowedTools = LOOP_ALLOWED_TOOLS) {
   return new Promise((resolve) => {
     const bin = which("claude");
     if (!bin) return resolve({ ok: false, error: "claude CLI 없음" });
-    const p = spawn(bin, ["-p", prompt, "--permission-mode", "acceptEdits"], { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false });
+    const p = spawn(bin, claudeArgs(prompt, { allowedTools }), { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false });
     p.on("close", (code) => resolve({ ok: code === 0, code }));
     p.on("error", (e) => resolve({ ok: false, error: String(e) }));
   });

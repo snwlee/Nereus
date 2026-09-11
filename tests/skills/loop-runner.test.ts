@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { runLoop, parseTasks, buildPrompt } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
+import { runLoop, parseTasks, buildPrompt, claudeArgs, LOOP_ALLOWED_TOOLS } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
 
 describe("loop-runner", () => {
   it("parses tasks with checkbox state", () => {
@@ -123,5 +123,37 @@ describe("loop-runner — 자율 게이트", () => {
       now: () => (t += 1000),  // 첫 반복 안에서 데드라인을 넘긴다
     });
     expect(r).toEqual({ status: "budget_exhausted", iterations: 1 });
+  });
+});
+
+describe("claudeArgs — 서브세션 권한", () => {
+  // acceptEdits 는 **파일 편집만** 자동 승인한다. Bash 는 승인을 묻는데, 비대화형 `-p`
+  // 세션에서 그 물음은 곧 거부다. 그래서 wave 서브세션이 테스트를 한 번도 돌리지 못하고
+  // tdd-override 로 RED 없이 구현했다(add-plugin-doctor 사이클에서 실측).
+  it("keeps acceptEdits and never escalates to bypassPermissions", () => {
+    const a = claudeArgs("작업", { allowedTools: LOOP_ALLOWED_TOOLS });
+    expect(a.slice(0, 2)).toEqual(["-p", "작업"]);
+    expect(a).toContain("acceptEdits");
+    expect(a.join(" ")).not.toContain("bypassPermissions");
+  });
+
+  it("passes the allowlist so the subsession can actually run its tests", () => {
+    const a = claudeArgs("작업", { allowedTools: ["Bash(npm test:*)"] });
+    const i = a.indexOf("--allowedTools");
+    expect(i).toBeGreaterThan(-1);
+    expect(a[i + 1]).toBe("Bash(npm test:*)");
+  });
+
+  it("omits the flag entirely when the allowlist is empty", () => {
+    expect(claudeArgs("작업", { allowedTools: [] })).not.toContain("--allowedTools");
+    expect(claudeArgs("작업")).not.toContain("--allowedTools");
+  });
+
+  it("allows the test runners and committing, but not pushing", () => {
+    const joined = LOOP_ALLOWED_TOOLS.join(" ");
+    for (const needed of ["node", "npx vitest", "npm test", "git add", "git commit"]) {
+      expect(joined).toContain(needed);
+    }
+    expect(joined).not.toContain("git push");
   });
 });
