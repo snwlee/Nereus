@@ -442,11 +442,11 @@
     - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/ledger-io.mjs tests/skills/doctor-ledger-io.test.ts plugins/nereus/hooks/scripts/lib/plugin-curated.mjs tests/lib/plugin-curated.test.ts && git commit -m "feat(doctor): 원장 파일 I/O 와 큐레이션 지문"`
   - Done when: 아홉 테스트 통과, 원장이 append-only 이고 설정 쓰기가 임시 파일 경유이며 MEDIUM 도 ack 가능하다
 
-- [ ] T9. CLI 배선 — apply·ack·unack·undo
+- [x] T9. CLI 배선 — apply·ack·unack·undo
   - Files: Modify `plugins/nereus/skills/doctor/scripts/doctor.mjs` · Modify `tests/skills/doctor-cli.test.ts`
   - Interfaces: Consumes `applyRemedy`·`ledgerPathFor` (T4b), `isAcked`·`planUndo` (T4), `readLedger`·`appendLedger`·`writeSettingsAtomic` (T8) · Produces `runDoctor` 의 확장된 인자 처리
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/skills/doctor-cli.test.ts` 끝에 추가:
+    - [x] 실패 테스트 작성 — `tests/skills/doctor-cli.test.ts` 끝에 추가:
       ```ts
       const high = { severity: "HIGH", kind: "mcp-shadow", unit: "chrome-devtools", scope: "global", fingerprint: "aa", sides: [], remedy: { applicable: true, kind: "permissions-deny", value: "mcp__chrome-devtools" } };
       const manual = { severity: "MEDIUM", kind: "double-gate", unit: "vbc", scope: "global", fingerprint: "bb", sides: [], remedy: { applicable: false, manual: "/plugin 에서 끄세요" } };
@@ -503,12 +503,12 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: FAIL (새 인자를 처리하지 않음)
-    - [ ] 최소 구현: `runDoctor` 가 `deps.ledger` 로 `isAcked` 를 돌려 리포트에서 수용된 충돌을 뺀다. `--apply` 는 `remedy.applicable` 인 충돌만 `applyRemedy` 에 넣어 settings 를 누적하고 `writeSettings` 를 **한 번만** 부르며 각 entry 를 `appendLedger` 로 남긴다. 수동 처방은 건너뛰되 출력에 남긴다. `--ack` 와 `--unack` 은 해당 type 의 줄을 append 한다. `--undo` 는 원장의 마지막 apply 줄에 `planUndo` 를 돌려 `revert` 면 되돌린 settings 를 쓰고, `stop` 이면 아무것도 쓰지 않고 기대값과 실제값을 출력에 담는다.
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: PASS
-    - [ ] 통과 확인: Run `npx vitest run` · Expected: PASS (전체 통과)
-    - [ ] SKILL.md 의 "아직 안 되는 것 (배선 대기)" 절을 지우고 실제 동작으로 옮긴다. `plugins/nereus/skills/doctor/SKILL.md` 의 해당 절을 "수용과 되돌리기" 로 되돌려 쓴다.
-    - [ ] 커밋: `git add plugins/nereus/skills/doctor/scripts/doctor.mjs tests/skills/doctor-cli.test.ts plugins/nereus/skills/doctor/SKILL.md && git commit -m "feat(doctor): apply·ack·unack·undo CLI 배선"`
+    - [x] 실패 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: FAIL (새 인자를 처리하지 않음)
+    - [x] 최소 구현: `runDoctor` 가 `deps.ledger` 로 `isAcked` 를 돌려 리포트에서 수용된 충돌을 뺀다. `--apply` 는 `remedy.applicable` 인 충돌만 `applyRemedy` 에 넣어 settings 를 누적하고 `writeSettings` 를 **한 번만** 부르며 각 entry 를 `appendLedger` 로 남긴다. 수동 처방은 건너뛰되 출력에 남긴다. `--ack` 와 `--unack` 은 해당 type 의 줄을 append 한다. `--undo` 는 원장의 마지막 apply 줄에 `planUndo` 를 돌려 `revert` 면 되돌린 settings 를 쓰고, `stop` 이면 아무것도 쓰지 않고 기대값과 실제값을 출력에 담는다.
+    - [x] 통과 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: PASS
+    - [x] 통과 확인: Run `npx vitest run` · Expected: PASS (전체 통과)
+    - [x] SKILL.md 의 "아직 안 되는 것 (배선 대기)" 절을 지우고 실제 동작으로 옮긴다. `plugins/nereus/skills/doctor/SKILL.md` 의 해당 절을 "수용과 되돌리기" 로 되돌려 쓴다.
+    - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/doctor.mjs tests/skills/doctor-cli.test.ts plugins/nereus/skills/doctor/SKILL.md && git commit -m "feat(doctor): apply·ack·unack·undo CLI 배선"`
   - Done when: 열한 테스트 통과, 인자 없는 실행은 여전히 아무것도 쓰지 않고, 드리프트에서 undo 가 쓰기 없이 멈춘다
 
 ## Global Constraints
