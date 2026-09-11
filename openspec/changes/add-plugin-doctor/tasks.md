@@ -49,7 +49,7 @@
     - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-inventory.mjs tests/lib/plugin-inventory.test.ts && git commit -m "feat(doctor): 플러그인 충돌 표면 인벤토리"`
   - Done when: 세 테스트 통과, 파일 읽기 실패가 예외로 새어나오지 않는다
 
-- [ ] T2. 구조적 충돌 판정과 지문 [wave:1]
+- [x] T2. 구조적 충돌 판정과 지문 [wave:1]
   - Files: Create `plugins/nereus/hooks/scripts/lib/plugin-conflicts.mjs` · Test `tests/lib/plugin-conflicts.test.ts`
   - Interfaces: Consumes `PluginRecord[]` (T1 의 `readInventory` 반환 모양) · Produces `structuralConflicts(records, scope): Conflict[]`, `fingerprint(conflict): string`
   - Steps:
@@ -106,13 +106,13 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/plugin-conflicts.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 실패 확인: Run `npx vitest run tests/lib/plugin-conflicts.test.ts` · Expected: FAIL (모듈 없음)
     - [x] 최소 구현: 활성 레코드만 대상으로 mcp·agents·bins 각각을 유닛 이름으로 그룹핑해 2개 이상이면 각각 `mcp-shadow`·`agent-shadow`·`bin-shadow` 를 HIGH 로 낸다. hooks 는 `event + "|" + matcher` 로 그룹핑해 `hook-shared` 를 LOW 로 내고 `remedy.applicable` 은 false 로 둔다. HIGH 의 remedy 는 mcp 만 `permissions-deny` 로 `"mcp__" + unit`, agent 는 `permissions-deny` 로 `"Agent(" + unit + ")"`, bin 은 `applicable: false` 로 둔다. `fingerprint` 는 `node:crypto` 의 sha256 으로 `kind`, 이름@버전 두 개를 정렬해 이은 것, `unit` 을 이어 해시하고 앞 16자를 반환한다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/plugin-conflicts.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-conflicts.mjs tests/lib/plugin-conflicts.test.ts && git commit -m "feat(doctor): 구조적 섀도잉 판정과 지문"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/plugin-conflicts.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-conflicts.mjs tests/lib/plugin-conflicts.test.ts && git commit -m "feat(doctor): 구조적 섀도잉 판정과 지문"`
   - Done when: 여섯 테스트 통과, 비활성 플러그인이 판정에 섞이지 않는다
 
-- [ ] T3. 큐레이션 표와 MEDIUM 판정 [wave:1]
+- [x] T3. 큐레이션 표와 MEDIUM 판정 [wave:1]
   - Files: Create `plugins/nereus/hooks/scripts/lib/plugin-curated.mjs` · Test `tests/lib/plugin-curated.test.ts`
   - Interfaces: Consumes `PluginRecord[]` (T1 의 `readInventory` 반환 모양) · Produces `CURATED: CuratedEntry[]`, `curatedConflicts(records, scope): Conflict[]`
   - Steps:
@@ -147,10 +147,10 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: `CURATED` 에 두 항목만 넣는다. (1) superpowers 와 nereus 가 함께 활성이면 `verification-before-completion` 이 `nereus:finish` 와 이중 게이트라는 항목, remedy 는 `applicable:false` 에 `/plugin` 화면에서 해당 스킬을 끄라는 수동 문자열. (2) ecc 와 nereus 가 함께 활성이면 `unified-memory` 가 claude-mem 과 겹친다는 항목. 각 항목은 `evidence` 에 근거 한 문장을 갖는다. `curatedConflicts` 는 양쪽 플러그인이 모두 활성일 때만 Conflict 를 만들고 severity 는 MEDIUM 으로 고정한다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-curated.mjs tests/lib/plugin-curated.test.ts && git commit -m "feat(doctor): 큐레이션 이중 게이트 표"`
+    - [x] 실패 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: `CURATED` 에 두 항목만 넣는다. (1) superpowers 와 nereus 가 함께 활성이면 `verification-before-completion` 이 `nereus:finish` 와 이중 게이트라는 항목, remedy 는 `applicable:false` 에 `/plugin` 화면에서 해당 스킬을 끄라는 수동 문자열. (2) ecc 와 nereus 가 함께 활성이면 `unified-memory` 가 claude-mem 과 겹친다는 항목. 각 항목은 `evidence` 에 근거 한 문장을 갖는다. `curatedConflicts` 는 양쪽 플러그인이 모두 활성일 때만 Conflict 를 만들고 severity 는 MEDIUM 으로 고정한다.
+    - [x] 통과 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-curated.mjs tests/lib/plugin-curated.test.ts && git commit -m "feat(doctor): 큐레이션 이중 게이트 표"`
   - Done when: 네 테스트 통과, 표 항목이 정확히 2개이고 각각 근거 문장을 갖는다
 
 - [ ] T4. 원장·수용 지문·undo 계획
