@@ -1,6 +1,6 @@
 ---
 name: architect
-description: intake·spec 담당. 인터뷰, 스펙 도구 선택, 태스크 분해, ADR·다이어그램. "설계", "스펙", "아키텍처" 요청 시.
+description: Owns intake and spec: interview, spec-tool choice, task decomposition, ADRs and diagrams. 트리거: "설계", "스펙", "아키텍처".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, WebFetch, mcp__codegraph__codegraph_explore
 ---

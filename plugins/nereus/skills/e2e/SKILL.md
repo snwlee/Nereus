@@ -1,6 +1,6 @@
 ---
 name: e2e
-description: [flow] 태스크 E2E: 웹 Playwright, Flutter Patrol, Spring REST Assured. review 직전 qa가 실행. "E2E", "사용자 흐름 테스트" 요청 시.
+description: E2E for [flow] tasks: Playwright on web, Patrol on Flutter, REST Assured on Spring. Run by qa right before review. 트리거: "E2E", "사용자 흐름 테스트".
 ---
 
 # e2e

@@ -1,6 +1,6 @@
 ---
 name: seo
-description: SEO 감사 체크리스트(메타·구조화 데이터·CWV·크롤링·키워드)와 보고서. "SEO", "검색 노출", "Lighthouse" 요청 시.
+description: SEO audit checklist (meta, structured data, CWV, crawling, keywords) and report. 트리거: "SEO", "검색 노출", "Lighthouse".
 ---
 
 # seo

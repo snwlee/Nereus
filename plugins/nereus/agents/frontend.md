@@ -1,6 +1,6 @@
 ---
 name: frontend
-description: 웹 UI 구현+디자인 검증(impeccable, 스크린샷, Playwright). "프론트", "화면", "컴포넌트" 요청 시.
+description: Implement web UI and verify the design (impeccable, screenshots, Playwright). 트리거: "프론트", "화면", "컴포넌트".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs, mcp__plugin_nereus_browser__take_screenshot, mcp__plugin_nereus_browser__navigate_page, mcp__plugin_nereus_browser__list_console_messages
 ---

@@ -1,6 +1,6 @@
 ---
 name: intake
-description: 새 작업의 첫 단계. 요청 크기 판정 후 인터뷰(ooo)로 모호성 ≤0.2까지 확정하고 spec으로 넘긴다. 새 기능·프로젝트 시작·"개발해줘" 요청 시. 작은 수정은 --quick.
+description: First step of any new work. Judges request size, then interviews (ooo) until ambiguity is ≤0.2 and hands off to spec. Use --quick for small edits. 트리거: 새 기능·프로젝트 시작, "개발해줘".
 ---
 
 # intake

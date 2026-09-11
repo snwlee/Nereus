@@ -1,6 +1,6 @@
 ---
 name: seo
-description: SEO 감사·키워드 조사, 우선순위 수정 목록. "SEO", "검색 노출", "메타 태그" 요청 시.
+description: SEO audit and keyword research, returning a prioritized fix list. 트리거: "SEO", "검색 노출", "메타 태그".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__plugin_nereus_browser__lighthouse_audit, mcp__plugin_nereus_browser__navigate_page
 ---

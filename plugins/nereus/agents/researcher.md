@@ -1,6 +1,6 @@
 ---
 name: researcher
-description: 시장·기술·경쟁 조사 → 근거 있는 보고서+PDF. "조사해", "리서치", "비교" 요청 시. 라이브러리 문서 조회는 개발 에이전트가 Context7로.
+description: Market, technology and competitive research → an evidence-backed report + PDF. Library docs are looked up by the dev agents via Context7, not here. 트리거: "조사해", "리서치", "비교".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
 ---

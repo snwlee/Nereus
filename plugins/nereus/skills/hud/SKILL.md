@@ -1,6 +1,6 @@
 ---
 name: hud
-description: statusline 한 줄 상태(태스크 진행률·검증 상태·컨텍스트 %)를 출력하거나 설치를 안내한다. "상태 표시", "statusline", "HUD" 요청 시.
+description: Print the one-line statusline state (task progress, verification status, context %) or guide its installation. 트리거: "상태 표시", "statusline", "HUD".
 ---
 
 # hud — 한 줄 상태

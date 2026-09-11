@@ -1,6 +1,6 @@
 ---
 name: review
-description: OCR delegation + Codex/Gemini(agy) 병렬 리뷰, CRITICAL/HIGH 0 게이트. "리뷰", "코드 검토" 요청 시, build 직후 자동.
+description: OCR delegation plus parallel Codex/Gemini(agy) review, gated at 0 CRITICAL/HIGH. Runs automatically right after build. 트리거: "리뷰", "코드 검토".
 ---
 
 # review

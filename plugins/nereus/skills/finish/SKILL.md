@@ -1,6 +1,6 @@
 ---
 name: finish
-description: 완료 게이트(evidence+무결성) → 커밋, archive, tasks 체크, handoff 갱신. "마무리", "커밋하고 정리" 요청 시, review 직후.
+description: Completion gate (evidence + integrity) → commit, archive, check off tasks, refresh handoff. Runs right after review. 트리거: "마무리", "커밋하고 정리".
 ---
 
 # finish

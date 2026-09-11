@@ -1,6 +1,6 @@
 ---
 name: learn
-description: 훅이 자동으로 모은 학습 후보를 검토·승인해 규칙으로 만든다. 승인된 규칙은 다음 세션에 자동 주입된다. "학습 후보", "이거 기억해", "다음부터 이렇게", 교정받은 직후에 사용.
+description: Review and approve the learning candidates the hooks collected, turning them into rules that are auto-injected next session. 트리거: "학습 후보", "이거 기억해", "다음부터 이렇게", 교정받은 직후.
 ---
 
 # learn — 세션에서 배우기

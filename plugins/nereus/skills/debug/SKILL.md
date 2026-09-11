@@ -1,6 +1,6 @@
 ---
 name: debug
-description: 버그·테스트 실패·예상과 다른 동작을 만나면 수정 전에 이것부터. 근본 원인 조사 4단계, 역추적, 다층 방어. "에러 나", "왜 안 되지", "실패해", "깨졌어" 요청 시.
+description: Root-cause investigation before any fix when you hit a bug, a failing test, or behavior that differs from expectations. Four investigation stages, backward tracing, layered defense. 트리거: "에러 나", "왜 안 되지", "실패해", "깨졌어".
 ---
 
 # debug

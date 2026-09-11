@@ -1,6 +1,6 @@
 ---
 name: security
-description: 인증·입력·DB·파일·외부호출·암호화·결제 변경의 보안 리뷰, 외부 스킬 SkillSpector 스캔. review에서 자동, "보안 점검" 요청 시.
+description: Security review of changes to auth, input handling, DB, files, outbound calls, crypto and payments; SkillSpector scan for external skills. Automatic during review. 트리거: "보안 점검".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write
 ---

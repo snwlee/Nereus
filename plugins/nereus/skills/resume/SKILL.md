@@ -1,6 +1,6 @@
 ---
 name: resume
-description: 이전 세션 handoff.md를 검증하고 이어서 작업. 수동 재개용 — /clear 후에는 SessionStart 훅이 자동으로 같은 일을 한다.
+description: Verify the previous session's handoff.md and continue the work. Manual resume only — after /clear the SessionStart hook does the same thing automatically. 트리거: 수동 재개 요청 시.
 ---
 
 # resume

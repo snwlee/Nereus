@@ -1,6 +1,6 @@
 ---
 name: skill-audit
-description: 스킬 품질·보안·중복·실효성을 점검한다. 스킬을 추가·수정한 뒤, 외부 스킬을 설치하기 전, 상시 토큰이 늘었을 때 사용. "스킬 점검", "스킬 감사", "이 스킬 안전해?", "스킬이 실제로 쓰이나" 요청 시.
+description: Check skills for quality, security, duplication and actual usefulness. Use after adding or editing a skill, before installing an external one, or when always-on token cost grows. 트리거: "스킬 점검", "스킬 감사", "이 스킬 안전해?", "스킬이 실제로 쓰이나".
 ---
 
 # skill-audit — 스킬이 안전하고, 겹치지 않고, 실제로 쓰이는가

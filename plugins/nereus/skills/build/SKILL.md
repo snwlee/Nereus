@@ -1,6 +1,6 @@
 ---
 name: build
-description: 태스크를 TDD로 구현(러너 있으면 강제). 게이트: 테스트 통과 + ooo qa. "구현해", "이 태스크" 요청 시, spec 직후 자동.
+description: Implement a task with TDD (enforced when a test runner exists). Gate: tests pass + ooo qa. Runs automatically right after spec. 트리거: "구현해", "이 태스크".
 ---
 
 # build

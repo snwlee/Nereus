@@ -1,6 +1,6 @@
 ---
 name: design
-description: 디자인·UI·UX·미감 작업은 Gemini 피드백을 반드시 거친다. 방향 후보 생성 → 방향 비평(코드 전) → 렌더 비평(코드 후), finish 하드 게이트. "디자인", "화면 만들어", "UI 수정", "예쁘게" 요청 시.
+description: Design, UI, UX and aesthetic work must go through Gemini feedback: direction candidates → direction critique (before code) → render critique (after code). Hard gate at finish. 트리거: "디자인", "화면 만들어", "UI 수정", "예쁘게".
 ---
 
 # design

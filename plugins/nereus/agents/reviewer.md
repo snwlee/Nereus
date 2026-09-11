@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: review 단계. OCR delegation + Codex/Gemini 병합, 심각도별 findings. "리뷰", "코드 검토" 요청 시.
+description: The review stage: OCR delegation merged with Codex/Gemini, findings by severity. 트리거: "리뷰", "코드 검토".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, mcp__codegraph__codegraph_explore
 ---

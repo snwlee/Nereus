@@ -1,6 +1,6 @@
 ---
 name: baton
-description: 컨텍스트 핸드오프 규칙과 handoff.md 형식. Baton 경고 시, 재개 시 참조. 직접 호출은 handoff/resume/loop.
+description: Context handoff rules and the handoff.md format. Referenced on a Baton warning and when resuming; call handoff/resume/loop for the actual action. 트리거: Baton 경고 시, 재개 시 참조. 직접 호출용 아님.
 ---
 
 # Baton

@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: 현재 상태를 .nereus/handoff.md에 전체 재작성하고 커밋. "핸드오프", "여기까지 저장", Baton 경고 시.
+description: Rewrite the full current state into .nereus/handoff.md and commit it. 트리거: "핸드오프", "여기까지 저장", Baton 경고 시.
 ---
 
 # handoff

@@ -1,6 +1,6 @@
 ---
 name: loop
-description: 장기 자율 reset 루프. 반복마다 새 세션이 태스크 하나를 끝내고 커밋. "루프 돌려", "끝날 때까지 자동" 요청 시.
+description: Long-running autonomous reset loop — each iteration is a fresh session that finishes one task and commits. 트리거: "루프 돌려", "끝날 때까지 자동".
 ---
 
 # loop

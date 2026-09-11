@@ -1,6 +1,6 @@
 ---
 name: setup
-description: 외부 도구 감지·설치, 동반 플러그인 안내, 설정 파일 생성. /nereus:setup [--check]
+description: Detect and install external tools, guide companion plugins, generate config files. 트리거: /nereus:setup [--check].
 ---
 
 # Nereus setup

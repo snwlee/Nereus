@@ -1,6 +1,6 @@
 ---
 name: research
-description: 시장·기술 조사 절차: gh search → 웹 → last30days → Agent-Reach. docs/research/ 보고서+PDF. "조사", "리서치", "비교" 요청 시.
+description: Market and technology research procedure: gh search → web → last30days → Agent-Reach, producing a report + PDF under docs/research/. 트리거: "조사", "리서치", "비교".
 ---
 
 # research

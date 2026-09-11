@@ -1,6 +1,6 @@
 ---
 name: continue
-description: 같은 세션에서 남은 태스크를 자동으로 이어가게 켜고 끈다(Stop 재진입). "자동으로 계속", "멈추지 말고", "continue on/off" 요청 시. 기본은 꺼져 있다.
+description: Turn same-session auto-continuation of remaining tasks on or off (Stop re-entry). Off by default. 트리거: "자동으로 계속", "멈추지 말고", "continue on/off".
 ---
 
 # continue — 세션 내 자동 계속
