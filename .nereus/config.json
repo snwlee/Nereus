@@ -8,5 +8,10 @@
       "tests/**",
       "**/SKILL.md"
     ]
+  },
+  "loop": {
+    "extraAllowedTools": [
+      "Bash(rtk:*)"
+    ]
   }
 }

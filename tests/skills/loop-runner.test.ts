@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { runLoop, parseTasks, buildPrompt, claudeArgs, LOOP_ALLOWED_TOOLS } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
+import { runLoop, parseTasks, buildPrompt, claudeArgs, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
 
 describe("loop-runner", () => {
   it("parses tasks with checkbox state", () => {
@@ -155,5 +155,32 @@ describe("claudeArgs — 서브세션 권한", () => {
       expect(joined).toContain(needed);
     }
     expect(joined).not.toContain("git push");
+  });
+});
+
+describe("resolveAllowedTools — 환경별 프록시를 사용자가 더한다", () => {
+  // 이 저장소에서 겪은 사례: rtk 훅이 `git status` 를 `rtk git status` 로 재작성해서
+  // 기본 allowlist 의 `Bash(git status:*)` 와 어긋나 서브세션이 저장소 상태를 못 봤다.
+  // rtk 는 환경 고유 도구라 배포 기본값에 넣지 않는다 — 사용자가 config 로 더한다.
+  it("returns the built-in list when nothing is configured", () => {
+    expect(resolveAllowedTools({})).toEqual([...LOOP_ALLOWED_TOOLS]);
+    expect(resolveAllowedTools()).toEqual([...LOOP_ALLOWED_TOOLS]);
+  });
+
+  it("appends the configured extras without dropping the built-ins", () => {
+    const out = resolveAllowedTools({ loop: { extraAllowedTools: ["Bash(rtk:*)"] } });
+    expect(out).toContain("Bash(rtk:*)");
+    for (const t of LOOP_ALLOWED_TOOLS) expect(out).toContain(t);
+  });
+
+  it("ignores a non-array or empty setting instead of crashing the loop", () => {
+    expect(resolveAllowedTools({ loop: { extraAllowedTools: "Bash(rtk:*)" } })).toEqual([...LOOP_ALLOWED_TOOLS]);
+    expect(resolveAllowedTools({ loop: {} })).toEqual([...LOOP_ALLOWED_TOOLS]);
+  });
+
+  it("does not let an extra smuggle in a push or a permission escalation", () => {
+    const out = resolveAllowedTools({ loop: { extraAllowedTools: ["Bash(git push:*)", "Bash(rtk:*)"] } });
+    expect(out).toContain("Bash(rtk:*)");
+    expect(out).not.toContain("Bash(git push:*)");
   });
 });
