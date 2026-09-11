@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
 import { handoffPath } from "../../../hooks/scripts/lib/paths.mjs";
 import { autonomousGate } from "../../../hooks/scripts/lib/autonomous-gate.mjs";
+import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 
 // [wave:N] 태그. [flow] 선례를 따라 대소문자·공백을 관대하게 받는다.
 // 전역 플래그를 쓰지 않는다 — 공유 정규식에 /g 를 붙이면 lastIndex 가 남아 결과가 흔들린다.
@@ -83,7 +84,7 @@ export function planWorktree({ task, index, root, base }) {
 export async function runWave(group, opts, deps = {}) {
   const root = opts.root ?? opts.cwd ?? process.cwd();
   const log = deps.log ?? (() => {});
-  const runClaudeIn = deps.runClaude ?? ((prompt, cwd) => defaultRunClaude(prompt, cwd));
+  const runClaudeIn = deps.runClaude ?? ((prompt, cwd) => defaultRunClaude(prompt, cwd, opts.allowedTools ?? LOOP_ALLOWED_TOOLS));
   const prompt = buildPrompt({ ...opts.paths, goal: opts.goal });
 
   if (group.length === 1) {
@@ -150,11 +151,63 @@ export function buildPrompt({ handoff, tasks, spec, goal }) {
   ].join("\n");
 }
 
-function defaultRunClaude(prompt, cwd) {
+/**
+ * 서브세션이 **자기 일을 끝내는 데 필요한 만큼만** 허용하는 목록.
+ *
+ * `--permission-mode acceptEdits` 는 파일 편집만 자동 승인한다. Bash 는 승인을 묻는데
+ * 비대화형 `-p` 세션에서 그 물음은 곧 거부다. 그래서 wave 서브세션이 테스트를 한 번도
+ * 돌리지 못하고 tdd-override 로 RED 없이 구현하는 사고가 났다(add-plugin-doctor 사이클).
+ *
+ * 그렇다고 bypassPermissions 로 올리지 않는다. 루프는 사람이 안 보는 동안 도는데, 거기서
+ * 전권을 주면 되돌릴 수 없는 일이 조용히 일어난다. 러너·git 커밋까지만 연다 —
+ * **push 는 넣지 않는다.** 원격에 나가는 것은 사람이 보고 결정할 일이다.
+ */
+export const LOOP_ALLOWED_TOOLS = Object.freeze([
+  "Bash(node:*)",
+  "Bash(npx vitest:*)",
+  "Bash(npm test:*)",
+  "Bash(npm run:*)",
+  "Bash(./gradlew:*)",
+  "Bash(mvn test:*)",
+  "Bash(flutter test:*)",
+  "Bash(flutter analyze:*)",
+  "Bash(git add:*)",
+  "Bash(git commit:*)",
+  "Bash(git status:*)",
+  "Bash(git diff:*)",
+  "Bash(git log:*)",
+]);
+
+// 사용자가 config 로 더해도 **넘길 수 없는 선**. 루프는 사람이 안 보는 동안 돈다.
+const FORBIDDEN_IN_EXTRAS = [/git\s+push/i, /bypassPermissions/i, /--dangerously/i];
+
+/**
+ * 기본 목록에 프로젝트 설정의 `loop.extraAllowedTools` 를 더한다.
+ *
+ * 환경마다 명령이 다른 모양으로 나간다 — 이 저장소에서는 rtk 훅이 `git status` 를
+ * `rtk git status` 로 재작성해서 기본 목록과 어긋났고, 서브세션이 저장소 상태를 못 봤다.
+ * 그런 프록시는 환경 고유라 배포 기본값에 넣지 않는다. 사용자가 더하되, 더하는 것으로
+ * push 나 권한 상승을 들여올 수는 없다.
+ */
+export function resolveAllowedTools(config = {}) {
+  const extra = config?.loop?.extraAllowedTools;
+  if (!Array.isArray(extra)) return [...LOOP_ALLOWED_TOOLS];
+  const safe = extra.filter((e) => typeof e === "string" && !FORBIDDEN_IN_EXTRAS.some((re) => re.test(e)));
+  return [...LOOP_ALLOWED_TOOLS, ...safe];
+}
+
+/** `claude -p` 인자 조립. 순수 함수라 무엇을 허용했는지 테스트가 직접 검사한다. */
+export function claudeArgs(prompt, { allowedTools } = {}) {
+  const args = ["-p", prompt, "--permission-mode", "acceptEdits"];
+  if (allowedTools?.length) args.push("--allowedTools", allowedTools.join(" "));
+  return args;
+}
+
+function defaultRunClaude(prompt, cwd, allowedTools = LOOP_ALLOWED_TOOLS) {
   return new Promise((resolve) => {
     const bin = which("claude");
     if (!bin) return resolve({ ok: false, error: "claude CLI 없음" });
-    const p = spawn(bin, ["-p", prompt, "--permission-mode", "acceptEdits"], { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false });
+    const p = spawn(bin, claudeArgs(prompt, { allowedTools }), { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false });
     p.on("close", (code) => resolve({ ok: code === 0, code }));
     p.on("error", (e) => resolve({ ok: false, error: String(e) }));
   });
@@ -176,7 +229,8 @@ async function defaultEvaluate(cwd) {
 export async function runLoop(opts, deps = {}) {
   const cwd = opts.cwd ?? process.cwd();
   const readTasks = deps.readTasks ?? (() => fs.readFileSync(path.resolve(cwd, opts.paths.tasks), "utf8"));
-  const runClaude = deps.runClaude ?? ((prompt) => defaultRunClaude(prompt, cwd));
+  const allowedTools = deps.allowedTools ?? resolveAllowedTools((deps.config ?? (() => loadConfig({ cwd })))());
+  const runClaude = deps.runClaude ?? ((prompt) => defaultRunClaude(prompt, cwd, allowedTools));
   const gitDirty = deps.gitDirty ?? (() => run("git", ["status", "--porcelain"], { cwd }).stdout.trim() !== "");
   const commit = deps.commit ?? ((msg) => { run("git", ["add", "-A"], { cwd }); run("git", ["commit", "-q", "-m", msg], { cwd }); });
   const evaluate = deps.evaluate ?? (() => defaultEvaluate(cwd));
@@ -191,7 +245,7 @@ export async function runLoop(opts, deps = {}) {
 
   // wave 를 쓰려면 runWave 를 거쳐야 한다. 그룹 크기 1이면 runWave 가 메인 워크트리에서
   // 그대로 돌므로 태그 없는 tasks 는 기존 순차 동작과 동일하다(하위 호환).
-  const wave = deps.runWave ?? ((group) => runWave(group, { ...opts, root: cwd }, { ...deps, runClaude: deps.runClaude }));
+  const wave = deps.runWave ?? ((group) => runWave(group, { ...opts, root: cwd, allowedTools }, { ...deps, runClaude: deps.runClaude }));
 
   let sameTaskFails = 0;
   let lastTask = null;

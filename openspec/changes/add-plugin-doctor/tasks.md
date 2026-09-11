@@ -373,6 +373,144 @@
     - [x] 커밋: `git add plugins/nereus/skills/doctor/SKILL.md plugins/nereus/skills/setup/SKILL.md plugins/nereus/skills/spec/references/reverse-spec.md && git commit -m "docs(doctor): SKILL 작성, setup 연동, reverse-spec OpenSpec 호환"`
   - Done when: `openspec validate` 가 전부 통과하고, reverse-spec.md 대로 새로 쓴 스펙이 CLI 를 통과한다
 
+- [x] T8. 원장 파일 I/O 와 큐레이션 지문
+  - Files: Create `plugins/nereus/skills/doctor/scripts/ledger-io.mjs` · Test `tests/skills/doctor-ledger-io.test.ts` · Modify `plugins/nereus/hooks/scripts/lib/plugin-curated.mjs` · Modify `tests/lib/plugin-curated.test.ts`
+  - Interfaces: Consumes `fingerprint` (T2 의 `plugin-conflicts.mjs`) · Produces `readLedger({ file, readText }): object[]`, `appendLedger({ file, entry, appendText, mkdir }): void`, `writeSettingsAtomic({ file, settings, writeText, rename }): void`
+  - Steps:
+    - [x] 실패 테스트 작성 `tests/skills/doctor-ledger-io.test.ts`:
+      ```ts
+      import { describe, it, expect } from "vitest";
+      import { readLedger, appendLedger, writeSettingsAtomic } from "../../plugins/nereus/skills/doctor/scripts/ledger-io.mjs";
+
+      describe("readLedger", () => {
+        it("parses one object per line and ignores blank lines", () => {
+          const out = readLedger({ file: "/l.jsonl", readText: () => '{"type":"ack","fingerprint":"aa"}\n\n{"type":"unack","fingerprint":"aa"}\n' });
+          expect(out.map((e: any) => e.type)).toEqual(["ack", "unack"]);
+        });
+        it("skips a corrupt line instead of discarding the whole ledger", () => {
+          const out = readLedger({ file: "/l.jsonl", readText: () => '{"type":"ack"}\nnot json\n{"type":"unack"}\n' });
+          expect(out).toHaveLength(2);
+        });
+        it("returns an empty list when the file is missing", () => {
+          expect(readLedger({ file: "/nope", readText: () => { throw new Error("ENOENT"); } })).toEqual([]);
+        });
+      });
+
+      describe("appendLedger", () => {
+        it("appends exactly one newline terminated line", () => {
+          const wrote: string[] = [];
+          appendLedger({ file: "/l.jsonl", entry: { type: "ack", fingerprint: "aa" }, appendText: (f: string, s: string) => { wrote.push(s); }, mkdir: () => {} });
+          expect(wrote).toHaveLength(1);
+          expect(wrote[0].endsWith("\n")).toBe(true);
+          expect(JSON.parse(wrote[0])).toMatchObject({ type: "ack", fingerprint: "aa" });
+        });
+        it("creates the parent directory before appending", () => {
+          const calls: string[] = [];
+          appendLedger({ file: "/a/b/l.jsonl", entry: { type: "ack" }, appendText: () => { calls.push("append"); }, mkdir: () => { calls.push("mkdir"); } });
+          expect(calls).toEqual(["mkdir", "append"]);
+        });
+      });
+
+      describe("writeSettingsAtomic", () => {
+        it("writes a temp file first and renames it over the target", () => {
+          const seq: string[] = [];
+          writeSettingsAtomic({ file: "/s.json", settings: { a: 1 }, writeText: (f: string) => { seq.push("write:" + f); }, rename: (from: string, to: string) => { seq.push("rename:" + from + " to " + to); } });
+          expect(seq).toHaveLength(2);
+          expect(seq[0].startsWith("write:/s.json.")).toBe(true);
+          expect(seq[1].endsWith(" to /s.json")).toBe(true);
+        });
+        it("does not rename when the write fails, so the target stays intact", () => {
+          let renamed = false;
+          expect(() => writeSettingsAtomic({ file: "/s.json", settings: { a: 1 }, writeText: () => { throw new Error("disk full"); }, rename: () => { renamed = true; } })).toThrow();
+          expect(renamed).toBe(false);
+        });
+      });
+      ```
+    - [x] 실패 확인: Run `npx vitest run tests/skills/doctor-ledger-io.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: `ledger-io.mjs` 작성. `readLedger` 는 `readText` 실패를 빈 배열로 삼키고, 줄마다 `JSON.parse` 를 try 로 감싸 깨진 줄만 버린다. `appendLedger` 는 `mkdir` 을 먼저 부르고 `JSON.stringify(entry) + "\n"` 한 줄만 덧붙인다(기존 내용을 절대 다시 쓰지 않는다). `writeSettingsAtomic` 은 `file + "." + process.pid + ".tmp"` 에 먼저 쓰고 성공했을 때만 `rename` 한다. 기본 주입은 `node:fs` 의 `readFileSync`·`appendFileSync`·`mkdirSync`·`writeFileSync`·`renameSync` 다.
+    - [x] 통과 확인: Run `npx vitest run tests/skills/doctor-ledger-io.test.ts` · Expected: PASS
+    - [x] 큐레이션 지문 테스트를 `tests/lib/plugin-curated.test.ts` 의 `curatedConflicts` describe 안에 추가:
+      ```ts
+      it("carries a fingerprint so a MEDIUM finding can be acked", () => {
+        const c = curatedConflicts([rec("superpowers@obra", "1.2.0"), rec("nereus@nereus", "0.19.3")], "global");
+        expect(c[0].fingerprint).toMatch(/^[0-9a-f]{16}$/);
+      });
+      ```
+    - [x] 실패 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: FAIL (fingerprint 가 undefined)
+    - [x] 최소 구현: `plugin-curated.mjs` 가 `plugin-conflicts.mjs` 의 `fingerprint` 를 import 해 Conflict 에 붙인다. 지문 입력은 구조적 충돌과 같은 규약(kind, 정렬한 이름@버전, unit)을 쓴다.
+    - [x] 통과 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: PASS (5개)
+    - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/ledger-io.mjs tests/skills/doctor-ledger-io.test.ts plugins/nereus/hooks/scripts/lib/plugin-curated.mjs tests/lib/plugin-curated.test.ts && git commit -m "feat(doctor): 원장 파일 I/O 와 큐레이션 지문"`
+  - Done when: 아홉 테스트 통과, 원장이 append-only 이고 설정 쓰기가 임시 파일 경유이며 MEDIUM 도 ack 가능하다
+
+- [x] T9. CLI 배선 — apply·ack·unack·undo
+  - Files: Modify `plugins/nereus/skills/doctor/scripts/doctor.mjs` · Modify `tests/skills/doctor-cli.test.ts`
+  - Interfaces: Consumes `applyRemedy`·`ledgerPathFor` (T4b), `isAcked`·`planUndo` (T4), `readLedger`·`appendLedger`·`writeSettingsAtomic` (T8) · Produces `runDoctor` 의 확장된 인자 처리
+  - Steps:
+    - [x] 실패 테스트 작성 — `tests/skills/doctor-cli.test.ts` 끝에 추가:
+      ```ts
+      const high = { severity: "HIGH", kind: "mcp-shadow", unit: "chrome-devtools", scope: "global", fingerprint: "aa", sides: [], remedy: { applicable: true, kind: "permissions-deny", value: "mcp__chrome-devtools" } };
+      const manual = { severity: "MEDIUM", kind: "double-gate", unit: "vbc", scope: "global", fingerprint: "bb", sides: [], remedy: { applicable: false, manual: "/plugin 에서 끄세요" } };
+
+      const deps = (over: any = {}) => ({
+        conflicts: [high, manual], ledger: [], settings: {},
+        appendLedger: () => {}, writeSettings: () => {}, run: () => ({ ok: true }),
+        ...over,
+      });
+
+      describe("runDoctor --apply", () => {
+        it("writes settings once and appends one apply line", () => {
+          const wrote: any[] = []; const lines: any[] = [];
+          runDoctor(["--apply"], deps({ writeSettings: (s: any) => { wrote.push(s); }, appendLedger: (e: any) => { lines.push(e); } }));
+          expect(wrote).toHaveLength(1);
+          expect(wrote[0].permissions.deny).toEqual(["mcp__chrome-devtools"]);
+          expect(lines).toHaveLength(1);
+          expect(lines[0]).toMatchObject({ type: "apply", fingerprint: "aa" });
+        });
+        it("reports the manual one as skipped instead of failing the whole run", () => {
+          const r = runDoctor(["--apply"], deps());
+          expect(r.output).toContain("수동");
+          expect(r.output).toContain("vbc");
+        });
+      });
+
+      describe("runDoctor --ack 와 --unack", () => {
+        it("appends an ack line for the given fingerprint", () => {
+          const lines: any[] = [];
+          runDoctor(["--ack", "aa"], deps({ appendLedger: (e: any) => { lines.push(e); } }));
+          expect(lines[0]).toMatchObject({ type: "ack", fingerprint: "aa" });
+        });
+        it("hides an acked conflict from the report", () => {
+          const out = runDoctor([], deps({ ledger: [{ type: "ack", fingerprint: "aa" }] })).output;
+          expect(out).not.toContain("chrome-devtools");
+        });
+        it("appends an unack line so the conflict comes back", () => {
+          const lines: any[] = [];
+          runDoctor(["--unack", "aa"], deps({ appendLedger: (e: any) => { lines.push(e); } }));
+          expect(lines[0]).toMatchObject({ type: "unack", fingerprint: "aa" });
+        });
+      });
+
+      describe("runDoctor --undo", () => {
+        it("stops without writing when the recorded path drifted", () => {
+          const wrote: any[] = [];
+          const r = runDoctor(["--undo"], deps({
+            ledger: [{ type: "apply", fingerprint: "aa", path: ["permissions", "deny"], before: undefined, after: ["mcp__chrome-devtools"], fileHash: "old" }],
+            settings: { permissions: { deny: ["mcp__other"] } },
+            writeSettings: (s: any) => { wrote.push(s); },
+          }));
+          expect(wrote).toEqual([]);
+          expect(r.output).toContain("멈췄");
+        });
+      });
+      ```
+    - [x] 실패 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: FAIL (새 인자를 처리하지 않음)
+    - [x] 최소 구현: `runDoctor` 가 `deps.ledger` 로 `isAcked` 를 돌려 리포트에서 수용된 충돌을 뺀다. `--apply` 는 `remedy.applicable` 인 충돌만 `applyRemedy` 에 넣어 settings 를 누적하고 `writeSettings` 를 **한 번만** 부르며 각 entry 를 `appendLedger` 로 남긴다. 수동 처방은 건너뛰되 출력에 남긴다. `--ack` 와 `--unack` 은 해당 type 의 줄을 append 한다. `--undo` 는 원장의 마지막 apply 줄에 `planUndo` 를 돌려 `revert` 면 되돌린 settings 를 쓰고, `stop` 이면 아무것도 쓰지 않고 기대값과 실제값을 출력에 담는다.
+    - [x] 통과 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: PASS
+    - [x] 통과 확인: Run `npx vitest run` · Expected: PASS (전체 통과)
+    - [x] SKILL.md 의 "아직 안 되는 것 (배선 대기)" 절을 지우고 실제 동작으로 옮긴다. `plugins/nereus/skills/doctor/SKILL.md` 의 해당 절을 "수용과 되돌리기" 로 되돌려 쓴다.
+    - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/doctor.mjs tests/skills/doctor-cli.test.ts plugins/nereus/skills/doctor/SKILL.md && git commit -m "feat(doctor): apply·ack·unack·undo CLI 배선"`
+  - Done when: 열한 테스트 통과, 인자 없는 실행은 여전히 아무것도 쓰지 않고, 드리프트에서 undo 가 쓰기 없이 멈춘다
+
 ## Global Constraints
 
 - 플러그인 런타임 코드는 **Node 표준 라이브러리만** 쓴다. 외부 의존성 추가 금지.

@@ -6,6 +6,10 @@
 // 그래서 severity 는 MEDIUM 으로 고정하고 remedy.applicable 은 항상 false 다.
 //
 // 항목을 추가할 때는 evidence 에 근거 한 문장을 꼭 쓴다. 근거 없는 항목은 테스트가 막는다.
+//
+// 지문은 구조적 충돌과 같은 규약(kind, 정렬한 이름@버전, unit)으로 붙인다. 파일로 못 고치는
+// 충돌이라도 사용자가 "알고 있다" 고 ack 할 수 있어야 하고, 그 키가 지문이다.
+import { fingerprint } from "./plugin-conflicts.mjs";
 
 /** 플러그인 이름에서 마켓플레이스 접미를 뗀다. superpowers@obra → superpowers */
 function baseName(name) {
@@ -55,16 +59,15 @@ export function curatedConflicts(records, scope) {
   return CURATED.flatMap((entry) => {
     const sides = entry.pair.map((p) => active.get(p));
     if (sides.some((s) => !s)) return [];
-    return [
-      {
-        severity: "MEDIUM",
-        kind: entry.kind,
-        unit: entry.unit,
-        scope,
-        sides: sides.map((s) => ({ name: s.name, version: s.version })),
-        evidence: entry.evidence,
-        remedy: { applicable: false, manual: entry.remedy },
-      },
-    ];
+    const conflict = {
+      severity: "MEDIUM",
+      kind: entry.kind,
+      unit: entry.unit,
+      scope,
+      sides: sides.map((s) => ({ name: s.name, version: s.version })),
+      evidence: entry.evidence,
+      remedy: { applicable: false, manual: entry.remedy },
+    };
+    return [{ ...conflict, fingerprint: fingerprint(conflict) }];
   });
 }
