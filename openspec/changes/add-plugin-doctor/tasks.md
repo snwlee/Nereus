@@ -256,11 +256,11 @@
     - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/apply.mjs tests/skills/doctor-apply.test.ts && git commit -m "feat(doctor): 처방 적용과 스코프별 원장 경로"`
   - Done when: 일곱 테스트 통과, 입력 settings 가 변형되지 않고 프로젝트 수용이 전역에 새지 않는다
 
-- [ ] T5. doctor CLI 와 리포트 렌더
+- [x] T5. doctor CLI 와 리포트 렌더
   - Files: Create `plugins/nereus/skills/doctor/scripts/doctor.mjs` · Test `tests/skills/doctor-cli.test.ts`
   - Interfaces: Consumes `structuralConflicts`, `curatedConflicts`, `isAcked` · Produces `renderReport(conflicts, opts): string`, `runDoctor(argv, deps): object`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/skills/doctor-cli.test.ts`:
+    - [x] 실패 테스트 작성 `tests/skills/doctor-cli.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { renderReport, runDoctor } from "../../plugins/nereus/skills/doctor/scripts/doctor.mjs";
@@ -303,10 +303,10 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: `renderReport` 는 HIGH, MEDIUM 을 표로 내고 LOW 는 `--all` 없이는 `LOW 1건` 형태의 요약 한 줄로만 낸다. `remedy.applicable` 이 false 면 처방 칸에 `수동` 과 `remedy.manual` 문자열을 넣는다. `runDoctor` 는 인자가 없으면 리포트만 내고 어떤 쓰기도 하지 않는다. `--remove` 는 `/plugin uninstall` 문자열을 출력에 넣기만 하고 `run` 을 호출하지 않는다.
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/skills/doctor/scripts/doctor.mjs tests/skills/doctor-cli.test.ts && git commit -m "feat(doctor): CLI 리포트와 파괴 금지 게이트"`
+    - [x] 실패 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: `renderReport` 는 HIGH, MEDIUM 을 표로 내고 LOW 는 `--all` 없이는 `LOW 1건` 형태의 요약 한 줄로만 낸다. `remedy.applicable` 이 false 면 처방 칸에 `수동` 과 `remedy.manual` 문자열을 넣는다. `runDoctor` 는 인자가 없으면 리포트만 내고 어떤 쓰기도 하지 않는다. `--remove` 는 `/plugin uninstall` 문자열을 출력에 넣기만 하고 `run` 을 호출하지 않는다.
+    - [x] 통과 확인: Run `npx vitest run tests/skills/doctor-cli.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/doctor.mjs tests/skills/doctor-cli.test.ts && git commit -m "feat(doctor): CLI 리포트와 파괴 금지 게이트"`
   - Done when: 다섯 테스트 통과, 인자 없는 실행이 파일을 쓰지 않고 제거 명령을 실행하지 않는다
 
 - [ ] T6. SessionStart 스냅샷 알림 배선
