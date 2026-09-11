@@ -309,11 +309,11 @@
     - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/doctor.mjs tests/skills/doctor-cli.test.ts && git commit -m "feat(doctor): CLI 리포트와 파괴 금지 게이트"`
   - Done when: 다섯 테스트 통과, 인자 없는 실행이 파일을 쓰지 않고 제거 명령을 실행하지 않는다
 
-- [ ] T6. SessionStart 스냅샷 알림 배선
+- [x] T6. SessionStart 스냅샷 알림 배선
   - Files: Modify `plugins/nereus/hooks/scripts/session-start.mjs` · Test `tests/hooks/session-start-plugins.test.ts`
   - Interfaces: Consumes `readInventory` (T1) · Produces `pluginSnapshotNote({ records, previous }): { note, snapshot }`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/hooks/session-start-plugins.test.ts`:
+    - [x] 실패 테스트 작성 `tests/hooks/session-start-plugins.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { pluginSnapshotNote, handle } from "../../plugins/nereus/hooks/scripts/session-start.mjs";
@@ -352,10 +352,10 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/hooks/session-start-plugins.test.ts` · Expected: FAIL (`pluginSnapshotNote` 없음)
-    - [ ] 최소 구현: `session-start.mjs` 에 `pluginSnapshotNote` 를 export 하고, `handle` 의 상태 블록 부분에서 `source` 가 `compact` 가 아닐 때만 `pluginRecords`·`readSnapshot` 을 호출해 note 를 notes 배열에 넣고 `writeSnapshot` 으로 갱신한다. 기본 주입은 `readInventory` 와 `~/.config/nereus/plugin-snapshot.json` 이고, 전부 deps 로 주입 가능해야 한다. 읽기·쓰기 실패는 삼킨다.
-    - [ ] 통과 확인: Run `npx vitest run tests/hooks/session-start-plugins.test.ts && npx vitest run tests/hooks/` · Expected: PASS (기존 훅 테스트 포함)
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start-plugins.test.ts && git commit -m "feat(doctor): SessionStart 새 플러그인 한 줄 알림"`
+    - [x] 실패 확인: Run `npx vitest run tests/hooks/session-start-plugins.test.ts` · Expected: FAIL (`pluginSnapshotNote` 없음)
+    - [x] 최소 구현: `session-start.mjs` 에 `pluginSnapshotNote` 를 export 하고, `handle` 의 상태 블록 부분에서 `source` 가 `compact` 가 아닐 때만 `pluginRecords`·`readSnapshot` 을 호출해 note 를 notes 배열에 넣고 `writeSnapshot` 으로 갱신한다. 기본 주입은 `readInventory` 와 `~/.config/nereus/plugin-snapshot.json` 이고, 전부 deps 로 주입 가능해야 한다. 읽기·쓰기 실패는 삼킨다.
+    - [x] 통과 확인: Run `npx vitest run tests/hooks/session-start-plugins.test.ts && npx vitest run tests/hooks/` · Expected: PASS (기존 훅 테스트 포함)
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start-plugins.test.ts && git commit -m "feat(doctor): SessionStart 새 플러그인 한 줄 알림"`
   - Done when: 다섯 테스트 통과, compact 에서 스냅샷을 쓰지 않고 첫 실행이 조용하다
 
 - [ ] T7. SKILL.md·setup 연동·reverse-spec 포맷 결함 수정
