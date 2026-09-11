@@ -20,7 +20,20 @@
 
 ## 3. 쓰기 (평탄 포맷)
 
-파일엔 `### Requirement:`(트리거 있음: WHEN → THEN)와 `### Invariant:`(항상 참)만 둔다. "API 계약", "비즈니스 규칙" 같은 타입 챕터 금지. Requirement는 `#### Scenario:`를 최소 1개 가진다. Invariant는 Scenario 없이 `verified_by`만 가능.
+**CLI 가 받는 뼈대를 먼저 맞춘다.** 아래 세 가지는 취향이 아니라 `openspec validate` 통과 조건이다
+(1.12 기준, 이 사이클에서 세 번 걸렸다).
+
+1. 스펙 파일은 `## Purpose` 와 `## Requirements` 섹션을 가진다. 제목과 `Last verified:` 뒤에
+   `## Purpose` 한 문단을 두고, 모든 `### Requirement:` 는 `## Requirements` 아래에 넣는다.
+2. **`### Invariant:` 를 쓰지 않는다.** CLI 는 `###` 을 전부 Requirement 로 파싱해 Scenario 를
+   요구하므로 Invariant 는 검증 실패로 떨어진다. 항상 참인 것도 `### Requirement:` 로 쓰고
+   `<!-- invariant -->` 주석으로 표시한 뒤 Scenario 를 하나 붙인다(불변을 깨는 시도가 어떻게
+   되는지가 그 Scenario 다).
+3. 변경 델타 파일(`openspec/changes/<id>/specs/<capability>/spec.md`)은 `## ADDED Requirements`
+   `## MODIFIED Requirements` `## REMOVED Requirements` 같은 **델타 헤더**를 쓴다. 기준선 스펙의
+   `## Requirements` 를 그대로 쓰면 델타로 인식되지 않는다.
+
+그 안에서는 `### Requirement:`(트리거 있음: WHEN → THEN)만 둔다. "API 계약", "비즈니스 규칙" 같은 타입 챕터 금지. Requirement는 `#### Scenario:`를 최소 1개 가진다.
 
 ```markdown
 ### Requirement: 재고 부족 시 에러 반환
@@ -40,6 +53,6 @@
 
 ## 하지 말 것
 
-- 타입 챕터 만들기, 파일 구조 설명하기, docstring 베껴 적기, 생성·벤더 코드 스펙화, 모듈 전체 한 번에 캐기, `###`을 Requirement/Invariant 외에 쓰기.
+- 타입 챕터 만들기, 파일 구조 설명하기, docstring 베껴 적기, 생성·벤더 코드 스펙화, 모듈 전체 한 번에 캐기, `###`을 Requirement 외에 쓰기.
 - 광산꾼은 리팩터링하지 않는다. 코드 모순은 고치지 말고 `<!-- uncertainty: 이유 -->`로 남긴다.
 - 500줄을 넘기면 capability가 너무 넓다 — 쪼갠다.
