@@ -116,7 +116,7 @@
   - Files: Create `plugins/nereus/hooks/scripts/lib/plugin-curated.mjs` · Test `tests/lib/plugin-curated.test.ts`
   - Interfaces: Consumes `PluginRecord[]` (T1 의 `readInventory` 반환 모양) · Produces `CURATED: CuratedEntry[]`, `curatedConflicts(records, scope): Conflict[]`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/lib/plugin-curated.test.ts`:
+    - [x] 실패 테스트 작성 `tests/lib/plugin-curated.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { CURATED, curatedConflicts } from "../../plugins/nereus/hooks/scripts/lib/plugin-curated.mjs";
