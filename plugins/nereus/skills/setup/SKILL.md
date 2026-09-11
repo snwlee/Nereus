@@ -17,7 +17,13 @@ MCP 상주 비용도 함께 본다 — 세션마다 서버가 뜨는데 그 비�
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/mcp-doctor.mjs"
 ```
-계열별 RSS·개수, 유령 프로세스(부모가 죽어 init 에 재부모된 것), `~/.npm/_npx` 캐시 크기, 설정 문제(버전 미고정·텔레메트리 on)를 보여준다. `--check` 인자만 있으면 여기까지 하고 끝낸다.
+계열별 RSS·개수, 유령 프로세스(부모가 죽어 init 에 재부모된 것), `~/.npm/_npx` 캐시 크기, 설정 문제(버전 미고정·텔레메트리 on)를 보여준다.
+
+다른 하네스 플러그인과의 충돌도 함께 본다 — 설치는 성공했는데 서로 가리는 경우가 여기서 드러난다.
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/doctor.mjs"
+```
+`--check` 인자만 있으면 여기까지 하고 끝낸다.
 
 ## 2. 설치
 

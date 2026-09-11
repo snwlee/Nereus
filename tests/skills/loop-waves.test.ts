@@ -239,3 +239,47 @@ describe("runLoop — wave 연결 (연결 없으면 runWave 는 죽은 코드다
     expect(r.branch).toBe("baton/wave-0-a");
   });
 });
+
+describe("parseTasks — 중첩 스텝은 태스크가 아니다", () => {
+  // nereus:spec 이 만드는 tasks.md 는 태스크마다 중첩 스텝 체크박스를 단다.
+  // 들여쓰기를 무시하고 세면 태스크 8개가 체크박스 49개로 읽히고, 스텝이 태스크 사이에
+  // 끼어들어 인접 규칙이 깨져 wave 가 아예 묶이지 않는다. 실제로 add-plugin-doctor 에서 겪었다.
+  const SPEC_SHAPED = [
+    "# tasks",
+    "",
+    "- [ ] [wave:1] T2. 구조적 충돌 판정",
+    "  - Files: Create `a.mjs`",
+    "  - Steps:",
+    "    - [ ] 실패 테스트 작성",
+    "    - [ ] 실패 확인",
+    "    - [ ] 최소 구현",
+    "",
+    "- [ ] [wave:1] T3. 큐레이션 표",
+    "  - Steps:",
+    "    - [ ] 실패 테스트 작성",
+    "    - [ ] 최소 구현",
+    "",
+    "- [ ] T4. 원장",
+  ].join("\n");
+
+  it("counts only the outermost checkboxes as tasks", () => {
+    const t = parseTasks(SPEC_SHAPED);
+    expect(t.map((x: any) => x.text)).toEqual([
+      "T2. 구조적 충돌 판정",
+      "T3. 큐레이션 표",
+      "T4. 원장",
+    ]);
+  });
+
+  it("lets an adjacent wave group survive the nested steps between its members", () => {
+    const g = planWaves(parseTasks(SPEC_SHAPED));
+    expect(g[0].map((x: any) => x.text)).toEqual(["T2. 구조적 충돌 판정", "T3. 큐레이션 표"]);
+    expect(g[0][0].wave).toBe(1);
+    expect(g).toHaveLength(2);
+  });
+
+  it("treats a uniformly indented list as top level, not as steps", () => {
+    const t = parseTasks(["  - [ ] A", "  - [ ] B"].join("\n"));
+    expect(t.map((x: any) => x.text)).toEqual(["A", "B"]);
+  });
+});

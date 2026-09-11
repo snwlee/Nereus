@@ -4,11 +4,12 @@ import { runLoop, parseTasks, buildPrompt } from "../../plugins/nereus/skills/ba
 describe("loop-runner", () => {
   it("parses tasks with checkbox state", () => {
     const t = parseTasks("- [ ] A [flow]\n- [x] B\n  - [ ] C\ntext\n- [X] D");
-    // wave 태그가 없으면 wave: null — [flow] 등 다른 태그는 텍스트에 그대로 남는다
+    // wave 태그가 없으면 wave: null — [flow] 등 다른 태그는 텍스트에 그대로 남는다.
+    // 중첩된 `  - [ ] C` 는 B 의 스텝이지 태스크가 아니다. 이 테스트는 원래 C 를 태스크로
+    // 셌는데, 그 동작이 nereus:spec 산출물에서 wave 를 깨뜨려 바로잡았다(loop-waves 테스트 참조).
     expect(t).toEqual([
       { text: "A [flow]", done: false, wave: null },
       { text: "B", done: true, wave: null },
-      { text: "C", done: false, wave: null },
       { text: "D", done: true, wave: null },
     ]);
   });
