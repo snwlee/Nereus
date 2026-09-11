@@ -358,19 +358,19 @@
     - [x] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start-plugins.test.ts && git commit -m "feat(doctor): SessionStart 새 플러그인 한 줄 알림"`
   - Done when: 다섯 테스트 통과, compact 에서 스냅샷을 쓰지 않고 첫 실행이 조용하다
 
-- [ ] T7. SKILL.md·setup 연동·reverse-spec 포맷 결함 수정
+- [x] T7. SKILL.md·setup 연동·reverse-spec 포맷 결함 수정
   - Files: Create `plugins/nereus/skills/doctor/SKILL.md` · Modify `plugins/nereus/skills/setup/SKILL.md` · Modify `plugins/nereus/skills/spec/references/reverse-spec.md`
   - Interfaces: Consumes `doctor.mjs` CLI · Produces 없음
   - Steps:
-    - [ ] `plugins/nereus/skills/doctor/SKILL.md` 작성. frontmatter 의 `name` 은 `doctor`, `description` 은 다른 하네스 플러그인과의 충돌을 점검한다는 내용과 "충돌", "중복", "플러그인 정리" 트리거를 담는다. 본문에 심각도 3단계 의미, 처방 3단계, 스킬 충돌은 파일로 못 고치고 수동 절차만 가능하다는 제약, `--all`·`--undo`·`--unack` 사용법을 적는다.
-    - [ ] `plugins/nereus/skills/setup/SKILL.md` 의 "## 1. 감지" 절 끝에 doctor 실행 한 줄을 추가한다:
+    - [x] `plugins/nereus/skills/doctor/SKILL.md` 작성. frontmatter 의 `name` 은 `doctor`, `description` 은 다른 하네스 플러그인과의 충돌을 점검한다는 내용과 "충돌", "중복", "플러그인 정리" 트리거를 담는다. 본문에 심각도 3단계 의미, 처방 3단계, 스킬 충돌은 파일로 못 고치고 수동 절차만 가능하다는 제약, `--all`·`--undo`·`--unack` 사용법을 적는다.
+    - [x] `plugins/nereus/skills/setup/SKILL.md` 의 "## 1. 감지" 절 끝에 doctor 실행 한 줄을 추가한다:
       ```bash
       node "${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/doctor.mjs"
       ```
-    - [ ] `plugins/nereus/skills/spec/references/reverse-spec.md` 를 OpenSpec CLI 1.12 와 맞춘다. 실제로 이 사이클에서 세 번 걸렸다. 세 곳을 고친다: (1) 스펙 파일은 `## Purpose` 와 `## Requirements` 섹션을 가져야 한다고 명시 (2) `### Invariant:` 는 CLI 가 Requirement 로 파싱해 Scenario 를 요구하므로, `### Requirement:` 로 쓰고 불변임을 주석으로 표시하라고 바꾼다 (3) 변경 델타 파일은 `## ADDED Requirements` 같은 델타 헤더를 써야 한다고 추가한다.
-    - [ ] 검증: Run `openspec validate --specs && openspec validate --changes` · Expected: PASS (2 specs, 1 change)
-    - [ ] 검증: Run `npx vitest run` · Expected: PASS (전체 통과)
-    - [ ] 커밋: `git add plugins/nereus/skills/doctor/SKILL.md plugins/nereus/skills/setup/SKILL.md plugins/nereus/skills/spec/references/reverse-spec.md && git commit -m "docs(doctor): SKILL 작성, setup 연동, reverse-spec OpenSpec 호환"`
+    - [x] `plugins/nereus/skills/spec/references/reverse-spec.md` 를 OpenSpec CLI 1.12 와 맞춘다. 실제로 이 사이클에서 세 번 걸렸다. 세 곳을 고친다: (1) 스펙 파일은 `## Purpose` 와 `## Requirements` 섹션을 가져야 한다고 명시 (2) `### Invariant:` 는 CLI 가 Requirement 로 파싱해 Scenario 를 요구하므로, `### Requirement:` 로 쓰고 불변임을 주석으로 표시하라고 바꾼다 (3) 변경 델타 파일은 `## ADDED Requirements` 같은 델타 헤더를 써야 한다고 추가한다.
+    - [x] 검증: Run `openspec validate --specs && openspec validate --changes` · Expected: PASS (2 specs, 1 change)
+    - [x] 검증: Run `npx vitest run` · Expected: PASS (전체 통과)
+    - [x] 커밋: `git add plugins/nereus/skills/doctor/SKILL.md plugins/nereus/skills/setup/SKILL.md plugins/nereus/skills/spec/references/reverse-spec.md && git commit -m "docs(doctor): SKILL 작성, setup 연동, reverse-spec OpenSpec 호환"`
   - Done when: `openspec validate` 가 전부 통과하고, reverse-spec.md 대로 새로 쓴 스펙이 CLI 를 통과한다
 
 ## Global Constraints
