@@ -153,11 +153,11 @@
     - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-curated.mjs tests/lib/plugin-curated.test.ts && git commit -m "feat(doctor): 큐레이션 이중 게이트 표"`
   - Done when: 네 테스트 통과, 표 항목이 정확히 2개이고 각각 근거 문장을 갖는다
 
-- [ ] T4. 원장·수용 지문·undo 계획
+- [x] T4. 원장·수용 지문·undo 계획
   - Files: Create `plugins/nereus/hooks/scripts/lib/doctor-ledger.mjs` · Test `tests/lib/doctor-ledger.test.ts`
   - Interfaces: Consumes `Conflict` (T2 의 `structuralConflicts` 반환 모양) · Produces `isAcked(entries, fp): boolean`, `planUndo({ entry, currentFile }): UndoPlan`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/lib/doctor-ledger.test.ts`:
+    - [x] 실패 테스트 작성 `tests/lib/doctor-ledger.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { isAcked, planUndo } from "../../plugins/nereus/hooks/scripts/lib/doctor-ledger.mjs";
@@ -196,10 +196,10 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/doctor-ledger.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: `isAcked` 는 원장 줄을 순서대로 훑어 같은 지문의 마지막 `ack` 또는 `unack` 을 채택한다. `planUndo` 는 네 분기를 순서대로 판정한다. 경로 값이 `undefined` 면 `noop`, 해시가 같으면 `revert` 에 `hash-match`, 값이 기록된 `after` 와 깊은 비교로 같으면 `revert` 에 `path-intact`, 그 외에는 `stop` 에 `expected` 와 `actual` 을 담는다. 판정 순서상 부재 검사가 해시 검사보다 앞선다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/doctor-ledger.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/doctor-ledger.mjs tests/lib/doctor-ledger.test.ts && git commit -m "feat(doctor): 원장 수용 지문과 undo 4분기 계획"`
+    - [x] 실패 확인: Run `npx vitest run tests/lib/doctor-ledger.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: `isAcked` 는 원장 줄을 순서대로 훑어 같은 지문의 마지막 `ack` 또는 `unack` 을 채택한다. `planUndo` 는 네 분기를 순서대로 판정한다. 경로 값이 `undefined` 면 `noop`, 해시가 같으면 `revert` 에 `hash-match`, 값이 기록된 `after` 와 깊은 비교로 같으면 `revert` 에 `path-intact`, 그 외에는 `stop` 에 `expected` 와 `actual` 을 담는다. 판정 순서상 부재 검사가 해시 검사보다 앞선다.
+    - [x] 통과 확인: Run `npx vitest run tests/lib/doctor-ledger.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/doctor-ledger.mjs tests/lib/doctor-ledger.test.ts && git commit -m "feat(doctor): 원장 수용 지문과 undo 4분기 계획"`
   - Done when: 여섯 테스트 통과, undo 가 드리프트에서 덮어쓰지 않고 멈춘다
 
 - [ ] T4b. 처방 적용·원장 append·스코프별 저장
