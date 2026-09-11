@@ -373,11 +373,11 @@
     - [x] 커밋: `git add plugins/nereus/skills/doctor/SKILL.md plugins/nereus/skills/setup/SKILL.md plugins/nereus/skills/spec/references/reverse-spec.md && git commit -m "docs(doctor): SKILL 작성, setup 연동, reverse-spec OpenSpec 호환"`
   - Done when: `openspec validate` 가 전부 통과하고, reverse-spec.md 대로 새로 쓴 스펙이 CLI 를 통과한다
 
-- [ ] T8. 원장 파일 I/O 와 큐레이션 지문
+- [x] T8. 원장 파일 I/O 와 큐레이션 지문
   - Files: Create `plugins/nereus/skills/doctor/scripts/ledger-io.mjs` · Test `tests/skills/doctor-ledger-io.test.ts` · Modify `plugins/nereus/hooks/scripts/lib/plugin-curated.mjs` · Modify `tests/lib/plugin-curated.test.ts`
   - Interfaces: Consumes `fingerprint` (T2 의 `plugin-conflicts.mjs`) · Produces `readLedger({ file, readText }): object[]`, `appendLedger({ file, entry, appendText, mkdir }): void`, `writeSettingsAtomic({ file, settings, writeText, rename }): void`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/skills/doctor-ledger-io.test.ts`:
+    - [x] 실패 테스트 작성 `tests/skills/doctor-ledger-io.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { readLedger, appendLedger, writeSettingsAtomic } from "../../plugins/nereus/skills/doctor/scripts/ledger-io.mjs";
@@ -426,20 +426,20 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/doctor-ledger-io.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: `ledger-io.mjs` 작성. `readLedger` 는 `readText` 실패를 빈 배열로 삼키고, 줄마다 `JSON.parse` 를 try 로 감싸 깨진 줄만 버린다. `appendLedger` 는 `mkdir` 을 먼저 부르고 `JSON.stringify(entry) + "\n"` 한 줄만 덧붙인다(기존 내용을 절대 다시 쓰지 않는다). `writeSettingsAtomic` 은 `file + "." + process.pid + ".tmp"` 에 먼저 쓰고 성공했을 때만 `rename` 한다. 기본 주입은 `node:fs` 의 `readFileSync`·`appendFileSync`·`mkdirSync`·`writeFileSync`·`renameSync` 다.
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/doctor-ledger-io.test.ts` · Expected: PASS
-    - [ ] 큐레이션 지문 테스트를 `tests/lib/plugin-curated.test.ts` 의 `curatedConflicts` describe 안에 추가:
+    - [x] 실패 확인: Run `npx vitest run tests/skills/doctor-ledger-io.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: `ledger-io.mjs` 작성. `readLedger` 는 `readText` 실패를 빈 배열로 삼키고, 줄마다 `JSON.parse` 를 try 로 감싸 깨진 줄만 버린다. `appendLedger` 는 `mkdir` 을 먼저 부르고 `JSON.stringify(entry) + "\n"` 한 줄만 덧붙인다(기존 내용을 절대 다시 쓰지 않는다). `writeSettingsAtomic` 은 `file + "." + process.pid + ".tmp"` 에 먼저 쓰고 성공했을 때만 `rename` 한다. 기본 주입은 `node:fs` 의 `readFileSync`·`appendFileSync`·`mkdirSync`·`writeFileSync`·`renameSync` 다.
+    - [x] 통과 확인: Run `npx vitest run tests/skills/doctor-ledger-io.test.ts` · Expected: PASS
+    - [x] 큐레이션 지문 테스트를 `tests/lib/plugin-curated.test.ts` 의 `curatedConflicts` describe 안에 추가:
       ```ts
       it("carries a fingerprint so a MEDIUM finding can be acked", () => {
         const c = curatedConflicts([rec("superpowers@obra", "1.2.0"), rec("nereus@nereus", "0.19.3")], "global");
         expect(c[0].fingerprint).toMatch(/^[0-9a-f]{16}$/);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: FAIL (fingerprint 가 undefined)
-    - [ ] 최소 구현: `plugin-curated.mjs` 가 `plugin-conflicts.mjs` 의 `fingerprint` 를 import 해 Conflict 에 붙인다. 지문 입력은 구조적 충돌과 같은 규약(kind, 정렬한 이름@버전, unit)을 쓴다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: PASS (5개)
-    - [ ] 커밋: `git add plugins/nereus/skills/doctor/scripts/ledger-io.mjs tests/skills/doctor-ledger-io.test.ts plugins/nereus/hooks/scripts/lib/plugin-curated.mjs tests/lib/plugin-curated.test.ts && git commit -m "feat(doctor): 원장 파일 I/O 와 큐레이션 지문"`
+    - [x] 실패 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: FAIL (fingerprint 가 undefined)
+    - [x] 최소 구현: `plugin-curated.mjs` 가 `plugin-conflicts.mjs` 의 `fingerprint` 를 import 해 Conflict 에 붙인다. 지문 입력은 구조적 충돌과 같은 규약(kind, 정렬한 이름@버전, unit)을 쓴다.
+    - [x] 통과 확인: Run `npx vitest run tests/lib/plugin-curated.test.ts` · Expected: PASS (5개)
+    - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/ledger-io.mjs tests/skills/doctor-ledger-io.test.ts plugins/nereus/hooks/scripts/lib/plugin-curated.mjs tests/lib/plugin-curated.test.ts && git commit -m "feat(doctor): 원장 파일 I/O 와 큐레이션 지문"`
   - Done when: 아홉 테스트 통과, 원장이 append-only 이고 설정 쓰기가 임시 파일 경유이며 MEDIUM 도 ack 가능하다
 
 - [ ] T9. CLI 배선 — apply·ack·unack·undo

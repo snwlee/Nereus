@@ -18,6 +18,10 @@ describe("curatedConflicts", () => {
   it("stays silent when a side is disabled", () => {
     expect(curatedConflicts([rec("superpowers@obra", "1.2.0", false), rec("nereus@nereus", "0.19.3")], "global")).toEqual([]);
   });
+  it("carries a fingerprint so a MEDIUM finding can be acked", () => {
+    const c = curatedConflicts([rec("superpowers@obra", "1.2.0"), rec("nereus@nereus", "0.19.3")], "global");
+    expect(c[0].fingerprint).toMatch(/^[0-9a-f]{16}$/);
+  });
   it("ships only entries whose evidence and remedy are written", () => {
     expect(CURATED.length).toBe(2);
     for (const e of CURATED) {
