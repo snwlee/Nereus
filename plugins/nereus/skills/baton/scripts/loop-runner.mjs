@@ -12,11 +12,24 @@ import { autonomousGate } from "../../../hooks/scripts/lib/autonomous-gate.mjs";
 export const WAVE_RE = /\[\s*wave\s*:\s*(\d+)\s*\]\s*/i;
 
 export function parseTasks(text) {
-  const out = [];
+  // 들여쓰기가 가장 얕은 체크박스만 태스크다. nereus:spec 이 만드는 tasks.md 는 태스크마다
+  // 중첩 스텝 체크박스(실패 테스트 작성·실패 확인·최소 구현…)를 다는데, 이걸 같이 세면
+  // (a) 태스크 8개가 체크박스 49개가 되어 반복마다 스텝 하나씩 처리하고
+  // (b) 스텝이 태스크 사이에 끼어 planWaves 의 인접 규칙이 깨져 wave 가 아예 묶이지 않는다.
+  // 절대 들여쓰기 0 이 아니라 "최소 들여쓰기"를 쓰는 이유는 목록 전체가 균일하게 들여쓰인
+  // 파일도 그대로 받기 위해서다.
+  const rows = [];
   for (const line of text.split("\n")) {
-    const m = line.match(/^\s*-\s*\[([ xX])\]\s*(.+?)\s*$/);
-    if (!m) continue;
-    let body = m[2];
+    const m = line.match(/^(\s*)-\s*\[([ xX])\]\s*(.+?)\s*$/);
+    if (m) rows.push({ indent: m[1].length, mark: m[2], body: m[3] });
+  }
+  if (!rows.length) return [];
+  const topIndent = Math.min(...rows.map((r) => r.indent));
+
+  const out = [];
+  for (const row of rows) {
+    if (row.indent !== topIndent) continue;
+    let body = row.body;
     let wave = null;
     const w = body.match(WAVE_RE);
     if (w) {
@@ -26,7 +39,7 @@ export function parseTasks(text) {
         body = (body.slice(0, w.index) + body.slice(w.index + w[0].length)).trim();
       }
     }
-    out.push({ text: body, done: m[1] !== " ", wave });
+    out.push({ text: body, done: row.mark !== " ", wave });
   }
   return out;
 }
