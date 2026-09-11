@@ -13,7 +13,7 @@ import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 // 슬래시 커맨드("/nereus:resume")는 보내지 않는다 — TUI 자동완성 팝업이 뜬 상태로 --enter 가
 // 눌려 /nereus:research 가 실행된다(실측 확인). 프롬프트에 지시문을 박아 넣지도 않는다:
 // 스킬 발동은 skill-router 의 nereus:resume 라우트가 보장하므로 여기는 짧은 자연어로 둔다.
-export const DEFAULT_RESUME_PROMPT = "이어서 진행해";
+export const DEFAULT_RESUME_PROMPT = "resume";
 const TURN_END_TIMEOUT_MS = 600_000; // 현재 턴이 끝나기를 기다린다(도구 실행이 길 수 있다)
 const CLEAR_TIMEOUT_MS = 60_000;
 const QUIET_MS = 3_000;      // 이만큼 출력이 없으면 턴이 끝난 것으로 본다
