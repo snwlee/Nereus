@@ -202,11 +202,11 @@
     - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/doctor-ledger.mjs tests/lib/doctor-ledger.test.ts && git commit -m "feat(doctor): 원장 수용 지문과 undo 4분기 계획"`
   - Done when: 여섯 테스트 통과, undo 가 드리프트에서 덮어쓰지 않고 멈춘다
 
-- [ ] T4b. 처방 적용·원장 append·스코프별 저장
+- [x] T4b. 처방 적용·원장 append·스코프별 저장
   - Files: Create `plugins/nereus/skills/doctor/scripts/apply.mjs` · Test `tests/skills/doctor-apply.test.ts`
   - Interfaces: Consumes `Conflict` (T2 형태), `planUndo` (T4) · Produces `applyRemedy({ conflict, settings, now }): { settings, entry }`, `ledgerPathFor(scope, { home, cwd }): string`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/skills/doctor-apply.test.ts`:
+    - [x] 실패 테스트 작성 `tests/skills/doctor-apply.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { applyRemedy, ledgerPathFor } from "../../plugins/nereus/skills/doctor/scripts/apply.mjs";
@@ -250,10 +250,10 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/doctor-apply.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: `applyRemedy` 는 입력 settings 를 구조적 복사해 새 객체를 만든다(불변성). `remedy.applicable` 이 false 면 수동 처방임을 담은 오류를 던진다. 이미 같은 값이 `permissions.deny` 에 있으면 settings 를 그대로 두고 `entry` 를 null 로 반환한다. `fileHash` 는 `node:crypto` sha256 으로 적용 후 settings 의 JSON 직렬화를 해싱한다. `ledgerPathFor` 는 global 이면 홈 아래 `.config/nereus/doctor-ledger.jsonl`, project 면 cwd 아래 `.nereus/doctor-ack.jsonl` 을 반환한다.
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/doctor-apply.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/skills/doctor/scripts/apply.mjs tests/skills/doctor-apply.test.ts && git commit -m "feat(doctor): 처방 적용과 스코프별 원장 경로"`
+    - [x] 실패 확인: Run `npx vitest run tests/skills/doctor-apply.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: `applyRemedy` 는 입력 settings 를 구조적 복사해 새 객체를 만든다(불변성). `remedy.applicable` 이 false 면 수동 처방임을 담은 오류를 던진다. 이미 같은 값이 `permissions.deny` 에 있으면 settings 를 그대로 두고 `entry` 를 null 로 반환한다. `fileHash` 는 `node:crypto` sha256 으로 적용 후 settings 의 JSON 직렬화를 해싱한다. `ledgerPathFor` 는 global 이면 홈 아래 `.config/nereus/doctor-ledger.jsonl`, project 면 cwd 아래 `.nereus/doctor-ack.jsonl` 을 반환한다.
+    - [x] 통과 확인: Run `npx vitest run tests/skills/doctor-apply.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/skills/doctor/scripts/apply.mjs tests/skills/doctor-apply.test.ts && git commit -m "feat(doctor): 처방 적용과 스코프별 원장 경로"`
   - Done when: 일곱 테스트 통과, 입력 settings 가 변형되지 않고 프로젝트 수용이 전역에 새지 않는다
 
 - [ ] T5. doctor CLI 와 리포트 렌더
