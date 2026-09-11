@@ -1,10 +1,10 @@
 # tasks — add-plugin-doctor
 
-- [ ] T1. 플러그인 인벤토리 수집
+- [x] T1. 플러그인 인벤토리 수집
   - Files: Create `plugins/nereus/hooks/scripts/lib/plugin-inventory.mjs` · Test `tests/lib/plugin-inventory.test.ts`
   - Interfaces: Produces `readInventory({ pluginsFile, settingsFile, readJson, readDir, readText }): PluginRecord[]`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/lib/plugin-inventory.test.ts`:
+    - [x] 실패 테스트 작성 `tests/lib/plugin-inventory.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { readInventory } from "../../plugins/nereus/hooks/scripts/lib/plugin-inventory.mjs";
@@ -43,10 +43,10 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/plugin-inventory.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: `plugin-inventory.mjs` 에 `readInventory` 작성. `installed_plugins.json` 의 각 키에 대해 배열 첫 항목의 `installPath`·`version` 을 쓰고, `enabledPlugins[name] === true` 만 enabled 로 본다. 표면은 `.mcp.json` 의 `mcpServers` 키, `hooks/hooks.json` 의 event 별 matcher, `skills/` 디렉터리명, `agents/` 파일명에서 확장자 제거, `bin/` 파일명, 루트 `settings.json` 의 `agent` 키에서 모은다. 읽기 실패는 전부 빈 값으로 삼킨다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/plugin-inventory.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-inventory.mjs tests/lib/plugin-inventory.test.ts && git commit -m "feat(doctor): 플러그인 충돌 표면 인벤토리"`
+    - [x] 실패 확인: Run `npx vitest run tests/lib/plugin-inventory.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: `plugin-inventory.mjs` 에 `readInventory` 작성. `installed_plugins.json` 의 각 키에 대해 배열 첫 항목의 `installPath`·`version` 을 쓰고, `enabledPlugins[name] === true` 만 enabled 로 본다. 표면은 `.mcp.json` 의 `mcpServers` 키, `hooks/hooks.json` 의 event 별 matcher, `skills/` 디렉터리명, `agents/` 파일명에서 확장자 제거, `bin/` 파일명, 루트 `settings.json` 의 `agent` 키에서 모은다. 읽기 실패는 전부 빈 값으로 삼킨다.
+    - [x] 통과 확인: Run `npx vitest run tests/lib/plugin-inventory.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-inventory.mjs tests/lib/plugin-inventory.test.ts && git commit -m "feat(doctor): 플러그인 충돌 표면 인벤토리"`
   - Done when: 세 테스트 통과, 파일 읽기 실패가 예외로 새어나오지 않는다
 
 - [ ] T2. 구조적 충돌 판정과 지문 [wave:1]
