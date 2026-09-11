@@ -53,7 +53,7 @@
   - Files: Create `plugins/nereus/hooks/scripts/lib/plugin-conflicts.mjs` · Test `tests/lib/plugin-conflicts.test.ts`
   - Interfaces: Consumes `PluginRecord[]` (T1 의 `readInventory` 반환 모양) · Produces `structuralConflicts(records, scope): Conflict[]`, `fingerprint(conflict): string`
   - Steps:
-    - [ ] 실패 테스트 작성 `tests/lib/plugin-conflicts.test.ts`:
+    - [x] 실패 테스트 작성 `tests/lib/plugin-conflicts.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { structuralConflicts, fingerprint } from "../../plugins/nereus/hooks/scripts/lib/plugin-conflicts.mjs";
@@ -107,7 +107,7 @@
       });
       ```
     - [ ] 실패 확인: Run `npx vitest run tests/lib/plugin-conflicts.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: 활성 레코드만 대상으로 mcp·agents·bins 각각을 유닛 이름으로 그룹핑해 2개 이상이면 각각 `mcp-shadow`·`agent-shadow`·`bin-shadow` 를 HIGH 로 낸다. hooks 는 `event + "|" + matcher` 로 그룹핑해 `hook-shared` 를 LOW 로 내고 `remedy.applicable` 은 false 로 둔다. HIGH 의 remedy 는 mcp 만 `permissions-deny` 로 `"mcp__" + unit`, agent 는 `permissions-deny` 로 `"Agent(" + unit + ")"`, bin 은 `applicable: false` 로 둔다. `fingerprint` 는 `node:crypto` 의 sha256 으로 `kind`, 이름@버전 두 개를 정렬해 이은 것, `unit` 을 이어 해시하고 앞 16자를 반환한다.
+    - [x] 최소 구현: 활성 레코드만 대상으로 mcp·agents·bins 각각을 유닛 이름으로 그룹핑해 2개 이상이면 각각 `mcp-shadow`·`agent-shadow`·`bin-shadow` 를 HIGH 로 낸다. hooks 는 `event + "|" + matcher` 로 그룹핑해 `hook-shared` 를 LOW 로 내고 `remedy.applicable` 은 false 로 둔다. HIGH 의 remedy 는 mcp 만 `permissions-deny` 로 `"mcp__" + unit`, agent 는 `permissions-deny` 로 `"Agent(" + unit + ")"`, bin 은 `applicable: false` 로 둔다. `fingerprint` 는 `node:crypto` 의 sha256 으로 `kind`, 이름@버전 두 개를 정렬해 이은 것, `unit` 을 이어 해시하고 앞 16자를 반환한다.
     - [ ] 통과 확인: Run `npx vitest run tests/lib/plugin-conflicts.test.ts` · Expected: PASS
     - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/plugin-conflicts.mjs tests/lib/plugin-conflicts.test.ts && git commit -m "feat(doctor): 구조적 섀도잉 판정과 지문"`
   - Done when: 여섯 테스트 통과, 비활성 플러그인이 판정에 섞이지 않는다
