@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { gateReport, untrackedAsDiff, excludeFindings, listRepoRefs } from "../../plugins/nereus/skills/finish/scripts/gate.mjs";
+import { gateReport, untrackedAsDiff, excludeFindings, listRepoRefs, readHandoffText } from "../../plugins/nereus/skills/finish/scripts/gate.mjs";
 
 const diff = (file: string, added: string[]) => [`diff --git a/${file} b/${file}`, `+++ b/${file}`, ...added.map((l) => "+" + l)].join("\n");
 
@@ -122,5 +122,32 @@ describe("listRepoRefs — 미추적 파일", () => {
       /[\\/]a[\\/]/.test(p) ? "node scripts/tool.mjs" : "무관");
     expect(refs.map((r) => r.file)).toEqual(["plugins/x/skills/a/SKILL.md", "plugins/x/skills/b/SKILL.md"]);
     expect(refs[0].text).toContain("tool.mjs");
+  });
+});
+
+// 회귀: 세션별 handoff 로 옮긴 뒤에도 게이트가 레거시 `.nereus/handoff.md` 만 읽어
+// 항상 handoff_stale 로 차단했다.
+describe("handoff 읽기 (세션별 파일)", () => {
+  it("가장 최근 세션 handoff 를 읽는다", () => {
+    const deps = {
+      readDir: () => [
+        { name: "20260912-1000-aaaaaaaa.md", mtimeMs: 100 },
+        { name: "20260912-1528-bbbbbbbb.md", mtimeMs: 900 },
+      ],
+      readFile: (p: string) => (p.endsWith("20260912-1528-bbbbbbbb.md") ? "v0.1.0 최초 등록" : "옛날 것"),
+    };
+    expect(readHandoffText("/proj", deps)).toContain("v0.1.0");
+  });
+
+  it("세션 파일이 없으면 레거시로 떨어진다", () => {
+    const deps = {
+      readDir: () => [],
+      readFile: (p: string) => (p.endsWith(".nereus/handoff.md") ? "레거시 본문" : null),
+    };
+    expect(readHandoffText("/proj", deps)).toBe("레거시 본문");
+  });
+
+  it("둘 다 없으면 null 이라 검사가 조용하다", () => {
+    expect(readHandoffText("/proj", { readDir: () => [], readFile: () => null })).toBeNull();
   });
 });
