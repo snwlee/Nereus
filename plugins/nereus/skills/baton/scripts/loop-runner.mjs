@@ -3,8 +3,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
-import { handoffPath } from "../../../hooks/scripts/lib/paths.mjs";
+import { handoffPath, handoffDir, latestHandoff } from "../../../hooks/scripts/lib/paths.mjs";
 import { autonomousGate } from "../../../hooks/scripts/lib/autonomous-gate.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 
@@ -116,6 +117,12 @@ export async function runWave(group, opts, deps = {}) {
     }
     // 여기서만 병렬이다. 각자 자기 워크트리에서만 쓴다.
     const results = await Promise.all(plans.map(({ w }) => runClaudeIn(prompt, w.dir)));
+    // 회수는 워크트리 제거(finally)보다 먼저여야 한다. 실패한 태스크의 handoff 도 가져온다 —
+    // 왜 실패했는지가 거기 적혀 있다.
+    const collectHandoff = deps.collectHandoff ?? defaultCollectHandoff;
+    for (const { w } of plans) {
+      try { collectHandoff(w.dir, path.join(wavesDir(root), `${w.name}.md`)); } catch { /* 회수 실패가 결과를 바꾸지 않는다 */ }
+    }
     // 커밋은 병합 전에 끝나야 한다 — 커밋 없는 워크트리는 병합해도 아무것도 오지 않는다.
     for (const [i, { w, task }] of plans.entries()) {
       if (results[i] && results[i].ok === false) { log(`태스크 실패, 병합 건너뜀: ${task.text}`); continue; }
@@ -141,14 +148,45 @@ export async function runWave(group, opts, deps = {}) {
   }
 }
 
-export function buildPrompt({ handoff, tasks, spec, goal }) {
+export function wavesDir(root) { return path.join(root, ".nereus", "waves"); }
+
+/** 자식에게 루프 서브세션임을 알린다. SessionStart 훅이 이 값으로 동시 세션 경고를 끈다. */
+export function claudeEnv(base = process.env) { return { ...base, NEREUS_LOOP: "1" }; }
+
+/**
+ * handoff 파일 경로를 프롬프트에 박지 않는다 — 세션마다 파일이 다르고, 그 경로는
+ * SessionStart 훅이 각 서브세션에게 직접 알려준다. 여기서 고정 경로를 주면
+ * 두 서브세션이 같은 파일을 쓴다.
+ */
+export function buildPrompt({ tasks, spec, waves, goal }) {
   return [
     `당신은 Nereus Baton 루프의 한 반복입니다. 목표: ${goal}`,
-    `먼저 ${handoff} 를 읽고(있다면), ${tasks} 에서 첫 미완료 태스크 하나를 고르세요. 스펙은 ${spec ?? "(없음)"} 입니다.`,
+    "이 세션이 쓸 handoff 파일 경로는 **세션 시작 안내**에 적혀 있습니다. 그 파일만 읽고 쓰고, 디렉터리가 없으면 만드세요.",
+    `${tasks} 에서 첫 미완료 태스크 하나를 고르세요. 스펙은 ${spec ?? "(없음)"} 입니다.`,
     "그 태스크만 nereus:build 규칙(TDD)으로 끝내고 체크박스를 채우세요. 다른 태스크는 건드리지 마세요.",
-    `끝나면 ${handoff} 를 전체 재작성하고(목표/현재 단계/완료/진행 중/다음/실패한 접근과 이유/결정/열린 질문/테스트 상태), 변경을 conventional commit으로 커밋하세요.`,
+    `${waves} 에 파일이 있으면 직전 wave 서브세션들이 남긴 요약입니다. 읽어서 handoff 에 흡수한 뒤 그 파일을 지우세요.`,
+    "끝나면 handoff 를 전체 재작성하고(목표/현재 단계/완료/진행 중/다음/실패한 접근과 이유/결정/열린 질문/테스트 상태), 변경을 conventional commit으로 커밋하세요.",
     "막히면 실패한 접근과 이유를 handoff에 남기고 멈추세요. 완료를 검증 없이 선언하지 마세요.",
   ].join("\n");
+}
+
+/**
+ * 워크트리가 남긴 handoff 를 메인으로 회수한다. `.nereus/` 는 git 추적 밖이라
+ * 커밋으로 따라오지 않고 워크트리 제거와 함께 사라진다 — 복사가 유일한 통로다.
+ * paths.mjs 를 순수하게 두기 위해 디렉터리 읽기는 여기서 한다.
+ */
+function defaultCollectHandoff(worktreeDir, destPath) {
+  const dir = handoffDir(worktreeDir);
+  let entries = [];
+  try {
+    entries = fs.readdirSync(dir)
+      .filter((name) => name.endsWith(".md"))
+      .map((name) => ({ name, mtimeMs: fs.statSync(path.join(dir, name)).mtimeMs }));
+  } catch { entries = []; }
+  const src = latestHandoff({ cwd: worktreeDir, entries, legacyExists: fs.existsSync(handoffPath(worktreeDir)) });
+  if (!src) return;                       // 남긴 것이 없으면 조용히 건너뛴다
+  fs.mkdirSync(path.dirname(destPath), { recursive: true });
+  fs.copyFileSync(src, destPath);
 }
 
 /**
@@ -207,7 +245,7 @@ function defaultRunClaude(prompt, cwd, allowedTools = LOOP_ALLOWED_TOOLS) {
   return new Promise((resolve) => {
     const bin = which("claude");
     if (!bin) return resolve({ ok: false, error: "claude CLI 없음" });
-    const p = spawn(bin, claudeArgs(prompt, { allowedTools }), { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false });
+    const p = spawn(bin, claudeArgs(prompt, { allowedTools }), { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false, env: claudeEnv() });
     p.on("close", (code) => resolve({ ok: code === 0, code }));
     p.on("error", (e) => resolve({ ok: false, error: String(e) }));
   });
@@ -220,10 +258,24 @@ function defaultGateCmd(cwd, cmd) {
   return { pass: r.ok, reason: r.ok ? undefined : `게이트 명령 실패: ${cmd}` };
 }
 
+/**
+ * 수렴 검증 명령. 순수 함수라 무엇을 돌리는지 테스트가 직접 본다.
+ *
+ * 예전에는 `ooo qa --json .` 을 돌렸는데 그런 플래그가 없다(ooo 0.53 기준 exit=2).
+ * `ooo qa` 는 **아티팩트 하나**(텍스트나 파일)를 받는 판정기라 저장소 전체 게이트로는 맞지 않는다.
+ * 그래서 항상 실패했고, 루프는 수렴하지 못한 채 게이트 3회 실패로 멈췄다. 프로젝트 자신의
+ * 테스트 러너를 돌린다 — 증거 파일(.nereus/evidence.json)까지 같은 경로로 남는다.
+ */
+export function evaluateCmd({ cwd, moduleUrl = import.meta.url } = {}) {
+  // fileURLToPath 를 쓴다. URL.pathname 은 win32 에서 `/C:/...` 를 줘서 경로가 깨진다.
+  const here = path.dirname(fileURLToPath(moduleUrl));
+  return { bin: "node", args: [path.resolve(here, "..", "..", "build", "scripts", "run-tests.mjs")], cwd };
+}
+
 async function defaultEvaluate(cwd) {
-  if (!which("ooo")) return { pass: true, skipped: "ooo 없음" };
-  const r = run("ooo", ["qa", "--json", "."], { cwd, timeoutMs: 10 * 60 * 1000 });
-  return { pass: r.ok, output: r.stdout.slice(-2000) };
+  const cmd = evaluateCmd({ cwd });
+  const r = run(cmd.bin, cmd.args, { cwd, timeoutMs: 10 * 60 * 1000 });
+  return { pass: r.ok, output: String(r.stdout ?? "").slice(-2000) };
 }
 
 export async function runLoop(opts, deps = {}) {
@@ -323,7 +375,7 @@ if (process.argv[1] && /loop-runner\.mjs$/.test(process.argv[1])) {
   const arg = (k, d) => { const i = process.argv.indexOf(k); return i > -1 ? process.argv[i + 1] : d; };
   const cwd = process.cwd();
   const timeoutSec = parseInt(arg("--timeout", "0"), 10);
-  const result = await runLoop({ cwd, max: parseInt(arg("--max", "30"), 10), goal: arg("--goal", "tasks 완료"), gateCmd: arg("--gate", undefined), timeoutMs: Number.isFinite(timeoutSec) && timeoutSec > 0 ? timeoutSec * 1000 : undefined, paths: { handoff: path.relative(cwd, handoffPath(cwd)), tasks: arg("--tasks", "tasks.md"), spec: arg("--spec", undefined) } });
+  const result = await runLoop({ cwd, max: parseInt(arg("--max", "30"), 10), goal: arg("--goal", "tasks 완료"), gateCmd: arg("--gate", undefined), timeoutMs: Number.isFinite(timeoutSec) && timeoutSec > 0 ? timeoutSec * 1000 : undefined, paths: { waves: path.relative(cwd, wavesDir(cwd)), tasks: arg("--tasks", "tasks.md"), spec: arg("--spec", undefined) } });
   process.stdout.write(JSON.stringify(result) + "\n");
   process.exit(result.status === "converged" ? 0 : 2);
 }

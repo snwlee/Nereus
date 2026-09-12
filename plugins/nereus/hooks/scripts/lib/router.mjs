@@ -33,11 +33,15 @@ const stripCode = (t) => String(t)
   .replace(/[\w./-]*[/\\][\w./\\-]*/g, " ")
   .replace(/\b[\w-]+\.(ts|tsx|js|mjs|jsx|dart|java|kt|py|go|rs|css|scss|html|json|md|yaml|yml)\b/gi, " ");
 
-export function routePrompt(text, { seen = [] } = {}) {
+// 코어 라우트가 항상 앞이다. 확장은 뒤에 붙고, MAX_HITS 는 병합 뒤에 적용되므로
+// 확장이 코어 스킬을 밀어낼 수 없다.
+const merged = (extraRoutes) => (extraRoutes?.length ? [...ROUTES, ...extraRoutes] : ROUTES);
+
+export function routePrompt(text, { seen = [], extraRoutes = [] } = {}) {
   if (typeof text !== "string" || !text.trim()) return [];
   const body = stripCode(text);
   const hits = [];
-  for (const r of ROUTES) {
+  for (const r of merged(extraRoutes)) {
     if (seen.includes(r.skill)) continue;
     if (r.re.test(body)) hits.push({ skill: r.skill, why: r.why });
     if (hits.length >= MAX_HITS) break;
@@ -51,8 +55,8 @@ export function routerNotice(hits) {
   return `[Nereus] 이 요청은 ${list} 대상입니다. 답하거나 파일을 열기 전에 Skill 로 먼저 불러 그 절차대로 진행하세요 — 기억으로 절차를 재현하지 않습니다. 맞지 않으면 한 줄로 이유를 말하고 넘어가면 됩니다.`;
 }
 
-export function skillMapBlock() {
-  const rows = ROUTES.map((r) => `- ${r.skill} — ${r.why}`).join("\n");
+export function skillMapBlock({ extraRoutes = [] } = {}) {
+  const rows = merged(extraRoutes).map((r) => `- ${r.skill} — ${r.why}`).join("\n");
   return [
     "## 스킬을 먼저 부른다",
     "요청이 아래 중 하나에 조금이라도 해당되면 **답하거나 코드를 읽기 전에** 그 스킬을 Skill 로 부른다.",

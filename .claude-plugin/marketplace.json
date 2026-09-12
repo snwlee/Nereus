@@ -26,6 +26,16 @@
       "author": {
         "name": "snwlee"
       }
+    },
+    {
+      "name": "nereus-game",
+      "description": "게임 개발 하네스: 로블록스·Unity(폰)·Switch 어댑터, 게임 도메인 스킬",
+      "source": "./plugins/nereus-game",
+      "category": "workflow",
+      "version": "0.1.0",
+      "author": {
+        "name": "snwlee"
+      }
     }
   ]
 }

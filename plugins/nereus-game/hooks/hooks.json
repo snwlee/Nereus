@@ -1,0 +1,17 @@
+{
+  "description": "nereus-game 훅. 전부 Node 스크립트 (macOS/Windows 공용)",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/luau-check.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

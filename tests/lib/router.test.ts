@@ -143,3 +143,27 @@ describe("continue 라우트", () => {
     }
   });
 });
+
+describe("확장 라우트 병합", () => {
+  it("확장 라우트는 코어 뒤에 병합된다", () => {
+    const extraRoutes = [{ skill: "nereus-game:roblox", why: "로블록스", re: /로블록스/i }];
+    const hits = routePrompt("로블록스 게임 디자인 고쳐줘", { extraRoutes });
+    expect(hits[0].skill).toBe("nereus:design");
+    expect(hits.map((h) => h.skill)).toContain("nereus-game:roblox");
+  });
+
+  it("확장이 코어를 밀어내지 않는다", () => {
+    const extraRoutes = [
+      { skill: "nereus-game:a", why: "a", re: /버그/i },
+      { skill: "nereus-game:b", why: "b", re: /버그/i },
+    ];
+    const hits = routePrompt("버그 났어", { extraRoutes });
+    expect(hits[0].skill).toBe("nereus:debug");
+    expect(hits).toHaveLength(2);
+  });
+
+  it("스킬맵에 확장 라우트가 들어간다", () => {
+    const block = skillMapBlock({ extraRoutes: [{ skill: "nereus-game:roblox", why: "로블록스", re: /로블록스/i }] });
+    expect(block).toContain("nereus-game:roblox — 로블록스");
+  });
+});

@@ -40,3 +40,47 @@ describe("stack detection", () => {
     expect(isSourceFile("src/db/migrations/001.sql")).toBe(false);
   });
 });
+
+describe("확장 스택 병합", () => {
+  it("확장 스택 마커를 인식한다", () => {
+    const fsx = { exists: (p: string) => p.endsWith("default.project.json"), readFile: () => "" };
+    const extraStacks = [{ name: "roblox", marker: "default.project.json" }];
+    expect(detectStack("/proj", fsx, { extraStacks })).toContain("roblox");
+  });
+
+  it("코어 스택이 확장보다 앞에 온다", () => {
+    const fsx = { exists: () => true, readFile: () => "{}" };
+    const extraStacks = [{ name: "roblox", marker: "default.project.json" }];
+    const out = detectStack("/proj", fsx, { extraStacks });
+    expect(out.indexOf("flutter")).toBeLessThan(out.indexOf("roblox"));
+  });
+});
+
+describe("확장 러너 연결", () => {
+  it("확장 스택의 러너를 코어가 돌려준다", () => {
+    const fsx = { exists: (p: string) => p.endsWith("default.project.json") || p.endsWith("lune.yaml"), readFile: () => "" };
+    const extraStacks = [{
+      name: "roblox",
+      marker: "default.project.json",
+      runnerMarker: "lune.yaml",
+      runner: "lune",
+      command: "lune run tests",
+    }];
+    expect(detectTestRunner("/proj", fsx, { extraStacks })).toEqual({ runner: "lune", command: "lune run tests" });
+  });
+
+  it("코어 러너가 확장보다 우선한다", () => {
+    const fsx = {
+      exists: (p: string) => p.endsWith("pubspec.yaml") || p.endsWith("default.project.json") || p.endsWith("lune.yaml"),
+      readFile: () => "flutter_test:",
+    };
+    const extraStacks = [{ name: "roblox", marker: "default.project.json", runnerMarker: "lune.yaml", runner: "lune", command: "lune run tests" }];
+    expect(detectTestRunner("/proj", fsx, { extraStacks }).runner).toBe("flutter_test");
+  });
+
+  it("러너 마커가 없으면 확장도 null", () => {
+    const fsx = { exists: (p: string) => p.endsWith("default.project.json"), readFile: () => "" };
+    const extraStacks = [{ name: "roblox", marker: "default.project.json", runnerMarker: "lune.yaml", runner: "lune", command: "lune run tests" }];
+    expect(detectTestRunner("/proj", fsx, { extraStacks })).toBeNull();
+  });
+});

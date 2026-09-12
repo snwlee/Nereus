@@ -8,9 +8,10 @@ const HEADER_RE = /^-\s*\[(?: |x)\]\s*(.+?)\s*$/;
 const REQUIRED = ["Files:", "Interfaces:", "Steps:", "Done when:"];
 
 // 뭉뚱그림·미기입 패턴. 태스크는 실행자가 그대로 옮기면 되게 exact해야 한다.
+const ANGLE_RE = /<[^>\n]{1,30}>/;
 const PLACEHOLDER_RES = [
   /\bTBD\b/i,
-  /<[^>\n]{1,30}>/,
+  ANGLE_RE,
   // 산문 말줄임만 잡는다. JS 스프레드(`{ ...base }`, `[...xs]`, `f(...args)`)는 정상 코드다.
   /\.\.\.(?![A-Za-z_$[{])/,
   /\b(TODO|FIXME)\b/,
@@ -29,16 +30,22 @@ export function lintTasks(text) {
     for (const req of REQUIRED) {
       if (!cur.block.includes(req)) findings.push({ task: cur.name, category: "missing_section", message: `필수 항목 누락: ${req}` });
     }
-    for (const line of cur.lines) {
+    for (const { text, fenced } of cur.lines) {
       for (const re of PLACEHOLDER_RES) {
-        if (re.test(line)) findings.push({ task: cur.name, category: "placeholder", message: `플레이스홀더 의심(${re.source.slice(0, 40)}): ${line.trim().slice(0, 80)}` });
+        // 꺾쇠는 코드 블록 안에서 제네릭(`Array<string>`)이나 비교 연산이다. 자리표시자가 아니다.
+        // 말줄임은 코드 안에서도 진짜 구멍이므로 그대로 잡는다.
+        if (re === ANGLE_RE && fenced) continue;
+        if (re.test(text)) findings.push({ task: cur.name, category: "placeholder", message: `플레이스홀더 의심(${re.source.slice(0, 40)}): ${text.trim().slice(0, 80)}` });
       }
     }
   };
+  let inFence = false;   // 펜스 자체도 "안"으로 친다 — 언어 태그(```ts)에는 꺾쇠가 없다
   for (const raw of text.split("\n")) {
+    const isFence = /^\s*```/.test(raw);
+    if (isFence) inFence = !inFence;
     const m = raw.match(HEADER_RE);
-    if (m && !/^\s/.test(raw)) { flush(); tasks++; cur = { name: m[1].slice(0, 80), lines: [], block: "" }; continue; }
-    if (cur) { cur.lines.push(raw); cur.block += raw + "\n"; }
+    if (m && !/^\s/.test(raw) && !inFence) { flush(); tasks++; cur = { name: m[1].slice(0, 80), lines: [], block: "" }; continue; }
+    if (cur) { cur.lines.push({ text: raw, fenced: inFence || isFence }); cur.block += raw + "\n"; }
   }
   flush();
   return { pass: findings.length === 0, tasks, findings };

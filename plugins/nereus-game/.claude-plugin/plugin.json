@@ -1,0 +1,10 @@
+{
+  "name": "nereus-game",
+  "version": "0.1.0",
+  "description": "게임 개발 하네스: 로블록스·Unity(폰)·Switch 어댑터, 게임 도메인 스킬. nereus 코어의 워크플로 위에서 동작한다",
+  "author": { "name": "snwlee", "email": "PGRRR119@gmail.com" },
+  "homepage": "https://github.com/snwlee/Nereus",
+  "repository": "https://github.com/snwlee/Nereus",
+  "license": "MIT",
+  "keywords": ["game", "roblox", "unity", "harness", "luau"]
+}

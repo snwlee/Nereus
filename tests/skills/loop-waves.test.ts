@@ -283,3 +283,36 @@ describe("parseTasks — 중첩 스텝은 태스크가 아니다", () => {
     expect(t.map((x: any) => x.text)).toEqual(["A", "B"]);
   });
 });
+
+describe("wave handoff 회수", () => {
+  const group = [{ text: "A", done: false, wave: 1 }, { text: "B", done: false, wave: 1 }];
+  const base = (over: any) => ({
+    head: () => "abc1234",
+    addWorktree: () => ({ ok: true }),
+    removeWorktree: () => ({ ok: true }),
+    commitIn: () => ({ ok: true }),
+    mergeBranch: () => ({ ok: true }),
+    runClaude: async () => ({ ok: true }),
+    ...over,
+  });
+  it("collects each worktree handoff into .nereus/waves before the worktrees are removed", async () => {
+    const collected: string[][] = [];
+    const removed: string[] = [];
+    const r = await runWave(group, { root: "/repo", goal: "G", paths: { tasks: "tasks.md" } }, base({
+      removeWorktree: (w: any) => { removed.push(w.dir); return { ok: true }; },
+      collectHandoff: (from: string, to: string) => { collected.push([from, to]); },
+    }));
+    expect(r.ok).toBe(true);
+    expect(collected).toHaveLength(2);
+    expect(collected[0][1]).toContain(path.join(".nereus", "waves"));
+    expect(removed).toHaveLength(2);
+  });
+  it("collects the handoff of a failed task too — the reason is written there", async () => {
+    const collected: string[] = [];
+    await runWave(group, { root: "/repo", goal: "G", paths: { tasks: "tasks.md" } }, base({
+      runClaude: async (_p: string, cwd: string) => ({ ok: !cwd.includes("wave-1") }),
+      collectHandoff: (from: string) => { collected.push(from); },
+    }));
+    expect(collected).toHaveLength(2);
+  });
+});

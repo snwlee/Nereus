@@ -1,6 +1,6 @@
 ---
 name: build
-description: Implement a task with TDD (enforced when a test runner exists). Gate: tests pass + ooo qa. Runs automatically right after spec. 트리거: "구현해", "이 태스크".
+description: Implement a task with TDD (enforced when a test runner exists). Gate: tests pass + stack build check. Runs automatically right after spec. 트리거: "구현해", "이 태스크".
 ---
 
 # build
@@ -58,7 +58,8 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/build/scripts/run-tests.mjs" --cmd "./gradlew
 ## 4. 게이트
 
 - 전체 테스트 실행 → 전부 통과. 출력을 인용한다.
-- `ooo qa`로 기계 검증(빌드·린트·테스트)을 한 번 더 돌린다. `ooo`가 없으면 스택별 빌드 명령(`flutter analyze`, `./gradlew build`, `npm run build` 또는 `tsc --noEmit`)으로 대체한다.
+- 스택별 빌드·정적 검사를 한 번 더 돌린다(`flutter analyze`, `./gradlew build`, `npm run build`, `tsc --noEmit`, 또는 `node --check`).
+  `ooo qa` 는 **아티팩트 하나**(파일이나 텍스트)를 판정하는 도구다 — `ooo qa <파일>` 형태로만 쓰고, 저장소 전체 게이트로 쓰지 않는다(`--json` 같은 플래그는 없다).
 - 디자인 표면(스타일시트·디자인 토큰·시각 마크업)을 만졌으면 `nereus:design` 의 렌더 라운드를 돌린다. 스크린샷을 확보해 Gemini 비평을 받고 `--files` 로 커버한다. 건너뛰면 finish 게이트가 차단한다.
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" status   # 무엇이 미이행인지 먼저 확인

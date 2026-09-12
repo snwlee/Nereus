@@ -3,13 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
-import { handoffPath, userConfigDir } from "./lib/paths.mjs";
+import {
+  handoffPath, handoffDir, sessionHandoffPath, latestHandoff,
+  recentOtherSessions, planHandoffPrune, userConfigDir,
+} from "./lib/paths.mjs";
 import { which } from "./lib/exec.mjs";
 import { readAll, selectForInjection } from "./lib/learnings.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { readCandidates } from "./session-end.mjs";
 import { skillMapBlock } from "./lib/router.mjs";
 import { readInventory } from "./lib/plugin-inventory.mjs";
+import { loadExtensions } from "./lib/extensions.mjs";
 
 // /clear 직후 주입되는 재개 절차. resume 스킬이 하던 검증을 여기서 지시해
 // 사용자가 /nereus:resume 을 따로 칠 필요를 없앤다. compact 는 대화가 그대로
@@ -88,6 +92,37 @@ export function pluginSnapshotNote({ records, previous }) {
   };
 }
 
+// 스킬 문서에만 두면 그 스킬을 부르지 않은 턴에는 적용되지 않는다. 매 컨텍스트에 한 줄 심는다.
+export const ASK_POLICY =
+  "순서·우선순위·착수 승인은 묻지 않는다. 할 일이 정해져 있으면 스스로 순서를 정해 하나씩 전부 끝낸다. "
+  + "질문은 (a) 하네스가 알 수 없는 정보와 (b) 외부로 나가는·되돌리기 어려운 행동에만 쓴다.";
+
+const COMPACT_LEAD = "이전 세션이 남긴 handoff입니다. 여기서 이어서 진행하고, 완료된 항목은 반복하지 마세요.";
+
+// 디렉터리가 없으면 빈 목록. 훅은 fail-open 이다.
+function defaultEntries(dir) {
+  try {
+    return fs.readdirSync(dir)
+      .filter((name) => name.endsWith(".md"))
+      .map((name) => ({ name, mtimeMs: fs.statSync(path.join(dir, name)).mtimeMs }));
+  } catch { return []; }
+}
+
+function defaultRemoveFile(p) { fs.rmSync(p, { force: true }); }
+
+function readFileSafe(p, readFile) {
+  try { return readFile(p); } catch { return ""; }
+}
+
+/** 경고 줄에 붙일 한 줄 요약. "## 목표" 다음 첫 내용 줄을 40자로 자른다. */
+function firstGoalLine(text) {
+  const lines = String(text).split("\n");
+  const at = lines.findIndex((l) => l.trim().startsWith("## 목표"));
+  if (at === -1) return "(목표 미상)";
+  const rest = lines.slice(at + 1).find((l) => l.trim());
+  return rest ? rest.trim().slice(0, 40) : "(목표 미상)";
+}
+
 export function handle(input, deps = {}) {
   const cwd = input.cwd || process.cwd();
   const readFile = deps.readFile ?? ((p) => fs.readFileSync(p, "utf8"));
@@ -95,17 +130,34 @@ export function handle(input, deps = {}) {
   const toolStatus = deps.toolStatus ?? toolStatusCached;
   const parts = [];
 
-  const hp = handoffPath(cwd);
-  if (exists(hp)) {
-    let body = "";
-    try { body = readFile(hp); } catch { body = ""; }
-    if (body.trim()) {
-      const lead = input.source === "compact"
-        ? "이전 세션이 남긴 handoff입니다. 여기서 이어서 진행하고, 완료된 항목은 반복하지 마세요."
-        : RESUME_CHECKLIST;
-      parts.push(`## Baton 재개\n${lead}\n\n${body.trim()}`);
-    }
-  }
+  // 세션마다 다른 파일에 쓴다. 한 파일을 공유하면 두 번째 세션의 "전체 재작성"이
+  // 첫 세션 상태를 통째로 지운다(.nereus 는 git 추적 밖이라 되돌릴 수도 없다).
+  const now = (deps.now ?? (() => Date.now()))();
+  const env = deps.env ?? process.env;
+  const dir = handoffDir(cwd);
+  const entries = (deps.entries ?? defaultEntries)(dir);
+  const mine = sessionHandoffPath({ cwd, sessionId: input.session_id, now, entries });
+  const latest = latestHandoff({ cwd, entries, legacyExists: exists(handoffPath(cwd)) });
+
+  let body = "";
+  if (latest) { try { body = readFile(latest); } catch { body = ""; } }
+  const lead = input.source === "compact" ? COMPACT_LEAD : RESUME_CHECKLIST;
+  const head = `이 세션의 handoff 파일: \`${path.relative(cwd, mine)}\` — handoff 는 여기에만 쓴다(다른 세션 파일을 덮어쓰지 않기 위해서다). 디렉터리가 없으면 만든다.`;
+  // 루프 서브세션은 반복마다 새 세션이라 자기 직전 반복이 매번 경고로 잡힌다. 소음이다.
+  const warn = env.NEREUS_LOOP ? [] : recentOtherSessions({ entries, sessionId: input.session_id, now })
+    .map((e) => `- \`${e.name}\` — ${firstGoalLine(readFileSafe(path.join(dir, e.name), readFile))}`);
+  // compact 는 같은 대화가 이어지는 것이라 새 컨텍스트가 아니다. 넣을 본문이 없으면
+  // 경로 안내도 다시 내지 않는다 — 세션 시작 때 이미 알렸다.
+  const silent = input.source === "compact" && !body.trim();
+  const block = silent ? [] : [body.trim() ? `${lead}\n\n${body.trim()}` : "재개할 handoff 가 없습니다. 새로 시작합니다.", head]
+    .concat(warn.length ? [`⚠ 다른 세션이 최근 30분 안에 handoff 를 갱신했습니다. 같은 파일을 건드리는지 확인하세요:\n${warn.join("\n")}`] : []);
+  if (block.length) parts.push(`## Baton 재개\n${block.join("\n\n")}`);
+
+  // 정리는 주입 뒤에 조용히. 실패가 세션 시작을 막지 않는다.
+  try {
+    const protect = [path.basename(mine), latest ? path.basename(latest) : ""].filter(Boolean);
+    for (const name of planHandoffPrune({ entries, now, protect })) (deps.removeFile ?? defaultRemoveFile)(path.join(dir, name));
+  } catch { /* 무시 */ }
 
   const learn = (deps.learnings ?? (() => {
     const cfg = (deps.config ?? (() => loadConfig({ cwd })))();
@@ -115,7 +167,10 @@ export function handle(input, deps = {}) {
 
   // 스킬 맵: 압축된 description 만으로는 모델이 스킬을 떠올리지 못한다. 새 컨텍스트마다 한 번 심는다.
   // compact 는 대화가 이어지므로 다시 넣지 않는다.
-  if (input.source !== "compact") parts.push(skillMapBlock());
+  if (input.source !== "compact") {
+    parts.push(`## 작업 방식\n${ASK_POLICY}`);
+    parts.push(skillMapBlock({ extraRoutes: (deps.extensions ?? (() => loadExtensions()))().routes }));
+  }
 
   if (input.source !== "compact") {
     const notes = [];

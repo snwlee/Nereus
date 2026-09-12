@@ -9,10 +9,13 @@ nereus:common 규칙을 따른다. 담당 에이전트: architect.
 
 ## 1. 판별
 
+intake 가 이미 `plan.mjs` 를 돌렸으면 그 결과를 쓴다. 없으면 여기서 돌린다:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/classify.mjs" "$PWD"
+node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/plan.mjs" "$PWD" --size small|medium|large
 ```
-결과 `kind`와 `reason`을 사용자에게 한 줄로 알리고 다른 판단을 원하는지 묻지 않는다. 사용자가 명시적으로 `--tool spec-kit|openspec`을 주면 그걸 따른다.
+`specTool` 을 따른다 — `openspec` 이면 2B, `spec-kit` 이면 2A, `tasks-only` 면 스펙 문서 없이 태스크만 만든다(태스크 규칙은 그대로 적용).
+`reverseSpec` 이 true 일 때만 역스펙 절차를 밟는다. 결과를 한 줄로 알리고 다른 판단을 원하는지 묻지 않는다.
+사용자가 명시적으로 `--tool spec-kit|openspec` 을 주면 그걸 따른다.
 
 ## 2A. 신규 → spec-kit
 
@@ -25,7 +28,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/classify.mjs" "$PWD"
 
 ## 2B. 기존 → OpenSpec
 
-1. `openspec/`가 없으면 `openspec init` 후 현재 코드의 역스펙을 만든다. 처음 한 번만. `/opsx:onboard`가 있으면 써도 되고, 없으면 `references/reverse-spec.md` 절차대로 직접 캔다(읽기 전용, capability 단위로 작게).
+1. `plan.reverseSpec` 이 true 이고 아직 기준선이 없으면 역스펙을 만든다(`openspec/`가 없으면 `openspec init` 먼저). `/opsx:onboard`가 있으면 써도 되고, 없으면 `references/reverse-spec.md` 절차대로 직접 캔다(읽기 전용, capability 단위로 작게).
 2. `/opsx:propose <변경 이름>` — intake 목표를 입력. proposal, specs 델타, design, tasks가 생긴다.
 3. tasks.md에 아래 "태스크 규칙" 적용.
 
@@ -74,4 +77,4 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/lint-tasks.mjs" <tasks파일>
 
 ## 3. 마무리
 
-`.nereus/handoff.md`를 만들거나 갱신한다(목표, 현재 단계: build, 다음: 첫 태스크). 그 다음 `nereus:build`로 넘어간다.
+이 세션의 handoff 파일(`.nereus/handoff/` 아래)을 만들거나 갱신한다(목표, 현재 단계: build, 다음: 첫 태스크). 그 다음 `nereus:build`로 넘어간다.

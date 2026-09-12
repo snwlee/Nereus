@@ -6,6 +6,7 @@ import { detectTestRunner, isSourceFile, isTestFile } from "./lib/stack.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
 import { normalizeToolEvent } from "./lib/harness.mjs";
+import { loadExtensions } from "./lib/extensions.mjs";
 
 export function globToRegExp(glob) {
   let out = "";
@@ -42,7 +43,8 @@ export function handle(input, deps = {}) {
   const cfg = (deps.config ?? (() => loadConfig({ cwd })))();
   if ((cfg.tdd?.exclude ?? []).some((g) => globToRegExp(g).test(rel))) return null;
 
-  const runner = (deps.runner ?? (() => detectTestRunner(cwd)))();
+  const extraStacks = (deps.extensions ?? (() => loadExtensions()))().stacks;
+  const runner = (deps.runner ?? (() => detectTestRunner(cwd, undefined, { extraStacks })))();
   if (!runner) return null;
 
   const store = deps.loadHistory ? deps : fileHistory(cwd, ev.sessionId);

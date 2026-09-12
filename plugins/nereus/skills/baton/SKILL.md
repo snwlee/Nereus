@@ -5,7 +5,11 @@ description: Context handoff rules and the handoff.md format. Referenced on a Ba
 
 # Baton
 
-진실은 디스크에만 있다: `.nereus/handoff.md`, tasks 파일, git 커밋. 대화 기억은 믿지 않는다.
+진실은 디스크에만 있다: `.nereus/handoff/` 아래 이 세션의 handoff 파일, tasks 파일, git 커밋. 대화 기억은 믿지 않는다.
+
+**쓰기는 자기 세션 파일, 읽기는 최신 파일.** 파일명은 `시각-세션id8.md` 이고, 그 경로는 세션 시작
+안내가 알려준다. 다른 세션의 파일은 열지도 쓰지도 않는다 — 같은 프로젝트에서 세션이 여럿
+돌아도 서로의 상태를 덮지 않게 하기 위해서다. 옛 단일 파일 `.nereus/handoff.md` 는 읽기만 된다(레거시).
 
 ## handoff.md 형식 (매번 전체 재작성, 덧붙이지 않음)
 
@@ -55,4 +59,6 @@ intake | spec | build | e2e | review | finish 중 하나 + 진행 중인 태스�
 
 ## 재개
 
-SessionStart 훅이 handoff.md를 주입한다. 재개 시 "진행 중"의 테스트 상태를 먼저 실제로 실행해 확인한 뒤 이어간다. 완료 항목은 반복하지 않는다.
+SessionStart 훅이 **가장 최근 handoff**(mtime 기준)를 주입하고, 이 세션이 쓸 파일 경로를 함께 알린다.
+최근 30분 안에 다른 세션이 handoff 를 갱신했으면 경고가 따라온다 — 같은 파일을 건드리는 중인지 확인한다.
+재개 시 "진행 중"의 테스트 상태를 먼저 실제로 실행해 확인한 뒤 이어간다. 완료 항목은 반복하지 않는다.

@@ -9,6 +9,21 @@ import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 import { globToRegExp } from "../../../hooks/scripts/tdd-guard.mjs";
 import fs from "node:fs";
 import path from "node:path";
+import { handoffDir, latestHandoff, handoffPath } from "../../../hooks/scripts/lib/paths.mjs";
+
+// 세션별 handoff(.nereus/handoff/시각-sid8.md) 중 최신을 읽는다. 없으면 레거시 .nereus/handoff.md.
+// (이전 사이클에 세션별 파일로 옮겼는데 이 검사가 따라오지 않아 항상 handoff_stale 로 차단했다.)
+export function readHandoffText(cwd, deps = {}) {
+  const readDir = deps.readDir ?? (() => {
+    try {
+      return fs.readdirSync(handoffDir(cwd)).map((name) => ({ name, mtimeMs: fs.statSync(path.join(handoffDir(cwd), name)).mtimeMs }));
+    } catch { return []; }
+  });
+  const readFile = deps.readFile ?? ((p) => { try { return fs.readFileSync(p, "utf8"); } catch { return null; } });
+  const entries = readDir().filter((e) => e.name.endsWith(".md"));
+  const target = latestHandoff({ cwd, entries, legacyExists: true }) ?? handoffPath(cwd);
+  return readFile(target) ?? readFile(handoffPath(cwd));
+}
 
 // 미추적 파일은 git diff 에 안 나오므로 전체를 추가 라인으로 간주한 가짜 diff 를 만든다.
 export function untrackedAsDiff(cwd, files, readFile = (p) => fs.readFileSync(p, "utf8")) {
@@ -81,7 +96,7 @@ if (process.argv[1] && /gate\.mjs$/.test(process.argv[1])) {
     rounds: readRounds(cwd),
     enforce: cfg.design?.enforce ?? "block",
   });
-  const r = gateReport({ diff, evidence: evidenceStatus(cwd), exclude: cfg.gate?.exclude ?? [], design, listRefs: () => listRepoRefs(cwd, tracked), readHandoff: () => { try { return fs.readFileSync(path.join(cwd, ".nereus/handoff.md"), "utf8"); } catch { return null; } } });
+  const r = gateReport({ diff, evidence: evidenceStatus(cwd), exclude: cfg.gate?.exclude ?? [], design, listRefs: () => listRepoRefs(cwd, tracked), readHandoff: () => readHandoffText(cwd) });
   process.stdout.write(r.markdown + "\n");
   process.exit(r.pass ? 0 : 1);
 }

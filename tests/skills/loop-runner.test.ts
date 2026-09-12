@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { runLoop, parseTasks, buildPrompt, claudeArgs, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
+import fs from "node:fs";
+import { runLoop, parseTasks, buildPrompt, claudeArgs, claudeEnv, evaluateCmd, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
 
 describe("loop-runner", () => {
   it("parses tasks with checkbox state", () => {
@@ -13,11 +14,20 @@ describe("loop-runner", () => {
       { text: "D", done: true, wave: null },
     ]);
   });
-  it("prompt references only handoff, tasks and spec paths", () => {
-    const p = buildPrompt({ handoff: ".nereus/handoff.md", tasks: "openspec/changes/x/tasks.md", spec: "openspec/changes/x/proposal.md", goal: "작업" });
-    expect(p).toContain(".nereus/handoff.md");
+  it("prompt references only tasks, spec and wave paths", () => {
+    const p = buildPrompt({ tasks: "openspec/changes/x/tasks.md", spec: "openspec/changes/x/proposal.md", waves: ".nereus/waves", goal: "작업" });
     expect(p).toContain("tasks.md");
     expect(p).toContain("커밋");
+  });
+  it("does not hardcode a handoff file — the session hook owns that path", () => {
+    const p = buildPrompt({ tasks: "tasks.md", spec: undefined, waves: ".nereus/waves", goal: "G" });
+    expect(p).not.toContain(".nereus/handoff.md");
+    expect(p).toContain("세션 시작");
+    expect(p).toContain(".nereus/waves");
+    expect(p).toContain("(없음)");
+  });
+  it("marks the child process as a loop subsession", () => {
+    expect(claudeEnv({ PATH: "/bin" })).toMatchObject({ PATH: "/bin", NEREUS_LOOP: "1" });
   });
   it("stops when all tasks done and evaluate passes", async () => {
     let calls = 0;
@@ -183,4 +193,28 @@ describe("resolveAllowedTools — 환경별 프록시를 사용자가 더한다"
     expect(out).toContain("Bash(rtk:*)");
     expect(out).not.toContain("Bash(git push:*)");
   });
+});
+
+describe("evaluateCmd — 루프의 기본 수렴 검증", () => {
+  it("never invokes an ooo flag that does not exist (ooo qa takes an artifact, not --json)", () => {
+    const cmd = evaluateCmd({ hasOoo: true, cwd: "/repo" });
+    expect(cmd.args.join(" ")).not.toContain("--json");
+  });
+  it("falls back to the project's own test runner instead of a repo-wide ooo verdict", () => {
+    const cmd = evaluateCmd({ hasOoo: true, cwd: "/repo" });
+    expect(cmd.bin).toBe("node");
+    expect(cmd.args.join(" ")).toContain("run-tests.mjs");
+  });
+  it("still runs the test runner when ooo is absent", () => {
+    const cmd = evaluateCmd({ hasOoo: false, cwd: "/repo" });
+    expect(cmd.bin).toBe("node");
+  });
+});
+
+it("resolves the runner path with fileURLToPath, not a raw URL pathname (win32 gives /C:/…)", () => {
+  const cmd = evaluateCmd({ cwd: "/repo" });
+  expect(cmd.args[0]).not.toMatch(/^\/[A-Za-z]:/);
+  expect(cmd.args[0].endsWith("run-tests.mjs")).toBe(true);
+  // 실제로 존재하는 파일을 가리켜야 한다 — 아니면 게이트가 조용히 항상 실패한다.
+  expect(fs.existsSync(cmd.args[0])).toBe(true);
 });
