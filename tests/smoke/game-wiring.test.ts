@@ -26,3 +26,17 @@ describe("nereus-game 배선", () => {
     }
   });
 });
+
+// 회귀: 확장이 선언한 라우트가 실재하지 않는 스킬을 가리켜, 설치하면 라우터가
+// 모델에게 없는 스킬을 부르라고 지시했다. 게이트의 unwired 검사는 실행 스크립트만 본다.
+describe("라우트가 가리키는 스킬이 실재한다", () => {
+  it("선언된 모든 route.skill 에 대응하는 SKILL.md 가 있다", () => {
+    const ext = loadExtensions({ readJson, records });
+    expect(ext.routes.length).toBeGreaterThan(0);
+    for (const r of ext.routes) {
+      const [plugin, skill] = r.skill.split(":");
+      expect(plugin, r.skill).toBe("nereus-game");
+      expect(fs.existsSync(`plugins/nereus-game/skills/${skill}/SKILL.md`), r.skill).toBe(true);
+    }
+  });
+});
