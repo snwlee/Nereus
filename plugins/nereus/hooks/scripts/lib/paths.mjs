@@ -50,3 +50,28 @@ export function sessionHandoffPath({ cwd, sessionId, now = Date.now(), entries =
   const mine = entries.find((e) => e.name.endsWith(`-${sid8(sessionId)}.md`));
   return path.join(handoffDir(cwd), mine ? mine.name : handoffFileName({ now, sessionId }));
 }
+
+// 최신은 mtime 으로 정한다. 파일명의 시각은 세션 시작 시각이라 마지막 쓰기 순서와 다르다.
+const byNewest = (a, b) => (b.mtimeMs - a.mtimeMs) || b.name.localeCompare(a.name);
+
+export function latestHandoff({ cwd, entries = [], legacyExists = false } = {}) {
+  const sorted = [...entries].sort(byNewest);
+  if (sorted.length) return path.join(handoffDir(cwd), sorted[0].name);
+  return legacyExists ? handoffPath(cwd) : null;
+}
+
+export function recentOtherSessions({ entries = [], sessionId, now = Date.now(), windowMs = 30 * 60 * 1000 } = {}) {
+  const mine = `-${sid8(sessionId)}.md`;
+  return entries
+    .filter((e) => !e.name.endsWith(mine) && now - e.mtimeMs <= windowMs)
+    .sort(byNewest);
+}
+
+/** 삭제할 파일명만 돌려준다. 지우는 것은 호출자 몫이다(순수 유지). */
+export function planHandoffPrune({ entries = [], now = Date.now(), keep = 10, maxAgeMs = 30 * 24 * 60 * 60 * 1000, protect = [] } = {}) {
+  const safe = new Set(protect);
+  const sorted = [...entries].sort(byNewest);
+  return sorted
+    .filter((e, i) => !safe.has(e.name) && (i >= keep || now - e.mtimeMs > maxAgeMs))
+    .map((e) => e.name);
+}
