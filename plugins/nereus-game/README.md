@@ -18,11 +18,22 @@
 {
   "routes": [{ "skill": "nereus-game:roblox", "why": "…", "re": "roblox|rojo|luau" }],
   "stacks": [{ "name": "roblox", "marker": "default.project.json",
-               "runnerMarker": "lune.yaml", "runner": "lune", "command": "lune run tests" }]
+               "runnerMarker": "lune.yaml", "runner": "lune", "command": "lune run tests",
+               "sourceExt": [".luau", ".lua"], "testRe": ["\\.spec\\.luau$", "(^|/)[Tt]ests?/"] }]
 }
 ```
 
 코어 라우트·스택이 항상 앞이고, 코어가 러너를 찾으면 확장 러너는 무시된다.
+
+### `sourceExt` · `testRe` 는 선택이 아니다
+
+코어는 게임 언어의 확장자를 모른다. **러너만 선언하고 `sourceExt` 를 빼면 TDD 게이트가
+"소스 파일이 아님"으로 빠져 경고도 차단도 한 번도 발동하지 않는다.** 초판이 정확히 그 상태였고,
+단위 테스트는 전부 초록이었다 — 실제 로블록스 프로젝트에 물려 보고서야 드러났다(2026-09-12).
+`tests/smoke/extension-wiring.test.ts` 가 이제 "러너를 선언한 스택은 `sourceExt` 도 선언한다"를 강제한다.
+
+규칙은 **이 프로젝트에 marker 가 실제로 있는 스택으로 좁혀서** 적용된다. 좁히지 않으면
+설치만 해 둔 다른 스택의 테스트 패턴까지 인정돼 동명 타 언어 테스트가 게이트를 통과시킨다.
 
 ## 지원 스택
 

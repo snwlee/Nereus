@@ -48,14 +48,30 @@
       "marker": "default.project.json",
       "runnerMarker": "lune.yaml",
       "runner": "lune",
-      "command": "lune run tests"
+      "command": "lune run tests",
+      "sourceExt": [
+        ".luau",
+        ".lua"
+      ],
+      "testRe": [
+        "\\.spec\\.luau$",
+        "\\.spec\\.lua$",
+        "(^|/)[Tt]ests?/"
+      ]
     },
     {
       "name": "unity",
       "marker": "ProjectSettings/ProjectVersion.txt",
       "runnerMarker": "Packages/manifest.json",
       "runner": "unity-test-framework",
-      "command": "Unity -runTests -batchmode -nographics -quit"
+      "command": "Unity -runTests -batchmode -nographics -quit",
+      "sourceExt": [
+        ".cs"
+      ],
+      "testRe": [
+        "(^|/)[Tt]ests?/",
+        "Tests?\\.cs$"
+      ]
     }
   ]
 }

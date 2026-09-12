@@ -102,3 +102,23 @@ describe("tddVerdict — 탈출구", () => {
     expect(r.reason).toMatch(/tdd-override|tdd\.enforce/);
   });
 });
+
+// 회귀: 게임 스택(.luau/.cs)에서 차단 게이트가 "not-source" 로 빠져 무효였다.
+describe("확장 스택 파일 규칙이 차단 게이트에 닿는다", () => {
+  const base = { enforce: "block" as const, runner: { command: "lune run tests" }, evidence: { status: "OK", exitCode: 0 }, hasTest: false };
+
+  it("규칙이 없으면 .luau 는 소스가 아니라 통과해 버린다 — 이것이 결함이었다", () => {
+    expect(tddVerdict({ ...base, rel: "src/server/Economy.luau" }).via).toBe("not-source");
+  });
+
+  it("fileRules 를 주면 .luau 구현 편집을 막는다", () => {
+    const v = tddVerdict({ ...base, rel: "src/server/Economy.luau", fileRules: { extraExt: [".luau"] } });
+    expect(v.allow).toBe(false);
+    expect(v.reason).toContain("Economy.luau");
+  });
+
+  it("확장 테스트 패턴에 맞는 파일은 언제나 먼저 쓸 수 있다", () => {
+    const v = tddVerdict({ ...base, rel: "src/server/Economy.spec.luau", fileRules: { extraExt: [".luau"], extraTestRe: ["\\.spec\\.luau$"] } });
+    expect(v.via).toBe("test-file");
+  });
+});

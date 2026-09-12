@@ -65,14 +65,52 @@ const TEST_PATTERNS = [
 const SOURCE_EXT = /\.(dart|java|kt|ts|tsx|js|jsx|mjs|cjs)$/;
 const NON_SOURCE = [/(^|[\\/])migrations?[\\/]/, /\.d\.ts$/, /\.g\.dart$/, /\.freezed\.dart$/, /(^|[\\/])generated[\\/]/];
 
-export function isTestFile(file) {
-  const f = file.replace(/\\/g, "/");
-  return TEST_PATTERNS.some((re) => re.test(f));
+// 코어는 게임·모바일 같은 도메인의 확장자를 모른다. 로블록스(.luau)·유니티(.cs) 를 여기 박으면
+// 스택이 늘 때마다 코어를 고쳐야 하고, 그것은 확장점을 둔 이유를 무너뜨린다.
+// 그래서 **확장 스택 선언이 데이터로 준다**(sourceExt / testRe). 인자는 선택이고 기본값은 기존 동작이다.
+//
+// 이것이 빠져 있어서 로블록스·유니티 프로젝트에서는 tdd-guard 도 tdd-gate 도 "소스가 아님"으로 빠져
+// TDD 강제가 한 번도 발동할 수 없었다 (2026-09-12, 실제 리그에서 발견).
+function compile(patterns) {
+  const out = [];
+  for (const p of Array.isArray(patterns) ? patterns : []) {
+    if (!p) continue; // 빈 패턴은 의미가 없다
+    try { out.push(p instanceof RegExp ? p : new RegExp(p)); } catch { /* 못 고치고 버린다 */ }
+  }
+  return out;
 }
 
-export function isSourceFile(file) {
+/**
+ * 확장 스택 선언들에서 파일 인식 규칙을 모은다. 선언하지 않은 스택은 조용히 건너뛴다.
+ *
+ * `cwd` 를 주면 **이 프로젝트에 실제로 있는 스택으로 좁힌다**. 좁히지 않으면 설치만 해 둔
+ * 다른 스택의 테스트 패턴까지 인정돼, 동명 타 언어 테스트가 TDD 게이트를 통과시킬 수 있다
+ * (codex 2차 의견 HIGH). 범위를 주지 않으면 전부 합친다 — 기존 호출부 계약은 그대로다.
+ *
+ * 빈 문자열은 버린다. `endsWith("")` 는 모든 경로에 맞아 확장 선언 하나가 전부를 소스로 만든다.
+ */
+export function stackFileRules(stacks, { cwd, fsx = defaultFs } = {}) {
+  const list = Array.isArray(stacks) ? stacks : [];
+  const scoped = cwd === undefined ? list : list.filter((st) => st?.marker && fsx.exists(path.join(cwd, st.marker)));
+  const extraExt = [];
+  const extraTestRe = [];
+  for (const st of scoped) {
+    for (const e of Array.isArray(st?.sourceExt) ? st.sourceExt : []) if (typeof e === "string" && e && !extraExt.includes(e)) extraExt.push(e);
+    for (const r of Array.isArray(st?.testRe) ? st.testRe : []) if (typeof r === "string" && r && !extraTestRe.includes(r)) extraTestRe.push(r);
+  }
+  return { extraExt, extraTestRe };
+}
+
+export function isTestFile(file, { extraTestRe = [] } = {}) {
   const f = file.replace(/\\/g, "/");
-  if (!SOURCE_EXT.test(f)) return false;
+  if (TEST_PATTERNS.some((re) => re.test(f))) return true;
+  return compile(extraTestRe).some((re) => re.test(f));
+}
+
+export function isSourceFile(file, { extraExt = [] } = {}) {
+  const f = file.replace(/\\/g, "/");
+  const known = SOURCE_EXT.test(f) || extraExt.some((e) => typeof e === "string" && e.length > 0 && f.toLowerCase().endsWith(e.toLowerCase()));
+  if (!known) return false;
   if (NON_SOURCE.some((re) => re.test(f))) return false;
   return true;
 }

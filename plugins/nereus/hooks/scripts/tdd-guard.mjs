@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
-import { detectTestRunner, isSourceFile, isTestFile } from "./lib/stack.mjs";
+import { detectTestRunner, isSourceFile, isTestFile, stackFileRules } from "./lib/stack.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
 import { normalizeToolEvent } from "./lib/harness.mjs";
@@ -38,12 +38,16 @@ export function handle(input, deps = {}) {
   if (!filePath) return null;
   const cwd = ev.cwd;
   const rel = path.relative(cwd, filePath).replace(/\\/g, "/");
-  if (!isSourceFile(rel) && !isTestFile(rel)) return null;
+
+  // 확장 규칙은 소스·테스트 판정보다 먼저 필요하다 — 게임 스택의 .luau/.cs 가 여기서 걸러지면
+  // 아래 러너 판정까지 가지도 못한다(2026-09-12 에 실제로 그랬다).
+  const extraStacks = (deps.extensions ?? (() => loadExtensions()))().stacks;
+  const fileRules = stackFileRules(extraStacks, { cwd });
+  if (!isSourceFile(rel, fileRules) && !isTestFile(rel, fileRules)) return null;
 
   const cfg = (deps.config ?? (() => loadConfig({ cwd })))();
   if ((cfg.tdd?.exclude ?? []).some((g) => globToRegExp(g).test(rel))) return null;
 
-  const extraStacks = (deps.extensions ?? (() => loadExtensions()))().stacks;
   const runner = (deps.runner ?? (() => detectTestRunner(cwd, undefined, { extraStacks })))();
   if (!runner) return null;
 
@@ -52,8 +56,8 @@ export function handle(input, deps = {}) {
   const next = [...history, rel];
   store.saveHistory(next);
 
-  if (isTestFile(rel)) return null;
-  const testSeen = history.some(isTestFile);
+  if (isTestFile(rel, fileRules)) return null;
+  const testSeen = history.some((f) => isTestFile(f, fileRules));
   const alreadyWarned = history.includes(rel);
   if (testSeen || alreadyWarned) return null;
 

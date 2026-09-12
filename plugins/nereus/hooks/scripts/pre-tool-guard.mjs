@@ -12,7 +12,7 @@ import { globToRegExp } from "./tdd-guard.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { tddVerdict, findTestFor, OVERRIDE_FILE } from "./lib/tdd-gate.mjs";
 import { normalizeToolEvent } from "./lib/harness.mjs";
-import { detectTestRunner } from "./lib/stack.mjs";
+import { detectTestRunner, stackFileRules } from "./lib/stack.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
 import { loadExtensions } from "./lib/extensions.mjs";
 
@@ -77,16 +77,20 @@ function defaultStaged(cwd) {
 // TDD 강제에 필요한 사실을 모은다. 순수 판정은 tdd-gate.mjs 가 한다.
 function defaultTddInputs(cwd, rel) {
   const tdd = loadConfig({ cwd }).tdd ?? {};
+  // 확장 스택이 준 파일 인식 규칙. 이게 없으면 .luau/.cs 가 "소스가 아님"으로 빠져 게이트가 무효가 된다.
+  const stacks = loadExtensions().stacks;
+  const fileRules = stackFileRules(stacks, { cwd });
   const files = run("git", ["ls-files"], { cwd }).stdout.split("\n").filter(Boolean);
   let override = null;
   try { override = fs.readFileSync(path.join(cwd, OVERRIDE_FILE), "utf8").trim() || "사유 없음"; } catch { /* 없으면 null */ }
   return {
     enforce: tdd.enforce ?? "warn",
-    runner: detectTestRunner(cwd, undefined, { extraStacks: loadExtensions().stacks }),
+    runner: detectTestRunner(cwd, undefined, { extraStacks: stacks }),
     exclude: tdd.exclude ?? [],
     allowRefactor: tdd.allowRefactor !== false,
     evidence: evidenceStatus(cwd),
-    hasTest: Boolean(findTestFor(rel, files)),
+    hasTest: Boolean(findTestFor(rel, files, fileRules)),
+    fileRules,
     override,
   };
 }

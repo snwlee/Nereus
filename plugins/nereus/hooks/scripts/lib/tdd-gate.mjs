@@ -23,18 +23,19 @@ export function testStem(file) {
 }
 
 /** 소스 파일에 대응하는 테스트 파일을 찾는다. 같은 어간이면 어느 트리에 있든 인정한다. */
-export function findTestFor(rel, files) {
+export function findTestFor(rel, files, fileRules = {}) {
   const stem = testStem(rel);
-  return files.find((f) => f !== rel && isTestFile(f) && testStem(f) === stem) ?? null;
+  return files.find((f) => f !== rel && isTestFile(f, fileRules) && testStem(f) === stem) ?? null;
 }
 
 const allow = (via) => ({ allow: true, via });
 
-export function tddVerdict({ rel, enforce = "warn", runner, exclude = [], evidence, hasTest, override = null, allowRefactor = true }) {
+// fileRules 는 확장 스택이 준 파일 인식 규칙이다(새 키 — 기존 호출부는 그대로 돈다).
+export function tddVerdict({ rel, enforce = "warn", runner, exclude = [], evidence, hasTest, override = null, allowRefactor = true, fileRules = {} }) {
   if (enforce !== "block") return allow("enforce-off");
   if (!runner) return allow("no-runner");                    // 강제할 근거가 없다
-  if (isTestFile(rel)) return allow("test-file");            // 테스트는 언제나 먼저 쓸 수 있어야 한다
-  if (!isSourceFile(rel)) return allow("not-source");
+  if (isTestFile(rel, fileRules)) return allow("test-file");            // 테스트는 언제나 먼저 쓸 수 있어야 한다
+  if (!isSourceFile(rel, fileRules)) return allow("not-source");
   if (exclude.some((g) => globToRegExp(g).test(rel))) return allow("excluded");
   if (override) return { allow: true, via: "override", consumeOverride: true, reason: override };
 
