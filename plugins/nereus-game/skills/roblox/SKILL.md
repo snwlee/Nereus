@@ -35,7 +35,12 @@ Studio 조작·플레이테스트는 **Roblox Studio 내장 MCP** 를 쓴다
 2단만 쓰면 태스크마다 업로드가 필요해 느리고, 1단만 쓰면 엔진 의존 코드가 검증되지 않는다.
 **로직을 DataModel 에서 떼어내는 설계가 곧 1단 커버리지다** — 이것을 spec 단계에서 태스크로 쪼갠다.
 
-finish 단계에서 `lib/roblox-gate.mjs` 의 `robloxStageTwo` 가 2단을 시도한다.
+finish 단계에서 2단을 시도한다:
+
+```bash
+node plugins/nereus-game/lib/roblox-gate.mjs   # robloxStageTwo, 종료코드 0=통과
+```
+
 필요한 환경변수는 셋이다 — `ROBLOX_API_KEY` · `ROBLOX_UNIVERSE_ID` · `ROBLOX_PLACE_ID`.
 **하나라도 없으면 미설정으로 통과시킨다**(실패가 아니다). 키가 없다고 finish 를 막으면
 키 없는 모든 세션에서 마무리가 불가능해진다.

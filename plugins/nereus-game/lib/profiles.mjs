@@ -45,3 +45,18 @@ export function loadProfile(genre, deps = defaultDeps) {
   if (missing.length) throw new Error(`알 수 없는 장르: ${genre} — 프로파일에 ${missing.join(", ")} 가 없다`);
   return raw;
 }
+
+// 실행 진입점. `node lib/profiles.mjs` 로 쓸 수 있는 장르를 찍는다.
+// "알 수 없는 장르" 오류를 만났을 때 무엇이 있는지 알아야 고칠 수 있다.
+if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+  const names = listProfiles();
+  if (!names.length) {
+    process.stdout.write("프로파일이 없다\n");
+  } else {
+    for (const n of names) {
+      const p = loadProfile(n);
+      process.stdout.write(`${n.padEnd(18)} ${p.label ?? ""} — 실패 양상: ${p.balance?.failureMode ?? "?"}\n`);
+    }
+  }
+  process.exit(0);
+}

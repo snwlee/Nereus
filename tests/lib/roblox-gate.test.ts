@@ -41,4 +41,15 @@ describe("robloxStageTwo", () => {
     expect(r.status).toBe("passed");
     expect(r.pass).toBe(true);
   });
+
+  it("2단 호출이 예외를 던져도 finish 를 죽이지 않는다", async () => {
+    const env = { ROBLOX_API_KEY: "k", ROBLOX_UNIVERSE_ID: "1", ROBLOX_PLACE_ID: "2" };
+    const r = await robloxStageTwo(
+      { cwd: "/p", env },
+      { fsx: robloxFs, run: async () => { throw new Error("ECONNRESET"); } },
+    );
+    expect(r.status).toBe("failed");
+    expect(r.pass).toBe(false);
+    expect(r.reason).toContain("ECONNRESET");
+  });
 });

@@ -10,7 +10,11 @@ nereus:common 규칙을 따른다. 담당 에이전트: art-director.
 
 ## 0. 먼저 전제를 확인한다
 
-`lib/asset-doctor.mjs` 의 `assetDoctor()` 가 단계별로 무엇이 없어서 막히는지 알려준다.
+```bash
+node plugins/nereus-game/lib/asset-doctor.mjs
+```
+
+단계별로 무엇이 없어서 막히는지 찍는다(`assetDoctor()`).
 
 | 단계 | 전제 |
 |---|---|

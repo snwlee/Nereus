@@ -34,13 +34,19 @@ export async function robloxStageTwo(input, deps = {}) {
     };
   }
 
-  const r = await run({
-    universeId: env.ROBLOX_UNIVERSE_ID,
-    placeId: env.ROBLOX_PLACE_ID,
-    apiKey: env.ROBLOX_API_KEY,
-    script,
-    timeoutSeconds,
-  });
+  // 네트워크·API 오류로 예외가 나면 finish 전체가 죽는다. 실패로 판정하고 사유를 남긴다.
+  let r;
+  try {
+    r = await run({
+      universeId: env.ROBLOX_UNIVERSE_ID,
+      placeId: env.ROBLOX_PLACE_ID,
+      apiKey: env.ROBLOX_API_KEY,
+      script,
+      timeoutSeconds,
+    });
+  } catch (e) {
+    return { status: "failed", pass: false, reason: `2단 호출 실패: ${e?.message ?? e}`, logs: [] };
+  }
 
   return {
     status: r?.pass ? "passed" : "failed",
@@ -48,4 +54,18 @@ export async function robloxStageTwo(input, deps = {}) {
     reason: r?.reason ?? "",
     logs: Array.isArray(r?.logs) ? r.logs : [],
   };
+}
+
+// 실행 진입점. 스킬이 `node lib/roblox-gate.mjs` 로 부른다.
+// export 를 SKILL.md 에 적는 것만으로는 배선이 아니다 — 실행 경로가 있어야 한다.
+if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+  robloxStageTwo({ cwd: process.cwd(), env: process.env })
+    .then((r) => {
+      process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
+      process.exit(r.pass ? 0 : 1);
+    })
+    .catch((e) => {
+      process.stdout.write(`${JSON.stringify({ status: "failed", pass: false, reason: String(e) })}\n`);
+      process.exit(1);
+    });
 }

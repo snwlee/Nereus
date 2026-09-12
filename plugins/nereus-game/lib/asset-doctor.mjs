@@ -43,3 +43,11 @@ export function assetDoctor(deps = {}) {
     return { stage: s.stage, label: s.label, ok, why: ok ? "" : s.why };
   });
 }
+
+// 실행 진입점. 스킬이 `node lib/asset-doctor.mjs` 로 부른다. 부재는 결함이 아니므로 항상 0 으로 끝낸다.
+if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+  for (const s of assetDoctor()) {
+    process.stdout.write(`${s.ok ? "OK  " : "--  "} ${s.stage.padEnd(6)} ${s.ok ? s.label : s.why}\n`);
+  }
+  process.exit(0);
+}

@@ -21,6 +21,8 @@ import { loadProfile, listProfiles } from "../../lib/profiles.mjs";
 const profile = loadProfile("sim-tycoon"); // 또는 "obby-platformer"
 ```
 
+쓸 수 있는 장르는 `node plugins/nereus-game/lib/profiles.mjs` 로 확인한다.
+
 알 수 없는 장르는 **던진다**. 기본값으로 떨어지지 않는다 — 다른 장르로 밸런싱하면 수치가
 그럴듯한 채로 틀리고, 그건 수치가 없는 것보다 나쁘다.
 
