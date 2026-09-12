@@ -23,3 +23,26 @@ describe("paths", () => {
     expect(handoffPath("/repo")).toBe(path.join("/repo", ".nereus", "handoff.md"));
   });
 });
+
+import { handoffDir, handoffFileName, sessionHandoffPath } from "../../plugins/nereus/hooks/scripts/lib/paths.mjs";
+
+describe("session handoff path", () => {
+  const now = new Date("2026-09-12T14:30:00").getTime();
+  it("names a file by session start time and the first 8 chars of the session id", () => {
+    expect(handoffFileName({ now, sessionId: "a1b2c3d4-e5f6-7890-aaaa-bbbbbbbbbbbb" })).toBe("20260912-1430-a1b2c3d4.md");
+  });
+  it("falls back to nosession when the session id is missing", () => {
+    expect(handoffFileName({ now, sessionId: undefined })).toBe("20260912-1430-nosessio.md");
+  });
+  it("puts session handoffs under .nereus/handoff", () => {
+    expect(handoffDir("/repo")).toBe(path.join("/repo", ".nereus", "handoff"));
+  });
+  it("creates a new path when no file of this session exists", () => {
+    const p = sessionHandoffPath({ cwd: "/repo", sessionId: "a1b2c3d4xx", now, entries: [{ name: "20260911-0900-99999999.md", mtimeMs: 1 }] });
+    expect(p).toBe(path.join("/repo", ".nereus", "handoff", "20260912-1430-a1b2c3d4.md"));
+  });
+  it("reuses this session's existing file after a compact", () => {
+    const p = sessionHandoffPath({ cwd: "/repo", sessionId: "a1b2c3d4xx", now, entries: [{ name: "20260912-0900-a1b2c3d4.md", mtimeMs: 1 }] });
+    expect(p).toBe(path.join("/repo", ".nereus", "handoff", "20260912-0900-a1b2c3d4.md"));
+  });
+});
