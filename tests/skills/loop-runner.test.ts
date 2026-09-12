@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { runLoop, parseTasks, buildPrompt, claudeArgs, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
+import { runLoop, parseTasks, buildPrompt, claudeArgs, claudeEnv, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
 
 describe("loop-runner", () => {
   it("parses tasks with checkbox state", () => {
@@ -13,11 +13,20 @@ describe("loop-runner", () => {
       { text: "D", done: true, wave: null },
     ]);
   });
-  it("prompt references only handoff, tasks and spec paths", () => {
-    const p = buildPrompt({ handoff: ".nereus/handoff.md", tasks: "openspec/changes/x/tasks.md", spec: "openspec/changes/x/proposal.md", goal: "작업" });
-    expect(p).toContain(".nereus/handoff.md");
+  it("prompt references only tasks, spec and wave paths", () => {
+    const p = buildPrompt({ tasks: "openspec/changes/x/tasks.md", spec: "openspec/changes/x/proposal.md", waves: ".nereus/waves", goal: "작업" });
     expect(p).toContain("tasks.md");
     expect(p).toContain("커밋");
+  });
+  it("does not hardcode a handoff file — the session hook owns that path", () => {
+    const p = buildPrompt({ tasks: "tasks.md", spec: undefined, waves: ".nereus/waves", goal: "G" });
+    expect(p).not.toContain(".nereus/handoff.md");
+    expect(p).toContain("세션 시작");
+    expect(p).toContain(".nereus/waves");
+    expect(p).toContain("(없음)");
+  });
+  it("marks the child process as a loop subsession", () => {
+    expect(claudeEnv({ PATH: "/bin" })).toMatchObject({ PATH: "/bin", NEREUS_LOOP: "1" });
   });
   it("stops when all tasks done and evaluate passes", async () => {
     let calls = 0;
