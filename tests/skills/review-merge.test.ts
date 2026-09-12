@@ -94,3 +94,31 @@ describe("severityAction", () => {
     expect(severityAction(undefined)).toBe("defer-ledger");
   });
 });
+
+describe("리뷰어 헬스체크", () => {
+  it("PATH 에 있어도 무응답이면 계획에서 빠진다", () => {
+    const probe = (bin: string) => (bin === "agy" ? { ok: false, why: "무응답" } : { ok: true });
+    const plan = planRunners("both", () => true, probe);
+    expect(plan.gemini).toBe(false);
+    expect(plan.skipped).toContain("gemini");
+    expect(JSON.stringify(plan.reasons)).toContain("agy");
+    expect(JSON.stringify(plan.reasons)).toContain("무응답");
+  });
+
+  it("응답하는 리뷰어는 포함된다", () => {
+    const plan = planRunners("codex", () => true, () => ({ ok: true }));
+    expect(plan.codex).toBe(true);
+  });
+
+  it("PATH 에 없으면 프로브를 돌리지 않는다", () => {
+    let probed = 0;
+    planRunners("both", () => false, () => { probed += 1; return { ok: true }; });
+    expect(probed).toBe(0);
+  });
+
+  it("probe 를 주지 않으면 기존 계약 그대로다 — reasons 키가 생기지 않는다", () => {
+    const plan = planRunners("codex", () => true);
+    expect(plan.codex).toBe(true);
+    expect(plan).not.toHaveProperty("reasons");
+  });
+});

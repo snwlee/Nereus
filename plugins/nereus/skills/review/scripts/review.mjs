@@ -27,14 +27,32 @@ export function normalizeReviewers(value) {
   return SHORTHAND.both;
 }
 
-export function planRunners(value, available = (b) => !!which(b)) {
+// "PATH 에 있음"과 "쓸 수 있음"은 다르다. agy 는 PATH 에 있으면서 무응답 후 exit 0 을 내고,
+// ocr delegate 는 커밋된 diff 를 못 본다. 존재만으로 가용을 단정하면 계획은 초록인데
+// 실제로는 아무도 리뷰하지 않는 상태가 된다 — 두 사이클 연속 그렇게 종결했다.
+// probe 를 주지 않으면 기존 동작 그대로다(기존 호출부 호환).
+export function planRunners(value, available = (b) => !!which(b), probe = null) {
   const want = normalizeReviewers(value);
   const plan = { ocr: false, codex: false, gemini: false, skipped: [] };
   for (const id of Object.keys(REVIEWERS)) {
     if (!want.includes(id)) continue;
-    if (available(REVIEWERS[id].bin)) plan[id] = true; else plan.skipped.push(id);
+    const bin = REVIEWERS[id].bin;
+    // skipped 는 기존 계약대로 id 문자열 배열을 유지한다. 사유는 probe 를 쓸 때만 reasons 로 덧붙인다.
+    if (!available(bin)) { skip(plan, id, bin, "PATH 에 없음", probe); continue; }
+    if (probe) {
+      const r = probe(bin);
+      if (!r?.ok) { skip(plan, id, bin, r?.why ?? "프로브 무응답", probe); continue; }
+    }
+    plan[id] = true;
   }
   return plan;
+}
+
+function skip(plan, id, bin, why, probe) {
+  plan.skipped.push(id);
+  if (!probe) return;
+  plan.reasons = plan.reasons ?? [];
+  plan.reasons.push({ id, bin, why });
 }
 
 export function parseOcrJson(raw) {
