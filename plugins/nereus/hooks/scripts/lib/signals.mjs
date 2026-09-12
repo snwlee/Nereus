@@ -1,7 +1,7 @@
 // 판정층. 관찰 로그에서 결정론적 신호 세 가지만 뽑아 "후보"를 만든다. LLM 호출 없음.
 // 후보는 규칙이 아니다. 사용자가 /nereus:learn 으로 승인해야 규칙이 된다(one-skill-to-rule-them-all 의 승인 규율, CC BY 4.0).
-export const REPEAT_THRESHOLD = 3;
-export const EVIDENCE_MAX = 5;
+const REPEAT_THRESHOLD = 3;
+const EVIDENCE_MAX = 5;
 const NEAR_MS = 10 * 60 * 1000;
 
 const head = (sig) => String(sig ?? "").split(/\s+/).slice(0, 3).join(" ");

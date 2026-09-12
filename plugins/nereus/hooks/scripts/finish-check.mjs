@@ -14,7 +14,7 @@ import { lastAssistantUsage, usageRatio } from "./lib/transcript.mjs";
 
 const continueFile = (cwd) => path.join(projectStateDir(cwd), "continue.json");
 
-export function readContinuation(cwd) {
+function readContinuation(cwd) {
   try { return JSON.parse(fs.readFileSync(continueFile(cwd), "utf8")); } catch { return null; }
 }
 function writeContinuation(cwd, state) {

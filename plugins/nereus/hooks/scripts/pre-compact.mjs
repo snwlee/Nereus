@@ -6,7 +6,7 @@ import { handoffPath } from "./lib/paths.mjs";
 const STALE_MS = 30 * 60 * 1000;
 
 // 압축 요약에 반드시 남길 다섯 섹션. MUST NOT(실패한 접근·금지 사항)이 빠지면 압축 뒤 같은 실수를 반복한다.
-export const COMPACT_INSTRUCTION = [
+const COMPACT_INSTRUCTION = [
   "[Baton] 컨텍스트 압축이 시작됩니다. 먼저 .nereus/handoff.md를 전체 재작성하세요.",
   "압축 요약에는 다음 다섯 섹션을 이 제목 그대로 반드시 포함하세요:",
   "1. 원문 요청 — 사용자가 처음 요청한 문장 그대로",

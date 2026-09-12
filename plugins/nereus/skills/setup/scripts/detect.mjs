@@ -58,14 +58,6 @@ export function detectDirs({ env = process.env, home = os.homedir(), cwd = proce
   }));
 }
 
-export const OFFICIAL_PLUGINS = ["skill-creator", "plugin-dev", "hookify", "mcp-server-dev", "claude-security", "security-guidance", "code-simplifier", "typescript-lsp", "jdtls-lsp", "kotlin-lsp"];
-export const COMPANION_MARKETPLACES = [
-  "thedotmack/claude-mem → /plugin install claude-mem (메모리)",
-  "Q00/ouroboros → /plugin install ouroboros@ouroboros (인터뷰·평가)",
-  "openai-codex → /plugin install codex@openai-codex (2차 의견)",
-  "npx impeccable install (디자인)",
-  "tt-a1i/archify (다이어그램)",
-];
 
 export function detect({ platform = process.platform, probe = (bin) => !!which(bin) } = {}) {
   const key = platform === "win32" ? "win32" : platform === "darwin" ? "darwin" : "linux";

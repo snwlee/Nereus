@@ -5,9 +5,9 @@ import path from "node:path";
 import { projectStateDir } from "./paths.mjs";
 import { isCorrection } from "./learnings.mjs";
 
-export const MAX_LINES = 2000;
-export const SIG_MAX = 120;
-export const EXCERPT_MAX = 200;
+const MAX_LINES = 2000;
+const SIG_MAX = 120;
+const EXCERPT_MAX = 200;
 
 const SECRET_RE = [
   /AKIA[0-9A-Z]{16}/g,
@@ -93,7 +93,7 @@ export function rotate(text, maxLines = MAX_LINES) {
   return lines.slice(-maxLines).join("\n");
 }
 
-export function observationsPath(cwd) { return path.join(projectStateDir(cwd), "learn", "observations.jsonl"); }
+function observationsPath(cwd) { return path.join(projectStateDir(cwd), "learn", "observations.jsonl"); }
 
 export function appendObservation(cwd, rec, { maxLines = MAX_LINES } = {}) {
   if (!rec) return null;

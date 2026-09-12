@@ -4,8 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { userConfigDir, projectStateDir } from "./paths.mjs";
 
-export const START_CONFIDENCE = 0.5;
-export const BUMP = 0.2;
+const START_CONFIDENCE = 0.5;
+const BUMP = 0.2;
 
 export function learningsPath(cwd, scope = "project") {
   return scope === "global" ? path.join(userConfigDir(), "learnings.jsonl") : path.join(projectStateDir(cwd), "learnings.jsonl");

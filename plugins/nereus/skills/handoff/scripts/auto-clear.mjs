@@ -18,7 +18,7 @@ const TURN_END_TIMEOUT_MS = 600_000; // 현재 턴이 끝나기를 기다린다(
 const CLEAR_TIMEOUT_MS = 60_000;
 const QUIET_MS = 3_000;      // 이만큼 출력이 없으면 턴이 끝난 것으로 본다
 const POLL_MS = 1_000;
-export const LOG_FILE = ".nereus/auto-clear.log";
+const LOG_FILE = ".nereus/auto-clear.log";
 
 /**
  * 실행할 orca 명령 단계를 만든다. 부수 효과 없음 — 테스트 가능하게 분리했다.

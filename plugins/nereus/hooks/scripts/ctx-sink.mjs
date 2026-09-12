@@ -6,7 +6,7 @@ import path from "node:path";
 import { readStdinJson } from "./lib/io.mjs";
 import { userConfigDir } from "./lib/paths.mjs";
 
-export const FRESH_MS = 90_000;
+const FRESH_MS = 90_000;
 
 export function ctxFile(sessionId, dir = path.join(userConfigDir(), "ctx")) {
   return path.join(dir, `${String(sessionId).replace(/[^A-Za-z0-9_-]/g, "_")}.json`);
@@ -25,7 +25,7 @@ export function sink(input, { writeFile = (p, s) => { fs.mkdirSync(path.dirname(
 // statusline 의 공식 %와 transcript 토큰 수로 한도를 역산해 두면, 공식 값이 낡아 폴백으로
 // 떨어져도 올바른 분모를 쓸 수 있다. transcript 에는 1M 세션임을 알리는 단서가 없다.
 // officialRatio 와 달리 별도 파일에 둔다 — sink() 가 매 statusline 갱신마다 덮어쓰기 때문.
-export const KNOWN_LIMITS = [200_000, 1_000_000];
+const KNOWN_LIMITS = [200_000, 1_000_000];
 
 export function limitFile(sessionId, dir = path.join(userConfigDir(), "ctx")) {
   return path.join(dir, `${String(sessionId).replace(/[^A-Za-z0-9_-]/g, "_")}.limit.json`);

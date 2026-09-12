@@ -41,7 +41,7 @@ export function summarize(rows) {
 }
 
 /** ps 의 elapsed 표기(`MM:SS`, `HH:MM:SS`, `D-HH:MM:SS`)를 초로. */
-export function elapsedSeconds(text) {
+function elapsedSeconds(text) {
   const s = String(text ?? "").trim();
   const [days, clock] = s.includes("-") ? s.split("-") : ["0", s];
   const parts = clock.split(":").map(Number);

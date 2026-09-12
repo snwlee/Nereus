@@ -22,13 +22,13 @@ export const DEFAULT_RULES = JSON.parse(fs.readFileSync(path.join(HERE, "..", "r
 function readRules(file) { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return []; } }
 
 /** 병합된 전체 규칙(비활성 포함). 비활성 여부는 쓰는 쪽에서 판단한다. */
-export function loadRules(cwd) {
+function loadRules(cwd) {
   const merged = new Map();
   for (const r of [...DEFAULT_RULES, ...readRules(path.join(userConfigDir(), "rules.json")), ...readRules(path.join(projectStateDir(cwd), "rules.json"))]) merged.set(r.id, r);
   return [...merged.values()];
 }
 
-export const isEnabled = (r) => r.enabled !== false;
+const isEnabled = (r) => r.enabled !== false;
 
 const SECRET_RE = /AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{30,}|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{35}/;
 const SOURCE_RE = /\.(ts|tsx|js|jsx|mjs|cjs|dart|java|kt|py|go|rs)$/;
@@ -97,7 +97,7 @@ function defaultTddInputs(cwd, rel) {
 
 const dropOverride = (cwd) => { try { fs.unlinkSync(path.join(cwd, OVERRIDE_FILE)); } catch { /* 이미 없음 */ } };
 
-export function tddCheck(input, cwd, deps = {}) {
+function tddCheck(input, cwd, deps = {}) {
   const fp = normalizeToolEvent(input).files[0];
   if (!fp) return null;
   const rel = (path.isAbsolute(fp) ? path.relative(cwd, fp) : fp).replace(/\\/g, "/");

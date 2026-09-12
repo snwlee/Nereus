@@ -18,7 +18,7 @@ import { loadExtensions } from "./lib/extensions.mjs";
 // /clear 직후 주입되는 재개 절차. resume 스킬이 하던 검증을 여기서 지시해
 // 사용자가 /nereus:resume 을 따로 칠 필요를 없앤다. compact 는 대화가 그대로
 // 이어지므로 이 체크리스트를 붙이지 않는다(이미 검증된 상태에서 요약만 된 것).
-export const RESUME_CHECKLIST = [
+const RESUME_CHECKLIST = [
   "`/nereus:resume` 을 따로 칠 필요 없이 지금 바로 이어서 진행하세요. 이어가기 전에:",
   "1. \"테스트 상태\"에 적힌 러너를 실제로 실행해 handoff 의 주장과 대조한다. 다르면 handoff 가 아니라 현재 코드가 진실이다. 차이를 사용자에게 알린다.",
   "2. `git log --oneline -5` 와 `git status` 로 미커밋 변경을 확인한다.",
@@ -27,7 +27,7 @@ export const RESUME_CHECKLIST = [
 ].join("\n");
 
 // agy 는 2026-09-12 부로 필수가 아니다 — gemini 2차 의견은 웹세션(python3)으로 받는다.
-export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3", "codex"];
+const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3", "codex"];
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function toolStatusCached({ now = Date.now(), cacheFile = path.join(userConfigDir(), "tools.json"), probe = (t) => !!which(t) } = {}) {
@@ -94,7 +94,7 @@ export function pluginSnapshotNote({ records, previous }) {
 }
 
 // 스킬 문서에만 두면 그 스킬을 부르지 않은 턴에는 적용되지 않는다. 매 컨텍스트에 한 줄 심는다.
-export const ASK_POLICY =
+const ASK_POLICY =
   "순서·우선순위·착수 승인은 묻지 않는다. 할 일이 정해져 있으면 스스로 순서를 정해 하나씩 전부 끝낸다. "
   + "질문은 (a) 하네스가 알 수 없는 정보와 (b) 외부로 나가는·되돌리기 어려운 행동에만 쓴다.";
 

@@ -31,7 +31,7 @@ function patchFiles(patch) {
 }
 
 /** tool_input에서 편집 파일 목록을 뽑는다. 하네스별 필드 차이를 여기서 흡수한다. */
-export function extractFiles(toolInput = {}) {
+function extractFiles(toolInput = {}) {
   const ti = toolInput ?? {};
   const out = [];
   const push = (v) => { if (typeof v === "string" && v) out.push(v); };

@@ -8,7 +8,7 @@ import { readObservations, clearObservations } from "./lib/observe.mjs";
 import { detectSignals, mergeCandidates } from "./lib/signals.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
 
-export const candidatesPath = (cwd) => path.join(projectStateDir(cwd), "learn", "candidates.json");
+const candidatesPath = (cwd) => path.join(projectStateDir(cwd), "learn", "candidates.json");
 
 export function readCandidates(cwd, { readFile = (p) => fs.readFileSync(p, "utf8") } = {}) {
   try {

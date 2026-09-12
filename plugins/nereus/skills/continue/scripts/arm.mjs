@@ -6,7 +6,7 @@ import { projectStateDir } from "../../../hooks/scripts/lib/paths.mjs";
 import { taskProgress } from "../../../hooks/scripts/lib/tasks.mjs";
 
 export const DEFAULT_MAX = 5;
-export const HARD_MAX = 20;
+const HARD_MAX = 20;
 
 export function file(cwd) { return path.join(projectStateDir(cwd), "continue.json"); }
 

@@ -5,8 +5,15 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOTS = ["plugins/nereus-game/lib", "plugins/nereus-game/hooks/scripts"];
-const SEARCH = ["plugins/nereus-game", "tests"];
+// 2026-09-12: 코어까지 넓혔다. 넓히자마자 고아 25건이 걸렸고(내부 전용 23 + 죽은 데이터 2),
+// 그때까지 MUST NOT 1번("선언하고 배선하지 않는 것")이 코어에서는 가드되지 않는 상태였다.
+const ROOTS = [
+  "plugins/nereus-game/lib",
+  "plugins/nereus-game/hooks/scripts",
+  "plugins/nereus/hooks/scripts",
+  "plugins/nereus/skills",
+];
+const SEARCH = ["plugins/nereus", "plugins/nereus-game", "tests"];
 
 function walk(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
