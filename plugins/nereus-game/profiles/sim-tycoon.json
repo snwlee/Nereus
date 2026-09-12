@@ -1,0 +1,12 @@
+{
+  "genre": "sim-tycoon",
+  "label": "시뮬레이터 · 타이쿤 (키우는 것)",
+  "loop": ["수집", "판매", "재투자", "확장"],
+  "metrics": ["세션 길이", "D1 리텐션", "단계 도달률", "재방문 간격"],
+  "balance": {
+    "failureMode": "bottleneck",
+    "cliffRatio": 8,
+    "targetTurnsToFirstStage": 5,
+    "note": "타이쿤의 실패는 '다음 단계가 도달 불가'로 나타난다. 절벽보다 병목을 먼저 본다."
+  }
+}

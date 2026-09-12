@@ -1,0 +1,12 @@
+{
+  "genre": "obby-platformer",
+  "label": "오비 · 플랫포머 (점프맵)",
+  "loop": ["도전", "실패", "재시도", "통과"],
+  "metrics": ["구간별 이탈률", "평균 재시도 횟수", "완주율", "체크포인트 체류 시간"],
+  "balance": {
+    "failureMode": "cliff",
+    "cliffRatio": 3,
+    "targetTurnsToFirstStage": 2,
+    "note": "오비의 실패는 '난이도 절벽'으로 나타난다. 연속 실패가 쌓이는 구간이 이탈 지점이다."
+  }
+}
