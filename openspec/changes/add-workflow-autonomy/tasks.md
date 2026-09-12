@@ -6,7 +6,7 @@
     `{ size, kind, tool, reason, interview, specTool, reverseSpec, prd }`.
     `interview` 는 `"none"|"short"|"full"`, `specTool` 은 `"tasks-only"|"spec-kit"|"openspec"`.
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/skills/spec-plan.test.ts`:
+    - [x] 실패 테스트 작성 — `tests/skills/spec-plan.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import { planWork } from "../../plugins/nereus/skills/spec/scripts/plan.mjs";
@@ -53,8 +53,8 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/spec-plan.test.ts` · Expected: FAIL (plan.mjs 없음)
-    - [ ] 최소 구현 — `plugins/nereus/skills/spec/scripts/plan.mjs`:
+    - [x] 실패 확인: Run `npx vitest run tests/skills/spec-plan.test.ts` · Expected: FAIL (plan.mjs 없음)
+    - [x] 최소 구현 — `plugins/nereus/skills/spec/scripts/plan.mjs`:
       ```js
       // 규모 × 신규/수정 → 인터뷰·스펙 도구·역스펙·PRD. 결정 지점을 한 곳에 모은다.
       // classify 는 손대지 않는다 — spec/SKILL.md 와 기존 테스트가 그 출력을 쓴다.
@@ -84,16 +84,16 @@
         process.stdout.write(JSON.stringify(planWork({ cwd: process.argv[2] || process.cwd(), size: i > -1 ? process.argv[i + 1] : undefined })) + "\n");
       }
       ```
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/spec-plan.test.ts` · Expected: PASS
-    - [ ] CLI 확인: Run `node plugins/nereus/skills/spec/scripts/plan.mjs "$PWD" --size medium` · Expected: `"interview":"none"` 이 들어간 JSON 한 줄
-    - [ ] 커밋: `git add plugins/nereus/skills/spec/scripts/plan.mjs tests/skills/spec-plan.test.ts && git commit -m "feat(spec): planWork — 규모 × 신규/수정 매트릭스"`
+    - [x] 통과 확인: Run `npx vitest run tests/skills/spec-plan.test.ts` · Expected: PASS
+    - [x] CLI 확인: Run `node plugins/nereus/skills/spec/scripts/plan.mjs "$PWD" --size medium` · Expected: `"interview":"none"` 이 들어간 JSON 한 줄
+    - [x] 커밋: `git add plugins/nereus/skills/spec/scripts/plan.mjs tests/skills/spec-plan.test.ts && git commit -m "feat(spec): planWork — 규모 × 신규/수정 매트릭스"`
   - Done when: 6개 테스트 통과, CLI 가 JSON 한 줄을 낸다, `classify` 테스트가 그대로 통과
 
 - [x] T2. 되묻지 않는 규칙을 세션마다 주입한다
   - Files: Modify `plugins/nereus/hooks/scripts/session-start.mjs` · Test `tests/hooks/session-start.test.ts`
   - Interfaces: Produces `ASK_POLICY` (export 상수) · `handle()` 의 주입 내용에 추가. 새 deps 없음.
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/hooks/session-start.test.ts` 에 추가:
+    - [x] 실패 테스트 작성 — `tests/hooks/session-start.test.ts` 에 추가:
       ```ts
       it("injects the standing rule that ordering is never handed back to the user", () => {
         const out = handle({ session_id: "s1", cwd: "/r", source: "startup" }, deps({}));
@@ -107,8 +107,8 @@
         expect(ctx).not.toContain("묻지 않는다");
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: FAIL (문구 없음)
-    - [ ] 최소 구현 — `session-start.mjs` 에 상수를 더하고 스킬 맵과 같은 자리(`source !== "compact"` 블록)에서 push 한다:
+    - [x] 실패 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: FAIL (문구 없음)
+    - [x] 최소 구현 — `session-start.mjs` 에 상수를 더하고 스킬 맵과 같은 자리(`source !== "compact"` 블록)에서 push 한다:
       ```js
       // 스킬 문서에만 두면 그 스킬을 부르지 않은 턴에는 적용되지 않는다. 매 컨텍스트에 한 줄 심는다.
       export const ASK_POLICY =
@@ -116,22 +116,22 @@
         + "질문은 (a) 하네스가 알 수 없는 정보와 (b) 외부로 나가는·되돌리기 어려운 행동에만 쓴다.";
       ```
       주입은 `parts.push(\`## 작업 방식\n${ASK_POLICY}\`)` 한 줄로 한다.
-    - [ ] 통과 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: PASS
-    - [ ] 회귀 확인: Run `npx vitest run tests/hooks/` · Expected: 전부 통과
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start.test.ts && git commit -m "feat(harness): 되묻지 않는 규칙을 세션마다 주입"`
+    - [x] 통과 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: PASS
+    - [x] 회귀 확인: Run `npx vitest run tests/hooks/` · Expected: 전부 통과
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start.test.ts && git commit -m "feat(harness): 되묻지 않는 규칙을 세션마다 주입"`
   - Done when: 새 테스트 2개 통과, 기존 훅 테스트 전부 통과, compact 에는 안 들어간다
 
-- [ ] T3. intake·spec·common 문서에서 되묻는 지점을 없앤다
+- [x] T3. intake·spec·common 문서에서 되묻는 지점을 없앤다
   - Files: Modify `plugins/nereus/skills/intake/SKILL.md` · Modify `plugins/nereus/skills/common/SKILL.md` · Modify `plugins/nereus/skills/spec/SKILL.md`
   - Interfaces: 없음(문서). 계약은 T1·T2 가 정한다.
   - Steps:
-    - [ ] `intake/SKILL.md` §0 을 `plan.mjs` 호출로 바꾼다. 규모를 판정해 `--size` 로 넘기고, 결과를 한 줄로 **알리고 그대로 진행**한다. "제안하고 동의하면"을 지운다.
-    - [ ] `intake/SKILL.md` HARD-GATE 를 고친다: "승인 전 코드 금지"는 유지하고, 승인의 정의를 "사용자가 그 작업을 요청한 시점"으로 적는다. "intake.md 사용자 승인"이라는 별도 확인 단계를 지운다.
-    - [ ] `intake/SKILL.md` §2·§3 을 고친다: 인터뷰 여부는 `plan.interview` 를 따른다(`none` 이면 인터뷰를 돌리지 않는다). 게이트의 "가정 표를 사용자가 승인"을 "가정 표를 알리고 진행"으로 바꾼다.
-    - [ ] `spec/SKILL.md` §1 을 `classify.mjs` 대신 `plan.mjs` 를 돌리게 바꾸고, `plan.reverseSpec` 이 true 일 때만 역스펙 절차를 밟는다고 적는다.
-    - [ ] `common/SKILL.md` 에 규칙 한 줄을 더한다: 순서·우선순위·착수 승인은 묻지 않는다. 남기는 질문 두 가지를 명시한다.
-    - [ ] 확인: Run `grep -n "동의하면\|승인\|확인받는다" plugins/nereus/skills/intake/SKILL.md` · Expected: 착수 승인을 요구하는 줄이 남아 있지 않다(승인의 정의를 설명하는 줄은 허용)
-    - [ ] 커밋: `git add plugins/nereus/skills && git commit -m "docs(harness): 순서·착수를 되묻지 않는다"`
+    - [x] `intake/SKILL.md` §0 을 `plan.mjs` 호출로 바꾼다. 규모를 판정해 `--size` 로 넘기고, 결과를 한 줄로 **알리고 그대로 진행**한다. "제안하고 동의하면"을 지운다.
+    - [x] `intake/SKILL.md` HARD-GATE 를 고친다: "승인 전 코드 금지"는 유지하고, 승인의 정의를 "사용자가 그 작업을 요청한 시점"으로 적는다. "intake.md 사용자 승인"이라는 별도 확인 단계를 지운다.
+    - [x] `intake/SKILL.md` §2·§3 을 고친다: 인터뷰 여부는 `plan.interview` 를 따른다(`none` 이면 인터뷰를 돌리지 않는다). 게이트의 "가정 표를 사용자가 승인"을 "가정 표를 알리고 진행"으로 바꾼다.
+    - [x] `spec/SKILL.md` §1 을 `classify.mjs` 대신 `plan.mjs` 를 돌리게 바꾸고, `plan.reverseSpec` 이 true 일 때만 역스펙 절차를 밟는다고 적는다.
+    - [x] `common/SKILL.md` 에 규칙 한 줄을 더한다: 순서·우선순위·착수 승인은 묻지 않는다. 남기는 질문 두 가지를 명시한다.
+    - [x] 확인: Run `grep -n "동의하면\|승인\|확인받는다" plugins/nereus/skills/intake/SKILL.md` · Expected: 착수 승인을 요구하는 줄이 남아 있지 않다(승인의 정의를 설명하는 줄은 허용)
+    - [x] 커밋: `git add plugins/nereus/skills && git commit -m "docs(harness): 순서·착수를 되묻지 않는다"`
   - Done when: intake 가 규모를 판정→알림→진행으로 이어지고, 인터뷰 여부가 `plan.interview` 로 결정되며, build 의 테스트 환경 질문과 finish 의 푸시 질문은 그대로 남아 있다
 
 ## Global Constraints

@@ -45,3 +45,16 @@ describe("smoke: three stacks", () => {
     expect(out.hookSpecificOutput.additionalContext).toContain("목표: 스모크");
   });
 });
+
+describe("계획 결정이 실제로 배선돼 있다", () => {
+  const read = (p: string) => fs.readFileSync(path.join(process.cwd(), p), "utf8");
+  it("intake and spec both route through plan.mjs, not classify alone", () => {
+    // 문서 편집이 조용히 빗나간 적이 있다(치환 문자열 불일치). 배선을 테스트로 고정한다.
+    expect(read("plugins/nereus/skills/intake/SKILL.md")).toContain("plan.mjs");
+    expect(read("plugins/nereus/skills/spec/SKILL.md")).toContain("plan.mjs");
+  });
+  it("keeps the two questions that must survive", () => {
+    expect(read("plugins/nereus/skills/build/SKILL.md")).toContain("테스트 환경이 없습니다");
+    expect(read("plugins/nereus/skills/finish/SKILL.md")).toContain("푸시할까요");
+  });
+});

@@ -9,10 +9,13 @@ nereus:common 규칙을 따른다. 담당 에이전트: architect.
 
 ## 1. 판별
 
+intake 가 이미 `plan.mjs` 를 돌렸으면 그 결과를 쓴다. 없으면 여기서 돌린다:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/classify.mjs" "$PWD"
+node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/plan.mjs" "$PWD" --size small|medium|large
 ```
-결과 `kind`와 `reason`을 사용자에게 한 줄로 알리고 다른 판단을 원하는지 묻지 않는다. 사용자가 명시적으로 `--tool spec-kit|openspec`을 주면 그걸 따른다.
+`specTool` 을 따른다 — `openspec` 이면 2B, `spec-kit` 이면 2A, `tasks-only` 면 스펙 문서 없이 태스크만 만든다(태스크 규칙은 그대로 적용).
+`reverseSpec` 이 true 일 때만 역스펙 절차를 밟는다. 결과를 한 줄로 알리고 다른 판단을 원하는지 묻지 않는다.
+사용자가 명시적으로 `--tool spec-kit|openspec` 을 주면 그걸 따른다.
 
 ## 2A. 신규 → spec-kit
 
