@@ -30,7 +30,7 @@
 |---|---|---|
 | 로블록스 (Rojo + Luau) | **동작** | 1단 `lune` 로컬 · 2단 Open Cloud Luau Execution(finish) |
 | Unity (2D 폰) | **동작** | Unity Test Framework (`-batchmode -nographics`) |
-| Nintendo Switch | 미구현 · NDA 경계 설계 필요 | — |
+| Nintendo Switch | **경계·절차 동작** (실기기 검증은 승인 필요) | 빌드 명령은 설정에서 읽음 |
 
 ## 도메인 스킬 (엔진 무관)
 
@@ -61,6 +61,16 @@
 - **로블록스 프로젝트에서만** 돈다(`default.project.json` 기준). `rokit` 셰임이 PATH 에 있어도
   프로젝트 밖에서는 실행하지 않는다.
 - 도구가 **없으면** 조용히 건너뛴다(종료 코드 0). 도구가 **찾은 위반**은 stderr 경고로 올린다.
+
+## NDA 경계
+
+Switch 개발을 위해 **NDA 구역의 외부 전송만** 차단한다(PreToolUse `nda-guard`).
+읽기·편집은 막지 않는다 — 막으면 개발 자체가 안 된다.
+
+- 기본 구역: `Platform/Switch/**` · `**/NintendoSDK/**` · `**/*.nx.*`
+- 차단 대상: 그 경로를 `codex`·`agy`·`ocr`·`curl`·`gh` 등에 넘기는 Bash 명령
+- 기본값은 **차단**. 경고로 낮추는 것은 의식적 행위여야 한다
+- Lotcheck 체크리스트 본문은 저장소에 없다(항목 자체가 NDA). `.nereus/lotcheck/` 에서 읽는다
 
 ## 외부 도구
 

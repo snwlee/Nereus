@@ -61,3 +61,12 @@ describe("도메인 라우트와 Unity 스택", () => {
     expect(detectTestRunner("/proj", fsx, { extraStacks: ext.stacks })?.runner).toBe("unity-test-framework");
   });
 });
+
+describe("switch 라우트", () => {
+  it("선언돼 있고 스킬이 실재하며 라우팅된다", () => {
+    const ext = loadExtensions({ readJson, records });
+    expect(ext.routes.map((r) => r.skill)).toContain("nereus-game:switch");
+    const hits = routePrompt("스위치 이식 준비하자", { extraRoutes: ext.routes });
+    expect(hits.some((h) => h.skill === "nereus-game:switch")).toBe(true);
+  });
+});
