@@ -25,7 +25,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/classify.mjs" "$PWD"
 
 ## 2B. 기존 → OpenSpec
 
-1. `openspec/`가 없으면 `openspec init` 후 현재 코드의 역스펙을 만든다. 처음 한 번만. `/opsx:onboard`가 있으면 써도 되고, 없으면 `references/reverse-spec.md` 절차대로 직접 캔다(읽기 전용, capability 단위로 작게).
+1. `plan.reverseSpec` 이 true 이고 아직 기준선이 없으면 역스펙을 만든다(`openspec/`가 없으면 `openspec init` 먼저). `/opsx:onboard`가 있으면 써도 되고, 없으면 `references/reverse-spec.md` 절차대로 직접 캔다(읽기 전용, capability 단위로 작게).
 2. `/opsx:propose <변경 이름>` — intake 목표를 입력. proposal, specs 델타, design, tasks가 생긴다.
 3. tasks.md에 아래 "태스크 규칙" 적용.
 

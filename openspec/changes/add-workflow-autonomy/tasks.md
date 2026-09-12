@@ -89,7 +89,7 @@
     - [ ] 커밋: `git add plugins/nereus/skills/spec/scripts/plan.mjs tests/skills/spec-plan.test.ts && git commit -m "feat(spec): planWork — 규모 × 신규/수정 매트릭스"`
   - Done when: 6개 테스트 통과, CLI 가 JSON 한 줄을 낸다, `classify` 테스트가 그대로 통과
 
-- [ ] T2. 되묻지 않는 규칙을 세션마다 주입한다
+- [x] T2. 되묻지 않는 규칙을 세션마다 주입한다
   - Files: Modify `plugins/nereus/hooks/scripts/session-start.mjs` · Test `tests/hooks/session-start.test.ts`
   - Interfaces: Produces `ASK_POLICY` (export 상수) · `handle()` 의 주입 내용에 추가. 새 deps 없음.
   - Steps:
