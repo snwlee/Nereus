@@ -386,7 +386,7 @@
     - [ ] 커밋: `git add plugins/nereus/skills && git commit -m "docs(baton): 세션별 handoff 경로로 스킬 문서 정렬"`
   - Done when: `grep` 결과에 지시용 경로가 남아 있지 않고, 세 문서가 "쓰기는 자기 세션 파일, 읽기는 최신" 을 같은 말로 적는다
 
-- [ ] T6. 통합 확인과 레거시 폴백 점검
+- [x] T6. 통합 확인과 레거시 폴백 점검
   - Files: Modify `tests/smoke/` 아래 해당 스모크 테스트 파일 (없으면 Create `tests/smoke/handoff-sessions.test.ts`) · Modify `openspec/changes/add-session-handoff/tasks.md`
   - Interfaces: Consumes T1~T4 의 공개 함수 전부. 새 인터페이스 없음.
   - Steps:
@@ -416,7 +416,7 @@
     - [ ] 커밋: `git add -A && git commit -m "test(baton): 두 세션이 서로의 handoff 를 덮지 않는다"`
   - Done when: `npm test` 전부 통과, 두 세션이 서로 다른 파일을 받는다, 레거시 단일 파일이 여전히 읽힌다
 
-- [ ] T7. lint-tasks 오탐 — 코드 블록 안의 꺾쇠는 플레이스홀더가 아니다
+- [x] T7. lint-tasks 오탐 — 코드 블록 안의 꺾쇠는 플레이스홀더가 아니다
   - Files: Modify `plugins/nereus/skills/spec/scripts/lint-tasks.mjs` · Test `tests/skills/lint-tasks.test.ts`
   - Interfaces: 기존 `lint(text)` 의 반환 형태(`{ pass, tasks, findings }`)를 바꾸지 않는다. 판정만 좁힌다.
   - Steps:
