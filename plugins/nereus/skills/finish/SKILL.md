@@ -25,7 +25,7 @@ nereus:common 규칙을 따른다. 담당 에이전트: writer(문서·아카이
 2. **커밋**: `git status`, `git diff --stat`을 보고 conventional commit 메시지를 만든다. 여러 관심사가 섞였으면 나눠 커밋한다. 시크릿·`.env`·빌드 산출물이 스테이징되지 않았는지 확인한다.
 3. **스펙 정리**: OpenSpec 프로젝트면 `/opsx:archive`로 change를 아카이브한다. spec-kit이면 `/speckit.converge`로 남은 작업이 없는지 확인한다.
 4. **문서**: 사용자에게 보이는 동작이 바뀌었으면 README나 docs를 갱신한다. 설계 결정이 있었으면 `docs/adr/`에 ADR 한 장(writer가 archify로 다이어그램을 붙일 수 있다).
-5. **handoff**: `.nereus/handoff.md`를 전체 재작성한다. 현재 단계는 "완료" 또는 다음 태스크. 이 단위에서 실패했던 접근이 있으면 남긴다. 판정·연기는 common의 Ruling 형식으로 기록한다.
+5. **handoff**: 이 세션의 handoff 파일(세션 시작 안내의 `.nereus/handoff/` 아래 경로)을 전체 재작성한다. 현재 단계는 "완료" 또는 다음 태스크. 이 단위에서 실패했던 접근이 있으면 남긴다. 판정·연기는 common의 Ruling 형식으로 기록한다.
 6. **브랜치**: main이 아닌 브랜치면 "푸시할까요? PR을 만들까요? 브랜치를 유지할까요?"를 한 번 묻는다. 묻지 않고 푸시하지 않는다.
 7. **메모리**: claude-mem이 있으면 세션 요약은 자동이다. 없으면 handoff.md가 유일한 기록임을 알린다.
 

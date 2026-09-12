@@ -74,4 +74,4 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/lint-tasks.mjs" <tasks파일>
 
 ## 3. 마무리
 
-`.nereus/handoff.md`를 만들거나 갱신한다(목표, 현재 단계: build, 다음: 첫 태스크). 그 다음 `nereus:build`로 넘어간다.
+이 세션의 handoff 파일(`.nereus/handoff/` 아래)을 만들거나 갱신한다(목표, 현재 단계: build, 다음: 첫 태스크). 그 다음 `nereus:build`로 넘어간다.

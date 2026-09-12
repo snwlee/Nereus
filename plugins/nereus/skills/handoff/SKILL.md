@@ -1,11 +1,13 @@
 ---
 name: handoff
-description: Rewrite the full current state into .nereus/handoff.md and commit it. 트리거: "핸드오프", "여기까지 저장", Baton 경고 시.
+description: Rewrite the full current state into this session's handoff file and commit it. 트리거: "핸드오프", "여기까지 저장", Baton 경고 시.
 ---
 
 # handoff
 
-1. nereus:baton 형식으로 `.nereus/handoff.md`를 **전체 재작성**한다. 이전 내용에 덧붙이지 않는다.
+1. nereus:baton 형식으로 **이 세션의 handoff 파일**을 **전체 재작성**한다. 이전 내용에 덧붙이지 않는다.
+   경로는 세션 시작 안내에 적힌 `.nereus/handoff/` 아래 파일이다. **다른 세션의 파일은 열지도 쓰지도 않는다.**
+   경로를 못 찾겠으면 `.nereus/handoff/` 에서 자기 세션 파일을 찾고, 그래도 없으면 새로 만든다.
 2. "진행 중" 섹션에는 실제 테스트 실행 결과(RED/GREEN)를 넣는다. 실행하지 않았으면 실행한다.
 3. "실패한 접근과 이유"를 빠뜨리지 않는다. 없으면 "없음".
 4. `git add -A && git commit -m "chore(baton): handoff <단계>/<태스크>"`. 커밋할 것이 없으면 생략.
