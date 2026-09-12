@@ -1,0 +1,16 @@
+{
+  "description": "nereus 코어에 붙는 게임 도메인 확장. 코드가 아니라 데이터로만 선언한다.",
+  "routes": [
+    {
+      "skill": "nereus-game:roblox",
+      "why": "로블록스 유즈맵·Rojo·Luau",
+      "re": "로블록스|roblox|rojo|luau|유즈맵"
+    }
+  ],
+  "stacks": [
+    {
+      "name": "roblox",
+      "marker": "default.project.json"
+    }
+  ]
+}
