@@ -29,8 +29,30 @@
 | 스택 | 상태 | 테스트 게이트 |
 |---|---|---|
 | 로블록스 (Rojo + Luau) | **동작** | 1단 `lune` 로컬 · 2단 Open Cloud Luau Execution(finish) |
-| Unity (폰) | 미구현 | — |
+| Unity (2D 폰) | **동작** | Unity Test Framework (`-batchmode -nographics`) |
 | Nintendo Switch | 미구현 · NDA 경계 설계 필요 | — |
+
+## 도메인 스킬 (엔진 무관)
+
+`level` · `narrative` · `gameux` · `asset` · `balance` — 전부 특정 엔진 문법을 담지 않는다.
+메인 플랫폼이 없고 로블록스와 2D 폰게임을 동시에 대응해야 하므로, 도메인 지식이 엔진에 묶이면 두 벌이 된다.
+테스트가 이것을 강제한다(`tests/smoke/game-domain.test.ts`).
+
+## 장르 프로파일
+
+장르는 코드 분기가 아니라 `profiles/*.json` 데이터다. 장르 추가 = 파일 한 장.
+
+| 프로파일 | 루프 | 주 실패 양상 |
+|---|---|---|
+| `sim-tycoon` | 수집 → 판매 → 재투자 → 확장 | 병목 (다음 단계 도달 불가) |
+| `obby-platformer` | 도전 → 실패 → 재시도 → 통과 | 난이도 절벽 |
+
+알 수 없는 장르는 **던진다.** 기본값으로 떨어지면 수치가 그럴듯한 채로 틀린다.
+
+## 밸런싱 시뮬레이터
+
+`lib/balance-sim.mjs` — 결정론적(seed 기반). 경제 정의를 N턴 돌려
+`bottlenecks` · `inflation` · `cliffs` 를 수치로 낸다. 같은 입력이면 같은 출력이라 게이트로 쓸 수 있다.
 
 ## 훅
 

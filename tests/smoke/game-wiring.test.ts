@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import { loadExtensions } from "../../plugins/nereus/hooks/scripts/lib/extensions.mjs";
 import { routePrompt } from "../../plugins/nereus/hooks/scripts/lib/router.mjs";
-import { detectStack } from "../../plugins/nereus/hooks/scripts/lib/stack.mjs";
+import { detectStack, detectTestRunner } from "../../plugins/nereus/hooks/scripts/lib/stack.mjs";
 
 // 실제 계약: readInventory 가 돌려주는 형태({name, enabled, installPath})를 그대로 넣는다.
 const records = [{ name: "nereus-game@nereus", enabled: true, installPath: "plugins/nereus-game" }];
@@ -38,5 +38,26 @@ describe("라우트가 가리키는 스킬이 실재한다", () => {
       expect(plugin, r.skill).toBe("nereus-game");
       expect(fs.existsSync(`plugins/nereus-game/skills/${skill}/SKILL.md`), r.skill).toBe(true);
     }
+  });
+});
+
+describe("도메인 라우트와 Unity 스택", () => {
+  it("도메인 라우트 6종과 Unity 스택이 확장에 선언돼 있다", () => {
+    const ext = loadExtensions({ readJson, records });
+    const skills = ext.routes.map((r) => r.skill);
+    for (const s of ["level", "narrative", "gameux", "asset", "balance", "unity"]) {
+      expect(skills, s).toContain(`nereus-game:${s}`);
+    }
+    expect(ext.stacks.map((s: any) => s.name)).toContain("unity");
+  });
+
+  it("Unity 프로젝트에서 코어가 확장 스택을 인식한다", () => {
+    const ext = loadExtensions({ readJson, records });
+    const fsx = {
+      exists: (p: string) => p.endsWith("ProjectSettings/ProjectVersion.txt") || p.endsWith("Packages/manifest.json"),
+      readFile: () => "",
+    };
+    expect(detectStack("/proj", fsx, { extraStacks: ext.stacks })).toContain("unity");
+    expect(detectTestRunner("/proj", fsx, { extraStacks: ext.stacks })?.runner).toBe("unity-test-framework");
   });
 });

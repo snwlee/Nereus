@@ -5,6 +5,36 @@
       "skill": "nereus-game:roblox",
       "why": "로블록스 유즈맵·Rojo·Luau",
       "re": "로블록스|roblox|rojo|luau|유즈맵"
+    },
+    {
+      "skill": "nereus-game:level",
+      "why": "레벨·맵·난이도·스테이지",
+      "re": "레벨|맵\\s?디자인|난이도|스테이지|level design|절차적\\s?생성"
+    },
+    {
+      "skill": "nereus-game:narrative",
+      "why": "스토리·대사·퀘스트",
+      "re": "스토리|대사|퀘스트|내러티브|시나리오|yarn\\s?spinner"
+    },
+    {
+      "skill": "nereus-game:gameux",
+      "why": "게임 UI·HUD·조작감",
+      "re": "게임\\s?ui|hud|조작감|인게임\\s?메뉴|게임패드|안전영역"
+    },
+    {
+      "skill": "nereus-game:asset",
+      "why": "에셋·스프라이트·모델·사운드",
+      "re": "에셋|스프라이트|타일셋|3d\\s?모델|텍스처|sfx|bgm|사운드"
+    },
+    {
+      "skill": "nereus-game:balance",
+      "why": "밸런스·경제·수치",
+      "re": "밸런스|밸런싱|경제\\s?설계|수치\\s?조정|인플레|이코노미"
+    },
+    {
+      "skill": "nereus-game:unity",
+      "why": "유니티·폰게임·2D",
+      "re": "유니티|unity|폰\\s?게임|모바일\\s?게임|2d\\s?게임"
     }
   ],
   "stacks": [
@@ -14,6 +44,13 @@
       "runnerMarker": "lune.yaml",
       "runner": "lune",
       "command": "lune run tests"
+    },
+    {
+      "name": "unity",
+      "marker": "ProjectSettings/ProjectVersion.txt",
+      "runnerMarker": "Packages/manifest.json",
+      "runner": "unity-test-framework",
+      "command": "Unity -runTests -batchmode -nographics -quit"
     }
   ]
 }

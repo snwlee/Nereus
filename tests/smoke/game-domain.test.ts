@@ -46,3 +46,12 @@ describe("도메인 스킬은 엔진을 모른다", () => {
     }
   });
 });
+
+describe("엔진 스킬은 자기 어댑터를 참조한다", () => {
+  it("unity 스킬이 있고 어댑터를 가리킨다", () => {
+    expect(fs.existsSync(`${ROOT}/skills/unity/SKILL.md`)).toBe(true);
+    const text = fs.readFileSync(`${ROOT}/skills/unity/SKILL.md`, "utf8");
+    expect(text).toContain("unity-stack.mjs");
+    expect(text).toContain("detectUnityRunner");
+  });
+});
