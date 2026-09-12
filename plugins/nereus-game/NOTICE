@@ -1,0 +1,18 @@
+nereus-game
+Copyright (c) 2026 snwlee
+
+This plugin is distributed under the MIT License.
+
+---
+
+Portions of the game-domain agent and skill definitions in this plugin are
+adapted from Claude Code Game Studios:
+
+  Claude-Code-Game-Studios
+  https://github.com/Donchitos/Claude-Code-Game-Studios
+  Copyright (c) Donchitos
+  Licensed under the MIT License.
+
+Adapted material has been rewritten to fit the Nereus plugin format and
+hook wiring. Shell-based hooks from the upstream project are NOT used;
+this plugin ships Node hooks so that it runs on Windows as well as macOS.
