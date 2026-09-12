@@ -1,0 +1,14 @@
+{
+  "base": "en",
+  "note": "expansion 은 영어 대비 평균 문자열 길이 비의 업계 통념 추정치다. 실측이 생기면 이 파일만 고친다.",
+  "locales": {
+    "en": { "label": "English", "expansion": 1.0 },
+    "ko": { "label": "한국어", "expansion": 0.8 },
+    "ja": { "label": "日本語", "expansion": 0.6 },
+    "pt-BR": { "label": "Português (Brasil)", "expansion": 1.3 },
+    "es": { "label": "Español", "expansion": 1.25 },
+    "zh": { "label": "中文", "expansion": 0.6 },
+    "fr": { "label": "Français", "expansion": 1.3 },
+    "de": { "label": "Deutsch", "expansion": 1.35 }
+  }
+}

@@ -40,6 +40,21 @@
       "skill": "nereus-game:switch",
       "why": "닌텐도 스위치·NDA 경계·Lotcheck",
       "re": "스위치|switch|닌텐도|nintendo|lotcheck|이식"
+    },
+    {
+      "skill": "nereus-game:sound",
+      "why": "사운드 설계·믹스 예산·오디오 피드백",
+      "re": "사운드\\s?설계|믹스|오디오\\s?예산|동시\\s?발음|라우드니스|적응형\\s?음악"
+    },
+    {
+      "skill": "nereus-game:liveops",
+      "why": "라이브옵스·이벤트·리텐션·운영",
+      "re": "라이브옵스|liveops|이벤트\\s?캘린더|리텐션|시즌|운영\\s?지표|롤백"
+    },
+    {
+      "skill": "nereus-game:localization",
+      "why": "현지화·번역·로케일",
+      "re": "현지화|로컬라이[즈제]이션|localization|l10n|번역|로케일|다국어"
     }
   ],
   "stacks": [

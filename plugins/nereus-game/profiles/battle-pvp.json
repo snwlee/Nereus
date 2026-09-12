@@ -1,13 +1,39 @@
 {
   "genre": "battle-pvp",
   "label": "배틀 · PvP",
-  "loop": ["조우", "교전", "정산", "재장비"],
-  "metrics": ["매치 길이", "승률 분포", "선택지 채택률", "재매치율"],
+  "loop": [
+    "조우",
+    "교전",
+    "정산",
+    "재장비"
+  ],
+  "metrics": [
+    "매치 길이",
+    "승률 분포",
+    "선택지 채택률",
+    "재매치율"
+  ],
   "balance": {
     "failureMode": "dominant-strategy",
     "cliffRatio": 4,
     "dominanceRatio": 3,
     "targetTurnsToFirstStage": 3,
     "note": "PvP 의 실패는 지배 전략으로 나타난다. 자원이 충분하고 곡선이 매끄러워도 선택지 하나가 나머지를 압도하면 게임이 죽는다."
+  },
+  "sound": {
+    "maxConcurrent": 32,
+    "minVariants": 3,
+    "loudnessLufs": [
+      -16,
+      -11
+    ]
+  },
+  "liveops": {
+    "retentionDriftPct": 20,
+    "note": "시즌 경계에서 리텐션이 계단으로 움직인다"
+  },
+  "l10n": {
+    "maxWidth": 20,
+    "note": "스킬·아이템 이름이 길어지면 HUD 가 깨진다"
   }
 }

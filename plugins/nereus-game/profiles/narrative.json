@@ -1,13 +1,39 @@
 {
   "genre": "narrative",
   "label": "내러티브 · 스토리 중심",
-  "loop": ["도입", "선택", "전개", "귀결"],
-  "metrics": ["챕터 완주율", "선택 분포", "이탈 지점", "재플레이율"],
+  "loop": [
+    "도입",
+    "선택",
+    "전개",
+    "귀결"
+  ],
+  "metrics": [
+    "챕터 완주율",
+    "선택 분포",
+    "이탈 지점",
+    "재플레이율"
+  ],
   "balance": {
     "failureMode": "pacing",
     "cliffRatio": 6,
     "dominanceRatio": 3,
     "targetTurnsToFirstStage": 2,
     "note": "경제가 없을 수 있다. 실패는 수치가 아니라 전개 속도로 나타나므로 시뮬레이터보다 구간별 이탈률을 본다."
+  },
+  "sound": {
+    "maxConcurrent": 12,
+    "minVariants": 2,
+    "loudnessLufs": [
+      -18,
+      -14
+    ]
+  },
+  "liveops": {
+    "retentionDriftPct": 30,
+    "note": "에피소드 배포 간격이 길어 일 단위 편차가 크다"
+  },
+  "l10n": {
+    "maxWidth": 40,
+    "note": "대사창은 넓지만 확장률이 큰 언어에서 줄바꿈이 늘어난다"
   }
 }
