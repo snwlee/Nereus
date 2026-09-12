@@ -27,6 +27,8 @@ Unity -runTests -batchmode -nographics -quit
 - PlayMode 는 느리다. 씬·물리·코루틴이 실제로 필요한 것만 남긴다.
 - **로직을 MonoBehaviour 에서 떼어내는 설계가 곧 EditMode 커버리지다.** 이걸 spec 단계에서 태스크로 쪼갠다.
 - CI 에서는 라이선스 활성화가 선행되어야 한다. 이것이 Unity CI 의 가장 흔한 실패 지점이다.
+- **TDD 게이트가 안 켜지면 `Packages/manifest.json` 부터 본다.** 매니페스트가 깨져 파싱에 실패해도
+  "테스트 프레임워크 없음"과 똑같이 러너가 `null` 이 되어 게이트가 조용히 꺼진다. 둘은 구분되지 않는다.
 
 ## 3. 2D 폰게임에서 봐야 하는 것
 
