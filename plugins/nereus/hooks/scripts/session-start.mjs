@@ -91,6 +91,11 @@ export function pluginSnapshotNote({ records, previous }) {
   };
 }
 
+// 스킬 문서에만 두면 그 스킬을 부르지 않은 턴에는 적용되지 않는다. 매 컨텍스트에 한 줄 심는다.
+export const ASK_POLICY =
+  "순서·우선순위·착수 승인은 묻지 않는다. 할 일이 정해져 있으면 스스로 순서를 정해 하나씩 전부 끝낸다. "
+  + "질문은 (a) 하네스가 알 수 없는 정보와 (b) 외부로 나가는·되돌리기 어려운 행동에만 쓴다.";
+
 const COMPACT_LEAD = "이전 세션이 남긴 handoff입니다. 여기서 이어서 진행하고, 완료된 항목은 반복하지 마세요.";
 
 // 디렉터리가 없으면 빈 목록. 훅은 fail-open 이다.
@@ -161,7 +166,10 @@ export function handle(input, deps = {}) {
 
   // 스킬 맵: 압축된 description 만으로는 모델이 스킬을 떠올리지 못한다. 새 컨텍스트마다 한 번 심는다.
   // compact 는 대화가 이어지므로 다시 넣지 않는다.
-  if (input.source !== "compact") parts.push(skillMapBlock());
+  if (input.source !== "compact") {
+    parts.push(`## 작업 방식\n${ASK_POLICY}`);
+    parts.push(skillMapBlock());
+  }
 
   if (input.source !== "compact") {
     const notes = [];

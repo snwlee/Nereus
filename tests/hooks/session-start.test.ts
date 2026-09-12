@@ -116,3 +116,17 @@ describe("session-start handoff ownership", () => {
     expect(removed.every((p) => p.replace(/\\/g, "/").includes("/r/.nereus/handoff/"))).toBe(true);
   });
 });
+
+describe("작업 방식 정책 주입", () => {
+  it("injects the standing rule that ordering is never handed back to the user", () => {
+    const out = handle({ session_id: "s1", cwd: "/r", source: "startup" }, deps({}));
+    const ctx = out!.hookSpecificOutput.additionalContext;
+    expect(ctx).toContain("순서");
+    expect(ctx).toContain("묻지 않는다");
+  });
+  it("does not repeat the rule on compact", () => {
+    const out = handle({ session_id: "s1", cwd: "/r", source: "compact" }, deps({}));
+    const ctx = out?.hookSpecificOutput?.additionalContext ?? "";
+    expect(ctx).not.toContain("묻지 않는다");
+  });
+});

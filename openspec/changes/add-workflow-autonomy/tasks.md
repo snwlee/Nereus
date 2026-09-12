@@ -1,6 +1,6 @@
 # tasks — add-workflow-autonomy
 
-- [ ] T1. planWork — 규모 × 신규/수정 매트릭스 (순수)
+- [x] T1. planWork — 규모 × 신규/수정 매트릭스 (순수)
   - Files: Create `plugins/nereus/skills/spec/scripts/plan.mjs` · Test `tests/skills/spec-plan.test.ts`
   - Interfaces: Consumes `classify(cwd, deps)` (기존, 변경 없음) · Produces `planWork({ cwd, size }, deps)` →
     `{ size, kind, tool, reason, interview, specTool, reverseSpec, prd }`.
