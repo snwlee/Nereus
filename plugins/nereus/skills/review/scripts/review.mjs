@@ -1,6 +1,6 @@
 // 리뷰 실행기: OCR delegation + 2차 의견(codex/gemini)을 설정대로 돌리고 findings를 병합한다.
 // 실제 CLI 호출은 SKILL이 주도하고, 이 스크립트는 계획·파싱·병합·게이트를 담당한다.
-import { which } from "../../../hooks/scripts/lib/exec.mjs";
+import { which, run } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 
 const ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
@@ -53,6 +53,84 @@ function skip(plan, id, bin, why, probe) {
   if (!probe) return;
   plan.reasons = plan.reasons ?? [];
   plan.reasons.push({ id, bin, why });
+}
+
+// ── 프로브 실체 ─────────────────────────────────────────────────────────────
+// 2026-09-12 조사: 두 CLI 의 실패 양상은 서로 다르고, 둘 다 "도구 결함"이 아니었다.
+//  - codex: 신뢰되지 않은 cwd 에서 부르면 stderr 로 거부하고 끝난다. 저장소 안에서는 13초에 응답한다.
+//           세 사이클 동안 "무응답"으로 기록한 것은 프로브를 /tmp 에서 돌린 호출 오류였다.
+//  - agy  : 기본 text 출력에서는 429 재시도 7회가 전부 삼켜져 "빈 출력 + exit 0" 으로만 보인다.
+//           --output-format json 으로 받아야 RESOURCE_EXHAUSTED 가 드러난다.
+// 그래서 프로브는 "실행 여부"가 아니라 **응답 본문**으로 판정한다.
+const PROBE_PROMPT = "Reply with exactly: PONG";
+const PROBE_ARGS = {
+  codex: ["exec", "--sandbox", "read-only", "--skip-git-repo-check", PROBE_PROMPT],
+  agy: ["-p", PROBE_PROMPT, "--output-format", "json", "--print-timeout", "60s"],
+};
+
+/** 프로브 인자. 프로브 대상이 아닌 바이너리는 빈 배열이다. */
+export function probeArgs(bin) {
+  return PROBE_ARGS[bin] ? [...PROBE_ARGS[bin]] : [];
+}
+
+/** 실행 결과를 {ok, why} 로 읽는다. 순수 함수 — 실행은 하지 않는다. */
+export function readProbe(bin, result) {
+  const stdout = String(result?.stdout ?? "");
+  const stderr = String(result?.stderr ?? "");
+  if (bin === "codex") {
+    if (/not inside a trusted directory/i.test(stderr + stdout)) {
+      return { ok: false, why: "신뢰되지 않은 디렉터리에서 호출됨 — 저장소 루트에서 실행해야 한다" };
+    }
+    if (!result?.ok) return { ok: false, why: stderr.trim() || `종료 코드 ${result?.status}` };
+    return stdout.trim() ? { ok: true } : { ok: false, why: "빈 응답" };
+  }
+  if (bin === "agy") {
+    // 할당량 판정은 종료 코드보다 먼저다 — agy 는 429 를 내고도 exit 0 을 낸다.
+    const quota = matchQuota(stdout + stderr);
+    if (quota) return { ok: false, why: `할당량 소진 — ${quota}` };
+    const j = agyJson(stdout);
+    const err = String(j?.error ?? "").trim();
+    if (err) return { ok: false, why: err };
+    if (!result?.ok) return { ok: false, why: stderr.trim() || stdout.trim() || `종료 코드 ${result?.status}` };
+    // json 을 요구해 놓고 받았으므로, 파싱되지 않는 stdout 은 응답이 아니다.
+    if (!j) return { ok: false, why: stdout.trim() ? "json 이 아닌 응답" : "빈 응답 (text 출력이면 오류가 삼켜진다 — json 으로 받는다)" };
+    if (String(j.status ?? "").toUpperCase() === "ERROR") return { ok: false, why: "리뷰어가 ERROR 로 끝났다" };
+    return String(j.response ?? "").trim() ? { ok: true } : { ok: false, why: "빈 응답" };
+  }
+  return { ok: true };
+}
+
+function matchQuota(text) {
+  if (!/RESOURCE_EXHAUSTED|\b429\b|quota reached/i.test(text)) return null;
+  const reset = text.match(/Resets in ([0-9hms]+)/i);
+  return reset ? `할당량이 ${reset[1]} 뒤에 리셋된다` : "할당량이 리셋될 때까지 쓸 수 없다";
+}
+
+function agyJson(stdout) {
+  for (const line of stdout.split("\n").map((l) => l.trim()).filter(Boolean).reverse()) {
+    try {
+      const j = JSON.parse(line);
+      if (j && typeof j === "object") return j.result ?? j;
+    } catch { /* NDJSON 중간 줄은 건너뛴다 */ }
+  }
+  return null;
+}
+
+/** 러너를 주입해 프로브 함수를 만든다. 기본 러너는 저장소 루트에서, stdin 을 닫고 돈다. */
+export function makeProbe(runner = defaultRunner) {
+  return (bin) => {
+    if (!probeArgs(bin).length) return { ok: true };
+    try {
+      return readProbe(bin, runner(bin, probeArgs(bin)));
+    } catch (e) {
+      return { ok: false, why: `프로브 실행 실패: ${e?.message ?? e}` };
+    }
+  };
+}
+
+// stdin 을 비워 주지 않으면 codex 가 파이프 입력을 기다린다 (이전 사이클의 "백그라운드에서 죽음"의 정체).
+function defaultRunner(bin, args) {
+  return run(bin, args, { cwd: process.cwd(), input: "", timeoutMs: 120000 });
 }
 
 // ocr delegate 는 인자가 없으면 **워크스페이스(미커밋) 모드**로 떨어진다.
@@ -111,5 +189,5 @@ export function severityAction(severity) {
 
 if (process.argv[1] && /review\.mjs$/.test(process.argv[1])) {
   const cfg = loadConfig();
-  process.stdout.write(JSON.stringify({ mode: cfg.secondOpinion, plan: planRunners(cfg.secondOpinion) }) + "\n");
+  process.stdout.write(JSON.stringify({ mode: cfg.secondOpinion, plan: planRunners(cfg.secondOpinion, undefined, makeProbe()) }) + "\n");
 }

@@ -46,3 +46,23 @@ describe("unwired export 금지", () => {
     expect(orphans).toEqual([]);
   });
 });
+
+// 회귀: planRunners 는 probe 주입구를 갖고도 프로덕션 진입점이 probe 없이 불러
+// "헬스체크가 있다"는 착각만 남아 있었다 (2026-09-12 에 발견). 주입구는 배선까지가 한 벌이다.
+describe("리뷰어 헬스체크 배선", () => {
+  const SRC = "plugins/nereus/skills/review/scripts/review.mjs";
+  const src = fs.readFileSync(SRC, "utf8");
+
+  it("실행 진입점이 planRunners 에 실제 프로브를 넘긴다", () => {
+    const main = src.slice(src.search(/if \(process\.argv\[1\]/));
+    expect(main).toMatch(/planRunners\([^)]*makeProbe\(\)/);
+  });
+
+  it("agy 프로브는 json 으로 받는다 — text 는 429 를 삼킨다", () => {
+    expect(src).toMatch(/--output-format["'\s,]+["']json["']/);
+  });
+
+  it("codex 프로브는 저장소 밖에서도 거부당하지 않게 git 체크를 건너뛴다", () => {
+    expect(src).toContain("--skip-git-repo-check");
+  });
+});

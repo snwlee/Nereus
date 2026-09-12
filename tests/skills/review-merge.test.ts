@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction, ocrDelegateArgs } from "../../plugins/nereus/skills/review/scripts/review.mjs";
+import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction, ocrDelegateArgs, probeArgs, readProbe, makeProbe } from "../../plugins/nereus/skills/review/scripts/review.mjs";
 
 describe("review merge", () => {
   it("parses OCR json output into normalized findings", () => {
@@ -135,5 +135,91 @@ describe("ocrDelegateArgs", () => {
 
   it("공백만 있는 base 도 워크스페이스 모드", () => {
     expect(ocrDelegateArgs("   ")).toEqual([]);
+  });
+});
+
+// 프로브 실체. 2026-09-12 조사로 두 CLI 의 실패 양상이 서로 다르다는 것이 확인됐다.
+//  - codex: 신뢰되지 않은 cwd 에서 부르면 즉시 거부한다. 저장소 안에서는 정상 응답한다.
+//  - agy : text 출력에서는 429 재시도가 전부 삼켜져 "빈 출력 + exit 0" 으로 보인다. json 으로 받아야 사유가 나온다.
+describe("리뷰어 프로브 실체", () => {
+  it("codex 프로브는 git 체크를 건너뛰고 read-only 로 부른다", () => {
+    const a = probeArgs("codex");
+    expect(a).toContain("exec");
+    expect(a).toContain("--skip-git-repo-check");
+    expect(a.join(" ")).toContain("--sandbox read-only");
+  });
+
+  it("agy 프로브는 json 으로 받는다 — text 는 오류를 삼킨다", () => {
+    const a = probeArgs("agy");
+    expect(a.join(" ")).toContain("--output-format json");
+    expect(a).toContain("-p");
+  });
+
+  it("모르는 바이너리는 프로브 인자가 없다", () => {
+    expect(probeArgs("ocr")).toEqual([]);
+  });
+
+  it("codex 가 신뢰되지 않은 디렉터리를 거부하면 사유를 그대로 낸다", () => {
+    const r = readProbe("codex", { ok: false, status: 1, stdout: "", stderr: "Not inside a trusted directory and --skip-git-repo-check was not specified." });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("신뢰되지 않은 디렉터리");
+  });
+
+  it("codex 가 응답하면 통과한다", () => {
+    expect(readProbe("codex", { ok: true, status: 0, stdout: "codex\nPONG\n", stderr: "" }).ok).toBe(true);
+  });
+
+  it("codex 가 exit 0 이면서 빈 출력이면 통과가 아니다", () => {
+    const r = readProbe("codex", { ok: true, status: 0, stdout: "   \n", stderr: "" });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("빈 응답");
+  });
+
+  it("agy 의 429 는 결함이 아니라 할당량 소진으로 보고한다", () => {
+    const stdout = JSON.stringify({ status: "ERROR", response: "", error: "API error (attempt 7): RESOURCE_EXHAUSTED (code 429): Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 94h15m29s." });
+    const r = readProbe("agy", { ok: true, status: 0, stdout, stderr: "" });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("할당량 소진");
+    expect(r.why).toContain("94h15m29s");
+  });
+
+  it("agy 가 응답을 담아 오면 통과한다", () => {
+    const stdout = JSON.stringify({ status: "OK", response: "PONG" });
+    expect(readProbe("agy", { ok: true, status: 0, stdout, stderr: "" }).ok).toBe(true);
+  });
+
+  it("agy 가 빈 출력 + exit 0 이면 통과가 아니다 — 이것이 세 사이클을 속인 양상이다", () => {
+    const r = readProbe("agy", { ok: true, status: 0, stdout: "", stderr: "" });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("빈 응답");
+  });
+
+  it("makeProbe 는 주입된 러너로 프로브를 조립한다", () => {
+    const calls: Array<{ bin: string; args: string[] }> = [];
+    const probe = makeProbe((bin, args) => {
+      calls.push({ bin, args });
+      return { ok: true, status: 0, stdout: JSON.stringify({ status: "OK", response: "PONG" }), stderr: "" };
+    });
+    expect(probe("agy").ok).toBe(true);
+    expect(calls[0].bin).toBe("agy");
+    expect(calls[0].args.join(" ")).toContain("--output-format json");
+  });
+
+  it("프로브 대상이 아닌 바이너리는 통과로 둔다 — 프로브 없음이 실패는 아니다", () => {
+    const probe = makeProbe(() => { throw new Error("불려서는 안 된다"); });
+    expect(probe("ocr").ok).toBe(true);
+  });
+
+  // codex 2차 의견(2026-09-12, HIGH): agy 경로가 exit code 를 보지 않고, JSON 이 아닌
+  // 아무 stdout 이나 응답으로 인정해 실패한 리뷰어를 계획에 넣을 수 있었다.
+  it("agy 가 비정상 종료하면 stdout 이 비어 있지 않아도 통과가 아니다", () => {
+    const r = readProbe("agy", { ok: false, status: 1, stdout: "usage: agy [flags]\n", stderr: "" });
+    expect(r.ok).toBe(false);
+  });
+
+  it("agy 의 비-JSON stdout 은 응답으로 인정하지 않는다 — json 을 요구해 놓고 받았기 때문이다", () => {
+    const r = readProbe("agy", { ok: true, status: 0, stdout: "some plain chatter\n", stderr: "" });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("json");
   });
 });
