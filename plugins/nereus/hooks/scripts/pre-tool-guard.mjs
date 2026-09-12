@@ -14,6 +14,7 @@ import { tddVerdict, findTestFor, OVERRIDE_FILE } from "./lib/tdd-gate.mjs";
 import { normalizeToolEvent } from "./lib/harness.mjs";
 import { detectTestRunner } from "./lib/stack.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
+import { loadExtensions } from "./lib/extensions.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_RULES = JSON.parse(fs.readFileSync(path.join(HERE, "..", "rules.default.json"), "utf8"));
@@ -81,7 +82,7 @@ function defaultTddInputs(cwd, rel) {
   try { override = fs.readFileSync(path.join(cwd, OVERRIDE_FILE), "utf8").trim() || "사유 없음"; } catch { /* 없으면 null */ }
   return {
     enforce: tdd.enforce ?? "warn",
-    runner: detectTestRunner(cwd),
+    runner: detectTestRunner(cwd, undefined, { extraStacks: loadExtensions().stacks }),
     exclude: tdd.exclude ?? [],
     allowRefactor: tdd.allowRefactor !== false,
     evidence: evidenceStatus(cwd),

@@ -5,6 +5,7 @@ import path from "node:path";
 import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
 import { routePrompt, routerNotice } from "./lib/router.mjs";
+import { loadExtensions } from "./lib/extensions.mjs";
 
 const seenFile = (cwd, sid) => path.join(projectStateDir(cwd), `.routed-${String(sid).replace(/[^A-Za-z0-9_-]/g, "_")}`);
 
@@ -19,7 +20,9 @@ export function handle(input, deps = {}) {
   const writeSeen = deps.writeSeen ?? ((s) => { try { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, s); } catch { /* 무시 */ } });
 
   const seen = parseSeen(readSeen());
-  const hits = routePrompt(input.prompt, { seen });
+  // 형제 플러그인(예: nereus-game)의 라우트를 함께 본다. 코어 라우트가 항상 앞이다.
+  const extraRoutes = (deps.extensions ?? (() => loadExtensions()))().routes;
+  const hits = routePrompt(input.prompt, { seen, extraRoutes });
   if (!hits.length) return null;
 
   writeSeen([...seen, ...hits.map((h) => h.skill)].join("\n") + "\n");

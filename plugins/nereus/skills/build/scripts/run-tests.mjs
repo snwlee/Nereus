@@ -3,10 +3,11 @@
 import { spawnSync } from "node:child_process";
 import { detectTestRunner } from "../../../hooks/scripts/lib/stack.mjs";
 import { recordEvidence } from "../../../hooks/scripts/lib/evidence.mjs";
+import { loadExtensions } from "../../../hooks/scripts/lib/extensions.mjs";
 
 const cwd = process.cwd();
 const i = process.argv.indexOf("--cmd");
-const cmd = i > -1 ? process.argv[i + 1] : detectTestRunner(cwd)?.command;
+const cmd = i > -1 ? process.argv[i + 1] : detectTestRunner(cwd, undefined, { extraStacks: loadExtensions().stacks })?.command;
 if (!cmd) { console.error("테스트 러너를 찾지 못했습니다. --cmd 로 명령을 지정하세요."); process.exit(2); }
 console.error(`[evidence] running: ${cmd}`);
 const r = spawnSync(cmd, { cwd, stdio: "inherit", shell: true, env: process.env });

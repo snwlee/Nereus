@@ -13,6 +13,7 @@ import { loadConfig } from "./lib/config.mjs";
 import { readCandidates } from "./session-end.mjs";
 import { skillMapBlock } from "./lib/router.mjs";
 import { readInventory } from "./lib/plugin-inventory.mjs";
+import { loadExtensions } from "./lib/extensions.mjs";
 
 // /clear 직후 주입되는 재개 절차. resume 스킬이 하던 검증을 여기서 지시해
 // 사용자가 /nereus:resume 을 따로 칠 필요를 없앤다. compact 는 대화가 그대로
@@ -168,7 +169,7 @@ export function handle(input, deps = {}) {
   // compact 는 대화가 이어지므로 다시 넣지 않는다.
   if (input.source !== "compact") {
     parts.push(`## 작업 방식\n${ASK_POLICY}`);
-    parts.push(skillMapBlock());
+    parts.push(skillMapBlock({ extraRoutes: (deps.extensions ?? (() => loadExtensions()))().routes }));
   }
 
   if (input.source !== "compact") {
