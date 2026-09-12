@@ -35,5 +35,12 @@
   "l10n": {
     "maxWidth": 40,
     "note": "대사창은 넓지만 확장률이 큰 언어에서 줄바꿈이 늘어난다"
+  },
+  "impact": {
+    "maxFrozenMsPerSec": 20,
+    "maxShakeAmplitude": 0.2,
+    "maxParticles": 150,
+    "minInputBufferMs": 60,
+    "note": "연출이 대사 흐름을 끊으면 안 된다"
   }
 }

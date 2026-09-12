@@ -34,5 +34,12 @@
   "l10n": {
     "maxWidth": 18,
     "note": "스테이지 이름과 안내가 화면 위에 겹쳐 나온다"
+  },
+  "impact": {
+    "maxFrozenMsPerSec": 60,
+    "maxShakeAmplitude": 0.5,
+    "maxParticles": 300,
+    "minInputBufferMs": 120,
+    "note": "점프 입력이 애니메이션 중에 들어오므로 버퍼가 가장 길어야 한다"
   }
 }

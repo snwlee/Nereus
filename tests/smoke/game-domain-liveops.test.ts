@@ -33,4 +33,15 @@ describe("새 도메인 배선", () => {
       expect(md, name).toMatch(/엔진과 무관|엔진 불가지론/);
     }
   });
+  it("impact 스킬이 배선돼 있고 자기 검사기를 부른다", () => {
+    const skills = ext.routes.map((r: any) => r.skill);
+    expect(skills).toContain("nereus-game:impact");
+    const md = fs.readFileSync("plugins/nereus-game/skills/impact/SKILL.md", "utf8");
+    expect(md).toContain("impact-budget.mjs");
+    expect(md).toMatch(/엔진과 무관|엔진 불가지론/);
+  });
+  it("gameux 가 임팩트를 impact 로 넘긴다 — 두 곳에 같은 기준을 두지 않는다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/gameux/SKILL.md", "utf8");
+    expect(md).toContain("nereus-game:impact");
+  });
 });

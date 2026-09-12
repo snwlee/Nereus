@@ -29,4 +29,9 @@ describe("도메인 검사기 실행 진입점", () => {
   it("알 수 없는 장르는 프로세스가 0 이 아닌 코드로 끝난다", () => {
     expect(() => runNode("plugins/nereus-game/lib/sound-budget.mjs", JSON.stringify({ genre: "nope", plan: {} }))).toThrow();
   });
+  it("impact 검사기를 프로세스로 돌려 사운드 교차 검증 결과를 받는다", () => {
+    const plan = { maxParticles: 10, inputBufferMs: 999, cues: [{ name: "hit", visual: true, sound: "nope", haptic: true }] };
+    const out = runNode("plugins/nereus-game/lib/impact-budget.mjs", JSON.stringify({ genre: "battle-pvp", plan, soundCues: ["swing"] }));
+    expect(JSON.parse(out).violations.map((v: any) => v.code)).toContain("sound-missing");
+  });
 });

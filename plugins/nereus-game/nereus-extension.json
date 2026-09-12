@@ -55,6 +55,11 @@
       "skill": "nereus-game:localization",
       "why": "현지화·번역·로케일",
       "re": "현지화|로컬라이[즈제]이션|localization|l10n|번역|로케일|다국어"
+    },
+    {
+      "skill": "nereus-game:impact",
+      "why": "타격감·임팩트·연출 예산",
+      "re": "타격감|임팩트|히트스톱|화면\\s?흔들|스크린셰이크|파티클|연출|게임필|game\\s?feel"
     }
   ],
   "stacks": [

@@ -35,5 +35,12 @@
   "l10n": {
     "maxWidth": 20,
     "note": "스킬·아이템 이름이 길어지면 HUD 가 깨진다"
+  },
+  "impact": {
+    "maxFrozenMsPerSec": 120,
+    "maxShakeAmplitude": 0.8,
+    "maxParticles": 500,
+    "minInputBufferMs": 100,
+    "note": "타격이 잦아 정지 예산이 크다. 대신 누적 정지가 길어지면 교전이 끊겨 보인다"
   }
 }

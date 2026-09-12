@@ -34,5 +34,12 @@
   "l10n": {
     "maxWidth": 24,
     "note": "상점·업그레이드 라벨이 좁다"
+  },
+  "impact": {
+    "maxFrozenMsPerSec": 40,
+    "maxShakeAmplitude": 0.3,
+    "maxParticles": 200,
+    "minInputBufferMs": 80,
+    "note": "타이쿤은 타격이 거의 없다. 정지·흔들림을 쓰면 오히려 조작이 끊긴 것처럼 읽힌다"
   }
 }
