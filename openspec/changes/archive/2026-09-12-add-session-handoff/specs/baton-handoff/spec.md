@@ -1,6 +1,12 @@
 # baton-handoff (델타)
 
-## MODIFIED Requirements
+## REMOVED Requirements
+
+### Requirement: handoff 경로는 프로젝트 상태 디렉터리에서 결정된다
+
+세션을 구분하지 않는 단일 경로였다. 아래 "handoff 경로는 세션마다 다르다"로 대체된다.
+
+## ADDED Requirements
 
 ### Requirement: handoff 경로는 세션마다 다르다
 <!-- id: paths.sessionHandoffPath -->
@@ -26,8 +32,6 @@
 #### Scenario: 같은 프로젝트의 두 번째 세션
 - **WHEN** 같은 `cwd` 에서 다른 세션이 handoff 를 쓴다
 - **THEN** 파일이 다르므로 첫 세션의 내용은 그대로 남는다
-
-## ADDED Requirements
 
 ### Requirement: 읽기는 가장 최근 handoff 하나다
 <!-- id: paths.latestHandoff -->

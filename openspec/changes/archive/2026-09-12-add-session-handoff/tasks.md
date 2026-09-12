@@ -4,7 +4,7 @@
   - Files: Modify `plugins/nereus/hooks/scripts/lib/paths.mjs` · Test `tests/lib/paths.test.ts`
   - Interfaces: Produces `handoffDir(cwd): string` · `handoffFileName({ now, sessionId }): string` · `sessionHandoffPath({ cwd, sessionId, now, entries }): string`. Consumes `projectStateDir(cwd)` (기존).
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/lib/paths.test.ts` 끝에 추가:
+    - [x] 실패 테스트 작성 — `tests/lib/paths.test.ts` 끝에 추가:
       ```ts
       import { handoffDir, handoffFileName, sessionHandoffPath } from "../../plugins/nereus/hooks/scripts/lib/paths.mjs";
 
@@ -30,8 +30,8 @@
       });
       ```
       `sessionId` 가 없으면 식별자는 `"nosession".slice(0, 8)` = `nosessio` 다. 기대값의 리터럴이 그 규칙을 고정한다.
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: FAIL (`handoffDir` is not a function)
-    - [ ] 최소 구현 — `paths.mjs` 에 추가(기존 `handoffPath` 는 레거시 폴백으로 남긴다):
+    - [x] 실패 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: FAIL (`handoffDir` is not a function)
+    - [x] 최소 구현 — `paths.mjs` 에 추가(기존 `handoffPath` 는 레거시 폴백으로 남긴다):
       ```js
       export function handoffDir(cwd) {
         return path.join(projectStateDir(cwd), "handoff");
@@ -56,15 +56,15 @@
         return path.join(handoffDir(cwd), mine ? mine.name : handoffFileName({ now, sessionId }));
       }
       ```
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/paths.mjs tests/lib/paths.test.ts && git commit -m "feat(baton): 세션별 handoff 경로 계산"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/paths.mjs tests/lib/paths.test.ts && git commit -m "feat(baton): 세션별 handoff 경로 계산"`
   - Done when: `npx vitest run tests/lib/paths.test.ts` 통과, 기존 `handoffPath` 테스트도 그대로 통과
 
 - [x] T2. paths.mjs — 최신 선택·다른 세션 감지·정리 계획 (순수)
   - Files: Modify `plugins/nereus/hooks/scripts/lib/paths.mjs` · Test `tests/lib/paths.test.ts`
   - Interfaces: Consumes `handoffDir(cwd)` (T1) · Produces `latestHandoff({ cwd, entries, legacyExists }): string | null` · `recentOtherSessions({ entries, sessionId, now, windowMs }): Entry[]` · `planHandoffPrune({ entries, now, keep, maxAgeMs, protect }): string[]`. `Entry` 는 `{ name: string, mtimeMs: number }`.
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/lib/paths.test.ts` 에 추가:
+    - [x] 실패 테스트 작성 — `tests/lib/paths.test.ts` 에 추가:
       ```ts
       import { latestHandoff, recentOtherSessions, planHandoffPrune } from "../../plugins/nereus/hooks/scripts/lib/paths.mjs";
 
@@ -116,8 +116,8 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: FAIL (`latestHandoff` is not a function)
-    - [ ] 최소 구현 — `paths.mjs` 에 추가:
+    - [x] 실패 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: FAIL (`latestHandoff` is not a function)
+    - [x] 최소 구현 — `paths.mjs` 에 추가:
       ```js
       // 최신은 mtime 으로 정한다. 파일명의 시각은 세션 시작 시각이라 마지막 쓰기 순서와 다르다.
       const byNewest = (a, b) => (b.mtimeMs - a.mtimeMs) || b.name.localeCompare(a.name);
@@ -144,15 +144,15 @@
           .map((e) => e.name);
       }
       ```
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/paths.mjs tests/lib/paths.test.ts && git commit -m "feat(baton): handoff 최신 선택·동시 세션 감지·정리 계획"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/paths.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/lib/paths.mjs tests/lib/paths.test.ts && git commit -m "feat(baton): handoff 최신 선택·동시 세션 감지·정리 계획"`
   - Done when: 위 7개 테스트 전부 통과
 
 - [x] T3. session-start 훅 배선 [wave:1]
   - Files: Modify `plugins/nereus/hooks/scripts/session-start.mjs` · Test `tests/hooks/session-start.test.ts`
   - Interfaces: Consumes `sessionHandoffPath`·`latestHandoff`·`recentOtherSessions`·`planHandoffPrune` (T1·T2) · Produces `handle(input, deps)` 확장 — 새 deps `entries(dir)` → `Entry[]`, `removeFile(path)`, `env` (환경변수 맵).
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/hooks/session-start.test.ts` 에 추가:
+    - [x] 실패 테스트 작성 — `tests/hooks/session-start.test.ts` 에 추가:
       ```ts
       const MIN = 60_000;
       const at = (ms: number) => ({ mtimeMs: ms });
@@ -207,8 +207,8 @@
       });
       ```
       `deps()` 헬퍼에 기본값을 더한다: `entries: over.entries ?? (() => []), removeFile: over.removeFile ?? (() => {}), now: over.now ?? (() => Date.now()), env: over.env ?? {}`.
-    - [ ] 실패 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: FAIL (경로 안내 문구 없음)
-    - [ ] 최소 구현 — `session-start.mjs` `handle()` 의 handoff 블록을 교체:
+    - [x] 실패 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: FAIL (경로 안내 문구 없음)
+    - [x] 최소 구현 — `session-start.mjs` `handle()` 의 handoff 블록을 교체:
       ```js
       const now = (deps.now ?? Date.now)();
       const env = deps.env ?? process.env;
@@ -261,15 +261,15 @@
         return body ? body.trim().slice(0, 40) : "(목표 미상)";
       }
       ```
-    - [ ] 통과 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start.test.ts && git commit -m "feat(baton): 세션별 handoff 주입·동시 세션 경고·정리"`
+    - [x] 통과 확인: Run `npx vitest run tests/hooks/session-start.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start.test.ts && git commit -m "feat(baton): 세션별 handoff 주입·동시 세션 경고·정리"`
   - Done when: 기존 session-start 테스트 전부 + 새 6개 통과, 훅이 파일을 만들지 않는다
 
 - [x] T4. loop-runner 배선 — 프롬프트·환경변수·wave 회수 [wave:1]
   - Files: Modify `plugins/nereus/skills/baton/scripts/loop-runner.mjs` · Test `tests/skills/loop-runner.test.ts` · Test `tests/skills/loop-waves.test.ts`
   - Interfaces: Produces `buildPrompt({ tasks, spec, waves, goal })` (handoff 인자 제거) · `wavesDir(root)` · `runWave` 새 dep `collectHandoff(worktreeDir, destPath)`. Consumes `handoffDir`·`latestHandoff`·`handoffPath` (T1·T2·기존).
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/skills/loop-runner.test.ts` 에 추가:
+    - [x] 실패 테스트 작성 — `tests/skills/loop-runner.test.ts` 에 추가:
       ```ts
       it("does not hardcode a handoff file — the session hook owns that path", () => {
         const p = buildPrompt({ tasks: "tasks.md", spec: undefined, waves: ".nereus/waves", goal: "G" });
@@ -324,8 +324,8 @@
         expect(collected).toHaveLength(2);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/loop-runner.test.ts tests/skills/loop-waves.test.ts` · Expected: FAIL (`claudeEnv` is not exported, `collectHandoff` 미호출)
-    - [ ] 최소 구현 — `loop-runner.mjs`:
+    - [x] 실패 확인: Run `npx vitest run tests/skills/loop-runner.test.ts tests/skills/loop-waves.test.ts` · Expected: FAIL (`claudeEnv` is not exported, `collectHandoff` 미호출)
+    - [x] 최소 구현 — `loop-runner.mjs`:
       ```js
       export function wavesDir(root) { return path.join(root, ".nereus", "waves"); }
 
@@ -371,26 +371,26 @@
       ```
       `defaultRunClaude` 의 `spawn` 옵션에 `env: claudeEnv()` 를 더한다.
       CLI 진입부의 `paths` 에서 `handoff` 를 빼고 `waves: path.relative(cwd, wavesDir(cwd))` 를 넣는다. `buildPrompt` 호출부(`runWave`)도 새 인자에 맞춘다.
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/loop-runner.test.ts tests/skills/loop-waves.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/skills/baton/scripts/loop-runner.mjs tests/skills/loop-runner.test.ts tests/skills/loop-waves.test.ts && git commit -m "feat(loop): wave handoff 회수와 세션 소유 경로 전환"`
+    - [x] 통과 확인: Run `npx vitest run tests/skills/loop-runner.test.ts tests/skills/loop-waves.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/skills/baton/scripts/loop-runner.mjs tests/skills/loop-runner.test.ts tests/skills/loop-waves.test.ts && git commit -m "feat(loop): wave handoff 회수와 세션 소유 경로 전환"`
   - Done when: loop 테스트 2개 파일 전부 통과, 프롬프트에 고정 handoff 경로가 없다
 
 - [x] T5. 스킬 문서를 새 경로 규칙으로 맞춘다
   - Files: Modify `plugins/nereus/skills/handoff/SKILL.md` · Modify `plugins/nereus/skills/baton/SKILL.md` · Modify `plugins/nereus/skills/resume/SKILL.md`
   - Interfaces: 없음 (문서). 코드 계약은 T1~T4 가 정한다.
   - Steps:
-    - [ ] `handoff/SKILL.md` 1번 항목의 `.nereus/handoff.md` 를 "세션 시작이 알려준 이 세션의 handoff 파일(`.nereus/handoff/` 아래 `시각-sid8.md`)" 로 바꾸고, "다른 세션 파일은 열지도 쓰지도 않는다" 한 줄을 더한다.
-    - [ ] `baton/SKILL.md` 의 "진실은 디스크에만 있다" 문단에서 `.nereus/handoff.md` 를 `.nereus/handoff/` 아래 세션별 파일 로 바꾸고, "## 재개" 절에 "읽기는 최신 파일, 쓰기는 자기 세션 파일" 두 줄을 넣는다.
-    - [ ] `resume/SKILL.md` 에서 handoff 를 가리키는 경로 표현을 같은 규칙으로 바꾼다.
-    - [ ] 확인: Run `grep -rn "nereus/handoff\.md" plugins/nereus/skills plugins/nereus/agents` · Expected: 레거시 폴백을 설명하는 줄 외에는 결과 없음
-    - [ ] 커밋: `git add plugins/nereus/skills && git commit -m "docs(baton): 세션별 handoff 경로로 스킬 문서 정렬"`
+    - [x] `handoff/SKILL.md` 1번 항목의 `.nereus/handoff.md` 를 "세션 시작이 알려준 이 세션의 handoff 파일(`.nereus/handoff/` 아래 `시각-sid8.md`)" 로 바꾸고, "다른 세션 파일은 열지도 쓰지도 않는다" 한 줄을 더한다.
+    - [x] `baton/SKILL.md` 의 "진실은 디스크에만 있다" 문단에서 `.nereus/handoff.md` 를 `.nereus/handoff/` 아래 세션별 파일 로 바꾸고, "## 재개" 절에 "읽기는 최신 파일, 쓰기는 자기 세션 파일" 두 줄을 넣는다.
+    - [x] `resume/SKILL.md` 에서 handoff 를 가리키는 경로 표현을 같은 규칙으로 바꾼다.
+    - [x] 확인: Run `grep -rn "nereus/handoff\.md" plugins/nereus/skills plugins/nereus/agents` · Expected: 레거시 폴백을 설명하는 줄 외에는 결과 없음
+    - [x] 커밋: `git add plugins/nereus/skills && git commit -m "docs(baton): 세션별 handoff 경로로 스킬 문서 정렬"`
   - Done when: `grep` 결과에 지시용 경로가 남아 있지 않고, 세 문서가 "쓰기는 자기 세션 파일, 읽기는 최신" 을 같은 말로 적는다
 
 - [x] T6. 통합 확인과 레거시 폴백 점검
   - Files: Modify `tests/smoke/` 아래 해당 스모크 테스트 파일 (없으면 Create `tests/smoke/handoff-sessions.test.ts`) · Modify `openspec/changes/add-session-handoff/tasks.md`
   - Interfaces: Consumes T1~T4 의 공개 함수 전부. 새 인터페이스 없음.
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/smoke/handoff-sessions.test.ts`:
+    - [x] 실패 테스트 작성 — `tests/smoke/handoff-sessions.test.ts`:
       ```ts
       import { describe, it, expect } from "vitest";
       import fs from "node:fs";
@@ -410,17 +410,17 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/smoke/handoff-sessions.test.ts` · Expected: FAIL 또는 PASS. FAIL 이면 T1~T3 의 회귀다 — 고치고 다시 돌린다
-    - [ ] 전체 테스트: Run `npm test` · Expected: PASS (기존 테스트 포함 전부)
-    - [ ] 레거시 폴백 수동 확인: Run `node -e "import('./plugins/nereus/hooks/scripts/lib/paths.mjs').then(m=>console.log(m.latestHandoff({cwd:'/repo',entries:[],legacyExists:true})))"` · Expected: `/repo/.nereus/handoff.md` 가 출력된다
-    - [ ] 커밋: `git add -A && git commit -m "test(baton): 두 세션이 서로의 handoff 를 덮지 않는다"`
+    - [x] 실패 확인: Run `npx vitest run tests/smoke/handoff-sessions.test.ts` · Expected: FAIL 또는 PASS. FAIL 이면 T1~T3 의 회귀다 — 고치고 다시 돌린다
+    - [x] 전체 테스트: Run `npm test` · Expected: PASS (기존 테스트 포함 전부)
+    - [x] 레거시 폴백 수동 확인: Run `node -e "import('./plugins/nereus/hooks/scripts/lib/paths.mjs').then(m=>console.log(m.latestHandoff({cwd:'/repo',entries:[],legacyExists:true})))"` · Expected: `/repo/.nereus/handoff.md` 가 출력된다
+    - [x] 커밋: `git add -A && git commit -m "test(baton): 두 세션이 서로의 handoff 를 덮지 않는다"`
   - Done when: `npm test` 전부 통과, 두 세션이 서로 다른 파일을 받는다, 레거시 단일 파일이 여전히 읽힌다
 
 - [x] T7. lint-tasks 오탐 — 코드 블록 안의 꺾쇠는 플레이스홀더가 아니다
   - Files: Modify `plugins/nereus/skills/spec/scripts/lint-tasks.mjs` · Test `tests/skills/lint-tasks.test.ts`
   - Interfaces: 기존 `lint(text)` 의 반환 형태(`{ pass, tasks, findings }`)를 바꾸지 않는다. 판정만 좁힌다.
   - Steps:
-    - [ ] 실패 테스트 작성 — `tests/skills/lint-tasks.test.ts` 에 추가:
+    - [x] 실패 테스트 작성 — `tests/skills/lint-tasks.test.ts` 에 추가:
       ```ts
       const LT = String.fromCharCode(60), GT = String.fromCharCode(62);
       it("does not flag TypeScript generics inside a fenced code block", () => {
@@ -430,7 +430,7 @@
           "  - Files: Modify `a.ts`",
           "  - Interfaces: 없음",
           "  - Steps:",
-          "    - [ ] 구현:",
+          "    - [x] 구현:",
           "      ```ts",
           `      const rows: Array${LT}string${GT} = [];`,
           `      const pair: Map${LT}string, number${GT} = new Map();`,
@@ -445,7 +445,7 @@
           "  - Files: Modify `a.js`",
           "  - Interfaces: 없음",
           "  - Steps:",
-          "    - [ ] 구현:",
+          "    - [x] 구현:",
           "      ```js",
           "      const cmp = (a, b) => (a.name < b.name ? 1 : -1);",
           "      ```",
@@ -459,18 +459,18 @@
           "  - Files: Modify `a.js`",
           "  - Interfaces: 없음",
           "  - Steps:",
-          "    - [ ] 값을 채운다: 채우기 자리표시자 하나",
+          "    - [x] 값을 채운다: 채우기 자리표시자 하나",
           "  - Done when: 통과",
         ].join("\n");
         const md2 = md.replace("채우기 자리표시자 하나", String.fromCharCode(60) + "채우기" + String.fromCharCode(62));
         expect(lint(md2).findings.length).toBeGreaterThan(0);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/lint-tasks.test.ts` · Expected: FAIL (앞의 두 테스트가 findings 를 1건 이상 낸다)
-    - [ ] 최소 구현: `lint-tasks.mjs` 에서 플레이스홀더 검사를 돌리기 전에 **펜스 코드 블록을 제거한 사본**을 만들어 그 사본에만 꺾쇠 규칙을 적용한다. 스프레드 오탐 때 말줄임 규칙에 쓴 방식과 같은 자리에 둔다. 코드 블록 밖 규칙과 다른 카테고리 검사는 그대로 둔다.
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/lint-tasks.test.ts` · Expected: PASS
-    - [ ] 회귀 확인: Run `node plugins/nereus/skills/spec/scripts/lint-tasks.mjs openspec/changes/add-plugin-doctor/tasks.md` · Expected: `"pass": true`
-    - [ ] 커밋: `git add plugins/nereus/skills/spec/scripts/lint-tasks.mjs tests/skills/lint-tasks.test.ts && git commit -m "fix(spec): 코드 블록 안의 꺾쇠를 플레이스홀더로 오탐하지 않는다"`
+    - [x] 실패 확인: Run `npx vitest run tests/skills/lint-tasks.test.ts` · Expected: FAIL (앞의 두 테스트가 findings 를 1건 이상 낸다)
+    - [x] 최소 구현: `lint-tasks.mjs` 에서 플레이스홀더 검사를 돌리기 전에 **펜스 코드 블록을 제거한 사본**을 만들어 그 사본에만 꺾쇠 규칙을 적용한다. 스프레드 오탐 때 말줄임 규칙에 쓴 방식과 같은 자리에 둔다. 코드 블록 밖 규칙과 다른 카테고리 검사는 그대로 둔다.
+    - [x] 통과 확인: Run `npx vitest run tests/skills/lint-tasks.test.ts` · Expected: PASS
+    - [x] 회귀 확인: Run `node plugins/nereus/skills/spec/scripts/lint-tasks.mjs openspec/changes/add-plugin-doctor/tasks.md` · Expected: `"pass": true`
+    - [x] 커밋: `git add plugins/nereus/skills/spec/scripts/lint-tasks.mjs tests/skills/lint-tasks.test.ts && git commit -m "fix(spec): 코드 블록 안의 꺾쇠를 플레이스홀더로 오탐하지 않는다"`
   - Done when: 세 테스트 통과, 기존 두 tasks.md 가 모두 `pass: true`, 산문 속 꺾쇠 자리표시자는 여전히 잡힌다
 
 
