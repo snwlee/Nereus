@@ -136,7 +136,7 @@ export function handle(input, deps = {}) {
   let body = "";
   if (latest) { try { body = readFile(latest); } catch { body = ""; } }
   const lead = input.source === "compact" ? COMPACT_LEAD : RESUME_CHECKLIST;
-  const head = `이 세션의 handoff 파일: \`${path.relative(cwd, mine)}\` — handoff 는 여기에만 쓴다(다른 세션 파일을 덮어쓰지 않기 위해서다).`;
+  const head = `이 세션의 handoff 파일: \`${path.relative(cwd, mine)}\` — handoff 는 여기에만 쓴다(다른 세션 파일을 덮어쓰지 않기 위해서다). 디렉터리가 없으면 만든다.`;
   // 루프 서브세션은 반복마다 새 세션이라 자기 직전 반복이 매번 경고로 잡힌다. 소음이다.
   const warn = env.NEREUS_LOOP ? [] : recentOtherSessions({ entries, sessionId: input.session_id, now })
     .map((e) => `- \`${e.name}\` — ${firstGoalLine(readFileSafe(path.join(dir, e.name), readFile))}`);

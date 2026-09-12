@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
 import { runLoop, parseTasks, buildPrompt, claudeArgs, claudeEnv, evaluateCmd, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
 
 describe("loop-runner", () => {
@@ -208,4 +209,12 @@ describe("evaluateCmd — 루프의 기본 수렴 검증", () => {
     const cmd = evaluateCmd({ hasOoo: false, cwd: "/repo" });
     expect(cmd.bin).toBe("node");
   });
+});
+
+it("resolves the runner path with fileURLToPath, not a raw URL pathname (win32 gives /C:/…)", () => {
+  const cmd = evaluateCmd({ cwd: "/repo" });
+  expect(cmd.args[0]).not.toMatch(/^\/[A-Za-z]:/);
+  expect(cmd.args[0].endsWith("run-tests.mjs")).toBe(true);
+  // 실제로 존재하는 파일을 가리켜야 한다 — 아니면 게이트가 조용히 항상 실패한다.
+  expect(fs.existsSync(cmd.args[0])).toBe(true);
 });

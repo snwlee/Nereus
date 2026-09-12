@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
 import { handoffPath, handoffDir, latestHandoff } from "../../../hooks/scripts/lib/paths.mjs";
 import { autonomousGate } from "../../../hooks/scripts/lib/autonomous-gate.mjs";
@@ -160,7 +161,7 @@ export function claudeEnv(base = process.env) { return { ...base, NEREUS_LOOP: "
 export function buildPrompt({ tasks, spec, waves, goal }) {
   return [
     `당신은 Nereus Baton 루프의 한 반복입니다. 목표: ${goal}`,
-    "이 세션이 쓸 handoff 파일 경로는 **세션 시작 안내**에 적혀 있습니다. 그 파일만 읽고 쓰세요.",
+    "이 세션이 쓸 handoff 파일 경로는 **세션 시작 안내**에 적혀 있습니다. 그 파일만 읽고 쓰고, 디렉터리가 없으면 만드세요.",
     `${tasks} 에서 첫 미완료 태스크 하나를 고르세요. 스펙은 ${spec ?? "(없음)"} 입니다.`,
     "그 태스크만 nereus:build 규칙(TDD)으로 끝내고 체크박스를 채우세요. 다른 태스크는 건드리지 마세요.",
     `${waves} 에 파일이 있으면 직전 wave 서브세션들이 남긴 요약입니다. 읽어서 handoff 에 흡수한 뒤 그 파일을 지우세요.`,
@@ -265,9 +266,10 @@ function defaultGateCmd(cwd, cmd) {
  * 그래서 항상 실패했고, 루프는 수렴하지 못한 채 게이트 3회 실패로 멈췄다. 프로젝트 자신의
  * 테스트 러너를 돌린다 — 증거 파일(.nereus/evidence.json)까지 같은 경로로 남는다.
  */
-export function evaluateCmd({ cwd } = {}) {
-  const runner = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..", "build", "scripts", "run-tests.mjs");
-  return { bin: "node", args: [path.normalize(runner)], cwd };
+export function evaluateCmd({ cwd, moduleUrl = import.meta.url } = {}) {
+  // fileURLToPath 를 쓴다. URL.pathname 은 win32 에서 `/C:/...` 를 줘서 경로가 깨진다.
+  const here = path.dirname(fileURLToPath(moduleUrl));
+  return { bin: "node", args: [path.resolve(here, "..", "..", "build", "scripts", "run-tests.mjs")], cwd };
 }
 
 async function defaultEvaluate(cwd) {
