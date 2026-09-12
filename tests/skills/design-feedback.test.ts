@@ -45,7 +45,14 @@ VERDICT: OK
 });
 
 describe("planRunner", () => {
-  it("uses agy for a text-only direction round", () => {
+  // 2026-09-12: agy 는 할당량이 소진됐고 웹세션은 살아 있다. 방향 라운드도 웹세션을 먼저 쓴다.
+  it("prefers the gemini web session for a text-only direction round", () => {
+    const p = planRunner({ phase: "direction", promptFile: "/tmp/p.txt", has: () => true });
+    expect(p.bin).toBe("python3");
+    expect(p.source).toBe("gemini-web");
+    expect(p.args).toEqual(expect.arrayContaining(["ask", "--prompt-file", "/tmp/p.txt"]));
+  });
+  it("falls back to agy when only agy is installed", () => {
     const p = planRunner({ phase: "direction", has: (b: string) => b === "agy" });
     expect(p.bin).toBe("agy");
     expect(p.args).toContain("-p");

@@ -71,9 +71,10 @@ node "$D" status            # 종료코드 0=통과, 1=차단
 
 ## 채널
 
-우선순위: **browser MCP → agy → Gemini 웹세션 CLI**. MCP 를 앞에 두는 이유는 쿠키·플랫폼에
+우선순위: **browser MCP → Gemini 웹세션 CLI → agy**. MCP 를 앞에 두는 이유는 쿠키·플랫폼에
 의존하지 않기 때문이다 — Windows 는 Chrome 127+ App-Bound Encryption 때문에 쿠키 자동 추출이
-안 되고(`image` 스킬 참조), `agy` 는 이미지 첨부를 못 받아 visual 라운드를 아예 못 한다.
+안 된다(`image` 스킬 참조). `agy` 를 맨 뒤로 내린 이유는 두 가지다: 이미지 첨부를 못 받아
+visual 라운드를 아예 못 하고, 2026-09-12 실측으로 할당량이 소진돼 있었다.
 
 ### 1순위 — browser MCP (직접 조작)
 스크립트는 MCP 도구를 부를 수 없다. 그래서 **프롬프트를 내보내고 응답을 들여오는** 두 단계로 잇는다.
@@ -96,7 +97,7 @@ node "$D" record visual --critique-file /tmp/critique.txt --files src/hero/Hero.
 브라우저가 없거나 Gemini 에 로그인되어 있지 않으면 2순위로 내려간다. 억지로 붙들지 않는다.
 
 ### 2·3순위 — CLI
-- **direction**: `agy`(Antigravity CLI) → 없으면 Gemini 웹세션 CLI
+- **direction**: Gemini 웹세션 CLI → 없으면 `agy`(Antigravity CLI)
 - **visual**: Gemini 웹세션 CLI(`skills/image/scripts/gemini_cli.py ask --file`). `agy` 는 이미지 첨부를 못 받는다.
 - 웹세션이 죽으면 `SESSION DEAD` — Chrome 로그인 상태를 확인한다. Windows/Linux 는 쿠키 재Export 가
   필요하다(`image` 스킬의 `cookies-import.mjs`).

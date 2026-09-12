@@ -1,4 +1,4 @@
-// 디자인 피드백 실행기. 방향(텍스트)은 agy, 렌더 결과(스크린샷 첨부)는 Gemini 웹세션 CLI 로 비평받고
+// 디자인 피드백 실행기. 방향(텍스트)·렌더 결과(스크린샷 첨부) 모두 Gemini 웹세션 CLI 로 비평받고
 // 결과를 .nereus/design-feedback.json 에 라운드로 적재한다. 게이트 판정은 lib/design.mjs 가 한다.
 //
 // 사용:
@@ -8,6 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { fileURLToPath } from "node:url";
 import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 import { designTouched, fileHashes, recordRound, readRounds, designGate } from "../../../hooks/scripts/lib/design.mjs";
@@ -84,12 +85,15 @@ export function parseCritique(text) {
   return { verdict, items, summary, raw };
 }
 
-const GEMINI_CLI = () => path.resolve(new URL("../../image/scripts/gemini_cli.py", import.meta.url).pathname);
+// URL.pathname 은 Windows 에서 "/C:/..." 를 내놓는다 — fileURLToPath 를 거쳐야 한다.
+const GEMINI_CLI = () => path.resolve(fileURLToPath(new URL("../../image/scripts/gemini_cli.py", import.meta.url)));
 
 export function planRunner({ phase, shots = [], promptFile = "", has = (b) => !!which(b) } = {}) {
   if (phase === "direction") {
-    if (has("agy")) return { bin: "agy", args: ["-p", "@" + promptFile], source: "gemini-agy", stdinPrompt: true };
+    // 웹세션이 먼저다. 2026-09-12 실측: agy 는 할당량 소진(~2026-09-16 리셋), 웹세션은 살아 있다.
+    // agy 는 웹세션이 없을 때의 대체 경로로 남긴다.
     if (has("python3")) return { bin: "python3", args: [GEMINI_CLI(), "ask", "--prompt-file", promptFile], source: "gemini-web" };
+    if (has("agy")) return { bin: "agy", args: ["-p", "@" + promptFile], source: "gemini-agy", stdinPrompt: true };
     return { error: "Gemini 채널이 없습니다 — agy(Antigravity CLI) 또는 python3 + Gemini 웹세션이 필요합니다. /nereus:setup 을 실행하세요." };
   }
   if (phase === "visual") {

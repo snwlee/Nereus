@@ -26,7 +26,8 @@ export const RESUME_CHECKLIST = [
   "4. \"MUST NOT\"에 적힌 접근은 다시 시도하지 않는다. \"완료\" 항목은 반복하지 않는다.",
 ].join("\n");
 
-export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "agy", "codex"];
+// agy 는 2026-09-12 부로 필수가 아니다 — gemini 2차 의견은 웹세션(python3)으로 받는다.
+export const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3", "codex"];
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function toolStatusCached({ now = Date.now(), cacheFile = path.join(userConfigDir(), "tools.json"), probe = (t) => !!which(t) } = {}) {

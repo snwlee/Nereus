@@ -1,17 +1,33 @@
 // 리뷰 실행기: OCR delegation + 2차 의견(codex/gemini)을 설정대로 돌리고 findings를 병합한다.
 // 실제 CLI 호출은 SKILL이 주도하고, 이 스크립트는 계획·파싱·병합·게이트를 담당한다.
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { which, run } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 
 const ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
 const norm = (s) => { const u = String(s ?? "INFO").toUpperCase(); return ORDER.includes(u) ? u : u === "ERROR" ? "HIGH" : u === "WARNING" ? "MEDIUM" : "INFO"; };
 
-// 리뷰어 정의. gemini 2차 의견은 Antigravity CLI(agy)로 실행한다.
+// image 스킬이 들고 있는 Gemini 웹세션 CLI. 리뷰·디자인·이미지가 같은 채널을 공유한다.
+// fileURLToPath 를 거친다. URL.pathname 은 Windows 에서 "/C:/..." 를 내놓아 경로가 깨진다
+// (메인 개발 환경이 Windows 다). — gemini 웹세션 리뷰 [MEDIUM], 2026-09-12
+export const GEMINI_CLI = path.resolve(fileURLToPath(new URL("../../image/scripts/gemini_cli.py", import.meta.url)));
+
+// 리뷰어 정의.
+// gemini 2차 의견은 **Gemini 웹세션**(python3 + gemini_cli.py)으로 받는다.
+// 2026-09-12 실측: agy(Antigravity CLI)는 할당량 소진(~2026-09-16 리셋), 웹세션은 11,504/12,096 크레딧.
+// agy 는 버리지 않고 배열 형식(["ocr","agy"])으로 직접 고를 수 있는 별도 리뷰어로 남긴다.
 export const REVIEWERS = {
   ocr: { bin: "ocr", label: "Open Code Review" },
   codex: { bin: "codex", label: "Codex" },
-  gemini: { bin: "agy", label: "Gemini (Antigravity)" },
+  gemini: { bin: "python3", label: "Gemini (웹세션)", script: GEMINI_CLI },
+  agy: { bin: "agy", label: "Gemini (Antigravity)" },
 };
+
+/** 웹세션 리뷰 호출 인자. diff 는 argv 길이 제한에 걸리므로 반드시 파일로 넘긴다. */
+export function geminiWebArgs(promptFile) {
+  return [GEMINI_CLI, "ask", "--prompt-file", String(promptFile)];
+}
 
 const SHORTHAND = {
   both: ["ocr", "codex", "gemini"],
@@ -63,9 +79,12 @@ function skip(plan, id, bin, why, probe) {
 //           --output-format json 으로 받아야 RESOURCE_EXHAUSTED 가 드러난다.
 // 그래서 프로브는 "실행 여부"가 아니라 **응답 본문**으로 판정한다.
 const PROBE_PROMPT = "Reply with exactly: PONG";
+// 키는 **바이너리 이름**이다(리뷰어 id 가 아니다). python3 항목은 gemini 웹세션 전용이다 —
+// 스크립트 경로가 인자 0번에 박혀 있어 어느 채널인지 인자만 봐도 드러난다.
 const PROBE_ARGS = {
   codex: ["exec", "--sandbox", "read-only", "--skip-git-repo-check", PROBE_PROMPT],
   agy: ["-p", PROBE_PROMPT, "--output-format", "json", "--print-timeout", "60s"],
+  python3: [GEMINI_CLI, "ask", "--prompt", PROBE_PROMPT],
 };
 
 /** 프로브 인자. 프로브 대상이 아닌 바이너리는 빈 배열이다. */
@@ -82,6 +101,17 @@ export function readProbe(bin, result) {
       return { ok: false, why: "신뢰되지 않은 디렉터리에서 호출됨 — 저장소 루트에서 실행해야 한다" };
     }
     if (!result?.ok) return { ok: false, why: stderr.trim() || `종료 코드 ${result?.status}` };
+    return stdout.trim() ? { ok: true } : { ok: false, why: "빈 응답" };
+  }
+  if (bin === "python3") {
+    // 웹세션 CLI 는 loguru 로그·쿠키 안내를 전부 stderr 로 내보내고 답변만 stdout 에 찍는다.
+    // 그래서 판정은 stdout 본문으로 하고, 사유는 stderr 에서 읽는다.
+    const quota = matchQuota(stdout + stderr);
+    if (quota) return { ok: false, why: `할당량 소진 — ${quota}` };
+    if (/cookie file missing|__Secure-1PSID missing|App-Bound Encryption/i.test(stderr + stdout)) {
+      return { ok: false, why: "Gemini 웹세션이 없다 — 쿠키를 넣어야 한다(/nereus:setup, cookies-import.mjs)" };
+    }
+    if (!result?.ok) return { ok: false, why: stderr.trim().split("\n").slice(-1)[0] || `종료 코드 ${result?.status}` };
     return stdout.trim() ? { ok: true } : { ok: false, why: "빈 응답" };
   }
   if (bin === "agy") {

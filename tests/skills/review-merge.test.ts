@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction, ocrDelegateArgs, probeArgs, readProbe, makeProbe } from "../../plugins/nereus/skills/review/scripts/review.mjs";
+import path from "node:path";
+import { existsSync } from "node:fs";
+import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction, ocrDelegateArgs, probeArgs, readProbe, makeProbe, geminiWebArgs } from "../../plugins/nereus/skills/review/scripts/review.mjs";
 
 describe("review merge", () => {
   it("parses OCR json output into normalized findings", () => {
@@ -42,10 +44,10 @@ describe("review merge", () => {
     expect(normalizeReviewers("weird")).toEqual(["ocr", "codex", "gemini"]);
   });
   it("설치 여부로 실행 계획을 만든다", () => {
-    const avail = (b: string) => ["ocr", "agy"].includes(b);
+    const avail = (b: string) => ["ocr", "python3"].includes(b);
     expect(planRunners("both", avail)).toEqual({ ocr: true, codex: false, gemini: true, skipped: ["codex"] });
     expect(planRunners("codex", avail)).toEqual({ ocr: true, codex: false, gemini: false, skipped: ["codex"] });
-    expect(planRunners("gemini", (b: string) => b === "agy")).toEqual({ ocr: false, codex: false, gemini: true, skipped: ["ocr"] });
+    expect(planRunners("gemini", (b: string) => b === "python3")).toEqual({ ocr: false, codex: false, gemini: true, skipped: ["ocr"] });
   });
   it("none 이면 2차 의견 없이 OCR 만 돈다", () => {
     expect(planRunners("none", () => true)).toEqual({ ocr: true, codex: false, gemini: false, skipped: [] });
@@ -54,7 +56,7 @@ describe("review merge", () => {
     expect(planRunners(["ocr", "gemini"], () => true)).toEqual({ ocr: true, codex: false, gemini: true, skipped: [] });
   });
   it("리뷰어 정의에 실행 바이너리가 붙어 있다", () => {
-    expect(REVIEWERS.gemini.bin).toBe("agy");
+    expect(REVIEWERS.gemini.bin).toBe("python3");
     expect(REVIEWERS.codex.bin).toBe("codex");
   });
   it("수정 루프 상한은 5라운드다", () => {
@@ -97,11 +99,11 @@ describe("severityAction", () => {
 
 describe("리뷰어 헬스체크", () => {
   it("PATH 에 있어도 무응답이면 계획에서 빠진다", () => {
-    const probe = (bin: string) => (bin === "agy" ? { ok: false, why: "무응답" } : { ok: true });
+    const probe = (bin: string) => (bin === "python3" ? { ok: false, why: "무응답" } : { ok: true });
     const plan = planRunners("both", () => true, probe);
     expect(plan.gemini).toBe(false);
     expect(plan.skipped).toContain("gemini");
-    expect(JSON.stringify(plan.reasons)).toContain("agy");
+    expect(JSON.stringify(plan.reasons)).toContain("python3");
     expect(JSON.stringify(plan.reasons)).toContain("무응답");
   });
 
@@ -221,5 +223,73 @@ describe("리뷰어 프로브 실체", () => {
     const r = readProbe("agy", { ok: true, status: 0, stdout: "some plain chatter\n", stderr: "" });
     expect(r.ok).toBe(false);
     expect(r.why).toContain("json");
+  });
+});
+
+// 2026-09-12 사용자 결정: gemini 2차 의견은 agy(Antigravity CLI)가 아니라 **Gemini 웹세션**으로 받는다.
+// 실측: agy 는 할당량 소진(~2026-09-16 리셋), 웹세션은 11,504/12,096 크레딧으로 살아 있다.
+// agy 는 버리지 않고 배열 형식으로 직접 고를 수 있는 별도 리뷰어로 남긴다.
+describe("gemini 2차 의견은 웹세션으로 받는다", () => {
+  it("gemini 리뷰어는 웹세션 CLI(python3 + gemini_cli.py)로 돈다", () => {
+    expect(REVIEWERS.gemini.bin).toBe("python3");
+    expect(REVIEWERS.gemini.script).toMatch(/gemini_cli\.py$/);
+  });
+
+  it("agy 는 버려지지 않고 별도 리뷰어로 남는다", () => {
+    expect(REVIEWERS.agy.bin).toBe("agy");
+    expect(normalizeReviewers(["ocr", "agy"])).toEqual(["ocr", "agy"]);
+  });
+
+  it("단축형 both/gemini 는 여전히 웹세션 gemini 를 가리킨다 — agy 는 명시해야 돈다", () => {
+    expect(normalizeReviewers("both")).toEqual(["ocr", "codex", "gemini"]);
+    expect(normalizeReviewers("gemini")).toEqual(["ocr", "gemini"]);
+  });
+
+  it("gemini 계획은 python3 설치 여부로 갈린다", () => {
+    expect(planRunners("gemini", (b: string) => b === "python3")).toEqual({ ocr: false, codex: false, gemini: true, skipped: ["ocr"] });
+    expect(planRunners("gemini", (b: string) => b === "agy")).toEqual({ ocr: false, codex: false, gemini: false, skipped: ["ocr", "gemini"] });
+  });
+
+  it("웹세션 프로브는 gemini_cli.py 에 ask 로 묻는다", () => {
+    const a = probeArgs("python3");
+    expect(a[0]).toMatch(/gemini_cli\.py$/);
+    expect(a).toContain("ask");
+    expect(a).toContain("--prompt");
+  });
+
+  it("웹세션이 응답하면 통과한다 — 로그는 stderr 로 나가므로 stdout 만 본다", () => {
+    const r = readProbe("python3", { ok: true, status: 0, stdout: "PONG\n", stderr: "INFO Account quota updated: Gemini Pro - 11504/12096 credits remaining" });
+    expect(r.ok).toBe(true);
+  });
+
+  it("쿠키가 없으면 결함이 아니라 '웹세션 없음' 상태로 보고한다", () => {
+    const r = readProbe("python3", { ok: false, status: 1, stdout: "", stderr: "cookie file missing: /Users/x/.nereus/secrets/gemini-web-cookies.json" });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("웹세션");
+  });
+
+  it("웹세션도 할당량 소진은 상태로 보고한다", () => {
+    const r = readProbe("python3", { ok: false, status: 1, stdout: "", stderr: "RESOURCE_EXHAUSTED (code 429): quota reached" });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("할당량 소진");
+  });
+
+  it("exit 0 + 빈 stdout 은 통과가 아니다", () => {
+    const r = readProbe("python3", { ok: true, status: 0, stdout: "  \n", stderr: "" });
+    expect(r.ok).toBe(false);
+    expect(r.why).toContain("빈 응답");
+  });
+
+  // gemini 웹세션 리뷰 [MEDIUM], 2026-09-12: URL.pathname 은 Windows 에서 "/C:/..." 를 낸다.
+  it("CLI 경로는 실재하는 절대경로다 — Windows 에서 앞 슬래시가 붙으면 안 된다", () => {
+    expect(path.isAbsolute(REVIEWERS.gemini.script)).toBe(true);
+    expect(existsSync(REVIEWERS.gemini.script)).toBe(true);
+    expect(REVIEWERS.gemini.script).not.toMatch(/^\/[A-Za-z]:/);
+  });
+
+  it("리뷰 호출 인자는 프롬프트 파일로 넘긴다 — diff 를 argv 에 실으면 길이 제한에 걸린다", () => {
+    const a = geminiWebArgs("/tmp/review-prompt.md");
+    expect(a[0]).toMatch(/gemini_cli\.py$/);
+    expect(a).toEqual(expect.arrayContaining(["ask", "--prompt-file", "/tmp/review-prompt.md"]));
   });
 });

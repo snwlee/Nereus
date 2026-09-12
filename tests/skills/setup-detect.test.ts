@@ -8,7 +8,9 @@ const j = (...seg: string[]) => path.join(...seg);
 describe("setup detect", () => {
   it("declares required and optional tools with per-platform installers", () => {
     const required = TOOLS.filter((t) => t.required).map((t) => t.bin);
-    expect(required).toEqual(expect.arrayContaining(["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "agy", "codex"]));
+    expect(required).toEqual(expect.arrayContaining(["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3", "codex"]));
+    // agy 는 gemini 웹세션으로 대체됐다 — 대체 채널로만 남는다.
+    expect(required).not.toContain("agy");
     for (const t of TOOLS) {
       expect(t.install.darwin).toBeTruthy();
       expect(t.install.win32).toBeTruthy();
