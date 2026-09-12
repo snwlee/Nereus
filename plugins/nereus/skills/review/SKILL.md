@@ -29,7 +29,11 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 
 리뷰 대상은 `git diff <base>...HEAD` (base 기본 `main`, 미커밋 작업이면 워크스페이스).
 
-- **OCR delegation**: `ocr delegate preview`로 리뷰할 파일과 룰을 받고, 파일별 `ocr delegate rule <files>`로 룰을 받아 **이 세션의 모델이 직접** 리뷰한다. OCR이 API 키로 직접 리뷰하게 설정돼 있으면 `ocr review --format json --output .nereus/review-ocr.json`을 쓴다.
+> **OCR 에 범위를 반드시 넘긴다.** `ocr delegate` 를 인자 없이 부르면 워크스페이스(미커밋) 모드로
+> 떨어져 **커밋된 변경이 리뷰 대상에서 통째로 빠진다**. `ocrDelegateArgs(base)` 가 인자를 만든다.
+> `.md` 는 `unsupported_ext` 로 제외되므로, 문서만 바뀐 범위에서 `0 reviewable` 이 나오는 것은 정상이다.
+
+- **OCR delegation**: `ocr delegate preview --from <base> --to HEAD` 로 리뷰할 파일과 룰을 받고, 파일별 `ocr delegate rule <files>`로 룰을 받아 **이 세션의 모델이 직접** 리뷰한다. OCR이 API 키로 직접 리뷰하게 설정돼 있으면 `ocr review --format json --output .nereus/review-ocr.json`을 쓴다.
 - **Codex**: `codex review` (또는 codex 플러그인의 `/codex:adversarial-review`). 결과를 파일·줄·심각도·메시지로 정리한다.
 - **Gemini (Antigravity CLI)**: `agy -p "다음 diff를 리뷰하고 file:line, severity(CRITICAL/HIGH/MEDIUM/LOW), message 형식의 JSON 배열로만 답하라: $(git diff ...)"`.
 

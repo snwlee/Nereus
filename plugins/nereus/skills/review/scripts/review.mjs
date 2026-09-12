@@ -55,6 +55,14 @@ function skip(plan, id, bin, why, probe) {
   plan.reasons.push({ id, bin, why });
 }
 
+// ocr delegate 는 인자가 없으면 **워크스페이스(미커밋) 모드**로 떨어진다.
+// 커밋된 브랜치 변경을 리뷰하려면 범위를 넘겨야 한다.
+// 세 사이클 동안 이것을 도구 한계로 오인해 "OCR 은 커밋된 diff 를 못 본다"고 기록했다 — 호출 오류였다.
+export function ocrDelegateArgs(base) {
+  const b = String(base ?? "").trim();
+  return b ? ["--from", b, "--to", "HEAD"] : [];
+}
+
 export function parseOcrJson(raw) {
   try {
     const j = JSON.parse(raw);

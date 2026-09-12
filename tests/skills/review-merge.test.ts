@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction } from "../../plugins/nereus/skills/review/scripts/review.mjs";
+import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction, ocrDelegateArgs } from "../../plugins/nereus/skills/review/scripts/review.mjs";
 
 describe("review merge", () => {
   it("parses OCR json output into normalized findings", () => {
@@ -120,5 +120,20 @@ describe("리뷰어 헬스체크", () => {
     const plan = planRunners("codex", () => true);
     expect(plan.codex).toBe(true);
     expect(plan).not.toHaveProperty("reasons");
+  });
+});
+
+describe("ocrDelegateArgs", () => {
+  it("base 가 있으면 범위 인자를 만든다", () => {
+    expect(ocrDelegateArgs("main")).toEqual(["--from", "main", "--to", "HEAD"]);
+  });
+
+  it("base 가 없으면 범위 인자 없이 워크스페이스 모드", () => {
+    expect(ocrDelegateArgs()).toEqual([]);
+    expect(ocrDelegateArgs("")).toEqual([]);
+  });
+
+  it("공백만 있는 base 도 워크스페이스 모드", () => {
+    expect(ocrDelegateArgs("   ")).toEqual([]);
   });
 });
