@@ -55,3 +55,21 @@ describe("엔진 스킬은 자기 어댑터를 참조한다", () => {
     expect(text).toContain("detectUnityRunner");
   });
 });
+
+describe("4차 배선", () => {
+  it("장르 프로파일이 4종이고 실패 양상이 셋 이상이다", () => {
+    const dir = `${ROOT}/profiles`;
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json"));
+    expect(files.length).toBeGreaterThanOrEqual(4);
+    const modes = new Set(
+      files.map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")).balance.failureMode),
+    );
+    expect(modes.size).toBeGreaterThanOrEqual(3);
+  });
+
+  it("README 가 2단 게이트와 doctor 를 안내한다", () => {
+    const text = fs.readFileSync(`${ROOT}/README.md`, "utf8");
+    expect(text).toContain("robloxStageTwo");
+    expect(text).toContain("assetDoctor");
+  });
+});

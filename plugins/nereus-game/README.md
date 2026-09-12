@@ -46,6 +46,8 @@
 |---|---|---|
 | `sim-tycoon` | 수집 → 판매 → 재투자 → 확장 | 병목 (다음 단계 도달 불가) |
 | `obby-platformer` | 도전 → 실패 → 재시도 → 통과 | 난이도 절벽 |
+| `battle-pvp` | 조우 → 교전 → 정산 → 재장비 | **지배 전략** (선택지 하나가 압도) |
+| `narrative` | 도입 → 선택 → 전개 → 귀결 | 페이싱 (경제가 없을 수 있다) |
 
 알 수 없는 장르는 **던진다.** 기본값으로 떨어지면 수치가 그럴듯한 채로 틀린다.
 
@@ -53,6 +55,22 @@
 
 `lib/balance-sim.mjs` — 결정론적(seed 기반). 경제 정의를 N턴 돌려
 `bottlenecks` · `inflation` · `cliffs` 를 수치로 낸다. 같은 입력이면 같은 출력이라 게이트로 쓸 수 있다.
+
+## 2단 테스트 게이트 (로블록스)
+
+finish 단계에서 `lib/roblox-gate.mjs` 의 `robloxStageTwo` 가 Open Cloud Luau Execution 으로
+실제 Roblox 서버에서 통합 테스트를 시도한다. 환경변수 셋이 필요하다 —
+`ROBLOX_API_KEY` · `ROBLOX_UNIVERSE_ID` · `ROBLOX_PLACE_ID`.
+
+네 상태를 구분한다: `skipped`(로블록스 아님) · `unconfigured`(키 없음, **통과**) ·
+`failed`(실제 실패, 차단) · `passed`. **키가 없다고 막지 않는다** — 막으면 키 없는 세션에서
+finish 자체가 불가능해진다.
+
+## 에셋 파이프라인 doctor
+
+`lib/asset-doctor.mjs` 의 `assetDoctor()` 가 단계별 전제를 판정한다
+(3d → `blender`, 2d → `COMFYUI_URL`, audio → `ELEVENLABS_API_KEY`).
+설치를 시도하지 않고, 무엇이 없어서 어느 단계가 막히는지만 알린다. 부재는 결함이 아니라 상태다.
 
 ## 훅
 
