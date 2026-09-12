@@ -148,7 +148,7 @@
     - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/paths.mjs tests/lib/paths.test.ts && git commit -m "feat(baton): handoff 최신 선택·동시 세션 감지·정리 계획"`
   - Done when: 위 7개 테스트 전부 통과
 
-- [ ] T3. session-start 훅 배선 [wave:1]
+- [x] T3. session-start 훅 배선 [wave:1]
   - Files: Modify `plugins/nereus/hooks/scripts/session-start.mjs` · Test `tests/hooks/session-start.test.ts`
   - Interfaces: Consumes `sessionHandoffPath`·`latestHandoff`·`recentOtherSessions`·`planHandoffPrune` (T1·T2) · Produces `handle(input, deps)` 확장 — 새 deps `entries(dir)` → `Entry[]`, `removeFile(path)`, `env` (환경변수 맵).
   - Steps:
@@ -265,7 +265,7 @@
     - [ ] 커밋: `git add plugins/nereus/hooks/scripts/session-start.mjs tests/hooks/session-start.test.ts && git commit -m "feat(baton): 세션별 handoff 주입·동시 세션 경고·정리"`
   - Done when: 기존 session-start 테스트 전부 + 새 6개 통과, 훅이 파일을 만들지 않는다
 
-- [ ] T4. loop-runner 배선 — 프롬프트·환경변수·wave 회수 [wave:1]
+- [x] T4. loop-runner 배선 — 프롬프트·환경변수·wave 회수 [wave:1]
   - Files: Modify `plugins/nereus/skills/baton/scripts/loop-runner.mjs` · Test `tests/skills/loop-runner.test.ts` · Test `tests/skills/loop-waves.test.ts`
   - Interfaces: Produces `buildPrompt({ tasks, spec, waves, goal })` (handoff 인자 제거) · `wavesDir(root)` · `runWave` 새 dep `collectHandoff(worktreeDir, destPath)`. Consumes `handoffDir`·`latestHandoff`·`handoffPath` (T1·T2·기존).
   - Steps:
@@ -375,7 +375,7 @@
     - [ ] 커밋: `git add plugins/nereus/skills/baton/scripts/loop-runner.mjs tests/skills/loop-runner.test.ts tests/skills/loop-waves.test.ts && git commit -m "feat(loop): wave handoff 회수와 세션 소유 경로 전환"`
   - Done when: loop 테스트 2개 파일 전부 통과, 프롬프트에 고정 handoff 경로가 없다
 
-- [ ] T5. 스킬 문서를 새 경로 규칙으로 맞춘다
+- [x] T5. 스킬 문서를 새 경로 규칙으로 맞춘다
   - Files: Modify `plugins/nereus/skills/handoff/SKILL.md` · Modify `plugins/nereus/skills/baton/SKILL.md` · Modify `plugins/nereus/skills/resume/SKILL.md`
   - Interfaces: 없음 (문서). 코드 계약은 T1~T4 가 정한다.
   - Steps:
