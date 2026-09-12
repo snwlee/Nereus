@@ -25,7 +25,21 @@ export function detectStack(cwd, fsx = defaultFs, { extraStacks = [] } = {}) {
   return out;
 }
 
-export function detectTestRunner(cwd, fsx = defaultFs) {
+// 코어 러너를 찾지 못했을 때만 확장 선언을 본다. 코어가 아는 스택이 항상 이긴다.
+// 확장 항목은 marker(스택 마커)와 runnerMarker(러너 설정 파일)를 둘 다 만족해야 러너로 인정된다 —
+// 러너 설정이 없는데 명령을 돌려주면 TDD 게이트가 매번 실패하고, 그러면 게이트를 꺼버리게 된다.
+export function detectTestRunner(cwd, fsx = defaultFs, { extraStacks = [] } = {}) {
+  const core = coreTestRunner(cwd, fsx);
+  if (core) return core;
+  const has = (f) => fsx.exists(path.join(cwd, f));
+  for (const s of extraStacks) {
+    if (!s?.marker || !s?.runnerMarker || !s?.runner || !s?.command) continue;
+    if (has(s.marker) && has(s.runnerMarker)) return { runner: s.runner, command: s.command };
+  }
+  return null;
+}
+
+function coreTestRunner(cwd, fsx) {
   const has = (f) => fsx.exists(path.join(cwd, f));
   if (has("pubspec.yaml")) {
     const pub = readOr(fsx, path.join(cwd, "pubspec.yaml"));

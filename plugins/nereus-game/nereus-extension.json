@@ -10,7 +10,10 @@
   "stacks": [
     {
       "name": "roblox",
-      "marker": "default.project.json"
+      "marker": "default.project.json",
+      "runnerMarker": "lune.yaml",
+      "runner": "lune",
+      "command": "lune run tests"
     }
   ]
 }
