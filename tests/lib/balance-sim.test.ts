@@ -50,3 +50,40 @@ describe("판정", () => {
     expect(r.summary.cliffs.length).toBeGreaterThan(0);
   });
 });
+
+describe("지배 전략", () => {
+  const stages = [{ name: "s", cost: 10 }];
+
+  it("한 선택지가 압도하면 보고한다", () => {
+    const eco = {
+      income: { base: 10, growth: 1 },
+      stages,
+      options: [
+        { name: "강검", cost: 10, effect: 500 },
+        { name: "평검", cost: 10, effect: 10 },
+        { name: "약검", cost: 10, effect: 8 },
+      ],
+    };
+    const r = simulate({ profile: loadProfile("battle-pvp"), economy: eco, turns: 5, seed: 1 });
+    expect(r.summary.dominant).toContain("강검");
+  });
+
+  it("균형 잡히면 비어 있다", () => {
+    const eco = {
+      income: { base: 10, growth: 1 },
+      stages,
+      options: [
+        { name: "a", cost: 10, effect: 10 },
+        { name: "b", cost: 10, effect: 11 },
+        { name: "c", cost: 10, effect: 9 },
+      ],
+    };
+    const r = simulate({ profile: loadProfile("battle-pvp"), economy: eco, turns: 5, seed: 1 });
+    expect(r.summary.dominant).toEqual([]);
+  });
+
+  it("선택지가 없으면 빈 배열", () => {
+    const r = simulate({ profile: loadProfile("narrative"), economy: { income: { base: 1, growth: 1 }, stages }, turns: 5, seed: 1 });
+    expect(r.summary.dominant).toEqual([]);
+  });
+});

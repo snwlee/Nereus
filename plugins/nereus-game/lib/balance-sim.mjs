@@ -49,7 +49,7 @@ export function simulate({ profile, economy, turns, seed = 1 }) {
 
 // 장르마다 실패 양상이 다르다 — 타이쿤은 병목(다음 단계 도달 불가), 오비는 절벽(난이도 급등).
 // 그래서 한 종류의 판정만 하지 않고 셋을 모두 낸다. 어느 것을 먼저 보는지는 프로파일이 정한다.
-function summarize({ profile, log, stages, stageIndex }) {
+function summarize({ profile, economy, log, stages, stageIndex }) {
   const bottlenecks = stages.slice(stageIndex).map((s) => s.name);
 
   // 인플레: 마지막 턴 수입 증가율 − 단계 비용 증가율. 양수면 수입이 비용을 앞지른다.
@@ -74,6 +74,7 @@ function summarize({ profile, log, stages, stageIndex }) {
   }
 
   return {
+    dominant: dominantOptions(profile, economy),
     clearedStages: stageIndex,
     totalStages: stages.length,
     lastResource: log.length ? log[log.length - 1].resource : 0,
@@ -82,4 +83,25 @@ function summarize({ profile, log, stages, stageIndex }) {
     cliffs,
     primaryFailure: profile?.balance?.failureMode ?? null,
   };
+}
+
+// 세 번째 실패 축. 병목(자원이 모자람)·절벽(난이도 급등)과 달리,
+// 지배 전략은 자원이 충분하고 곡선이 매끄러워도 게임을 죽인다 —
+// 선택지 하나가 나머지를 압도하면 나머지는 존재하지 않는 것과 같다.
+// 선택지를 쓰지 않는 장르가 있으므로 정보가 없으면 조용히 빈 배열이다.
+function dominantOptions(profile, economy) {
+  const options = Array.isArray(economy?.options) ? economy.options : [];
+  if (options.length < 3) return [];
+  const ratio = Number(profile?.balance?.dominanceRatio) || Infinity;
+
+  const scored = options
+    .filter((o) => Number(o?.cost) > 0 && Number.isFinite(Number(o?.effect)))
+    .map((o) => ({ name: o.name, eff: Number(o.effect) / Number(o.cost) }));
+  if (scored.length < 3) return [];
+
+  const sorted = [...scored].sort((a, b) => a.eff - b.eff);
+  const median = sorted[Math.floor(sorted.length / 2)].eff;
+  if (!(median > 0)) return [];
+
+  return scored.filter((o) => o.eff / median >= ratio).map((o) => o.name);
 }
