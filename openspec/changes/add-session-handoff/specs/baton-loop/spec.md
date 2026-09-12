@@ -56,3 +56,19 @@ SessionStart 훅이 이 값으로 "다른 세션 활동" 경고를 생략한다.
 #### Scenario: 서브세션 스폰
 - **WHEN** 러너가 `claude -p` 를 띄운다
 - **THEN** 자식 프로세스 환경에 `NEREUS_LOOP=1` 이 있다
+
+### Requirement: 수렴 검증은 프로젝트의 테스트 러너로 한다
+<!-- id: loop-runner.evaluateCmd -->
+<!-- enforced: loop-runner.mjs evaluateCmd(), defaultEvaluate() -->
+
+`--gate` 가 없을 때 시스템은 프로젝트의 테스트 러너(`run-tests.mjs`)로 수렴을 판정해야 한다.
+`ooo qa` 는 아티팩트 하나를 받는 판정기이고 `--json` 플래그가 없어(0.53 기준 exit=2)
+저장소 전체 게이트로 쓸 수 없다. 그대로 두면 게이트가 항상 실패해 루프가 수렴하지 못한다.
+
+#### Scenario: 게이트 명령이 없을 때
+- **WHEN** `--gate` 없이 루프를 돌린다
+- **THEN** `node .../run-tests.mjs` 를 돌리고 종료코드 0 만 통과로 본다
+
+#### Scenario: ooo 가 설치돼 있어도
+- **WHEN** `ooo` 가 PATH 에 있다
+- **THEN** 검증 명령에 `--json` 이 들어가지 않는다

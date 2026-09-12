@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { runLoop, parseTasks, buildPrompt, claudeArgs, claudeEnv, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
+import { runLoop, parseTasks, buildPrompt, claudeArgs, claudeEnv, evaluateCmd, LOOP_ALLOWED_TOOLS, resolveAllowedTools } from "../../plugins/nereus/skills/baton/scripts/loop-runner.mjs";
 
 describe("loop-runner", () => {
   it("parses tasks with checkbox state", () => {
@@ -191,5 +191,21 @@ describe("resolveAllowedTools — 환경별 프록시를 사용자가 더한다"
     const out = resolveAllowedTools({ loop: { extraAllowedTools: ["Bash(git push:*)", "Bash(rtk:*)"] } });
     expect(out).toContain("Bash(rtk:*)");
     expect(out).not.toContain("Bash(git push:*)");
+  });
+});
+
+describe("evaluateCmd — 루프의 기본 수렴 검증", () => {
+  it("never invokes an ooo flag that does not exist (ooo qa takes an artifact, not --json)", () => {
+    const cmd = evaluateCmd({ hasOoo: true, cwd: "/repo" });
+    expect(cmd.args.join(" ")).not.toContain("--json");
+  });
+  it("falls back to the project's own test runner instead of a repo-wide ooo verdict", () => {
+    const cmd = evaluateCmd({ hasOoo: true, cwd: "/repo" });
+    expect(cmd.bin).toBe("node");
+    expect(cmd.args.join(" ")).toContain("run-tests.mjs");
+  });
+  it("still runs the test runner when ooo is absent", () => {
+    const cmd = evaluateCmd({ hasOoo: false, cwd: "/repo" });
+    expect(cmd.bin).toBe("node");
   });
 });

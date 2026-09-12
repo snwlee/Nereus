@@ -257,10 +257,23 @@ function defaultGateCmd(cwd, cmd) {
   return { pass: r.ok, reason: r.ok ? undefined : `게이트 명령 실패: ${cmd}` };
 }
 
+/**
+ * 수렴 검증 명령. 순수 함수라 무엇을 돌리는지 테스트가 직접 본다.
+ *
+ * 예전에는 `ooo qa --json .` 을 돌렸는데 그런 플래그가 없다(ooo 0.53 기준 exit=2).
+ * `ooo qa` 는 **아티팩트 하나**(텍스트나 파일)를 받는 판정기라 저장소 전체 게이트로는 맞지 않는다.
+ * 그래서 항상 실패했고, 루프는 수렴하지 못한 채 게이트 3회 실패로 멈췄다. 프로젝트 자신의
+ * 테스트 러너를 돌린다 — 증거 파일(.nereus/evidence.json)까지 같은 경로로 남는다.
+ */
+export function evaluateCmd({ cwd } = {}) {
+  const runner = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..", "build", "scripts", "run-tests.mjs");
+  return { bin: "node", args: [path.normalize(runner)], cwd };
+}
+
 async function defaultEvaluate(cwd) {
-  if (!which("ooo")) return { pass: true, skipped: "ooo 없음" };
-  const r = run("ooo", ["qa", "--json", "."], { cwd, timeoutMs: 10 * 60 * 1000 });
-  return { pass: r.ok, output: r.stdout.slice(-2000) };
+  const cmd = evaluateCmd({ cwd });
+  const r = run(cmd.bin, cmd.args, { cwd, timeoutMs: 10 * 60 * 1000 });
+  return { pass: r.ok, output: String(r.stdout ?? "").slice(-2000) };
 }
 
 export async function runLoop(opts, deps = {}) {

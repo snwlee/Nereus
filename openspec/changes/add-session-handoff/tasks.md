@@ -474,6 +474,17 @@
   - Done when: 세 테스트 통과, 기존 두 tasks.md 가 모두 `pass: true`, 산문 속 꺾쇠 자리표시자는 여전히 잡힌다
 
 
+- [x] T8. 루프 수렴 검증이 존재하지 않는 ooo 플래그를 쓴다 (빌드 중 발견)
+  - Files: Modify `plugins/nereus/skills/baton/scripts/loop-runner.mjs` · Test `tests/skills/loop-runner.test.ts` · Modify `plugins/nereus/skills/loop/SKILL.md`
+  - Interfaces: Produces `evaluateCmd({ cwd })` → `{ bin, args, cwd }` · Consumes 없음. `defaultEvaluate` 가 이것을 쓴다.
+  - Steps:
+    - [x] 실패 테스트 작성: `evaluateCmd` 가 `--json` 을 쓰지 않고 `run-tests.mjs` 를 돌린다는 테스트 3개
+    - [x] 실패 확인: Run `npx vitest run tests/skills/loop-runner.test.ts` · Expected: FAIL (evaluateCmd 미export)
+    - [x] 최소 구현: `defaultEvaluate` 의 `ooo qa --json .` 을 `run-tests.mjs` 실행으로 교체
+    - [x] 통과 확인: Run `npx vitest run tests/skills/loop-runner.test.ts` · Expected: PASS
+    - [x] 커밋: `git commit -m "fix(loop): 수렴 검증을 프로젝트 테스트 러너로"`
+  - Done when: `ooo qa --json` 호출이 코드와 문서에서 사라지고, 루프 게이트가 테스트 러너로 판정한다
+
 ## Global Constraints
 
 - 런타임은 Node 20+ 표준 라이브러리만 쓴다. 플러그인 코드에 새 의존성을 넣지 않는다.
