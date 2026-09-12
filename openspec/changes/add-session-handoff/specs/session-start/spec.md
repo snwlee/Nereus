@@ -32,8 +32,12 @@
 주입해, 이후 handoff·finish 가 **그 경로에만** 쓰게 해야 한다. 파일을 미리 만들지는 않는다.
 
 #### Scenario: 경로 안내
-- **WHEN** 어떤 `source` 로든 세션이 시작된다
-- **THEN** 주입 내용에 `.nereus/handoff/<이름>.md` 경로와 "여기에만 쓴다"는 지시가 들어 있다
+- **WHEN** 새 컨텍스트가 열린다(`startup`·`resume`·`clear`)
+- **THEN** 주입 내용에 `.nereus/handoff/` 아래 이 세션의 경로와 "여기에만 쓴다"는 지시가 들어 있다
+
+#### Scenario: compact 이고 재개할 내용도 없음
+- **WHEN** `source` 가 `compact` 이고 읽을 handoff 본문이 없다
+- **THEN** 아무것도 주입하지 않는다. 같은 대화가 이어지는 중이라 경로는 이미 알렸다
 
 #### Scenario: 파일을 만들지 않는다
 - **WHEN** 훅이 경로를 계산한다

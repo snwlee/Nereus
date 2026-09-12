@@ -1,6 +1,6 @@
 # tasks — add-session-handoff
 
-- [ ] T1. paths.mjs — 세션 handoff 경로 결정 (순수)
+- [x] T1. paths.mjs — 세션 handoff 경로 결정 (순수)
   - Files: Modify `plugins/nereus/hooks/scripts/lib/paths.mjs` · Test `tests/lib/paths.test.ts`
   - Interfaces: Produces `handoffDir(cwd): string` · `handoffFileName({ now, sessionId }): string` · `sessionHandoffPath({ cwd, sessionId, now, entries }): string`. Consumes `projectStateDir(cwd)` (기존).
   - Steps:
@@ -60,7 +60,7 @@
     - [ ] 커밋: `git add plugins/nereus/hooks/scripts/lib/paths.mjs tests/lib/paths.test.ts && git commit -m "feat(baton): 세션별 handoff 경로 계산"`
   - Done when: `npx vitest run tests/lib/paths.test.ts` 통과, 기존 `handoffPath` 테스트도 그대로 통과
 
-- [ ] T2. paths.mjs — 최신 선택·다른 세션 감지·정리 계획 (순수)
+- [x] T2. paths.mjs — 최신 선택·다른 세션 감지·정리 계획 (순수)
   - Files: Modify `plugins/nereus/hooks/scripts/lib/paths.mjs` · Test `tests/lib/paths.test.ts`
   - Interfaces: Consumes `handoffDir(cwd)` (T1) · Produces `latestHandoff({ cwd, entries, legacyExists }): string | null` · `recentOtherSessions({ entries, sessionId, now, windowMs }): Entry[]` · `planHandoffPrune({ entries, now, keep, maxAgeMs, protect }): string[]`. `Entry` 는 `{ name: string, mtimeMs: number }`.
   - Steps:
