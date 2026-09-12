@@ -14,7 +14,7 @@ const defaultFs = {
   readFile: (p) => fs.readFileSync(p, "utf8"),
 };
 
-export const ROJO_PROJECT = "default.project.json";
+const ROJO_PROJECT = "default.project.json";
 
 /** Rojo 프로젝트 파일이 있으면 로블록스 스택이다. */
 export function isRobloxProject(cwd, fsx = defaultFs) {

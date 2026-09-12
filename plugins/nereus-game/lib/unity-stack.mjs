@@ -11,8 +11,8 @@ const defaultFs = {
   readFile: (p) => fs.readFileSync(p, "utf8"),
 };
 
-export const UNITY_MARKER = "ProjectSettings/ProjectVersion.txt";
-export const UNITY_MANIFEST = "Packages/manifest.json";
+const UNITY_MARKER = "ProjectSettings/ProjectVersion.txt";
+const UNITY_MANIFEST = "Packages/manifest.json";
 const TEST_PACKAGE = "com.unity.test-framework";
 
 // 내부 전용. 밖에서 쓰는 곳이 생기기 전에는 export 하지 않는다 —

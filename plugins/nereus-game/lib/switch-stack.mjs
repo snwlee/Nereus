@@ -7,7 +7,7 @@ import path from "node:path";
 
 const defaultFs = { exists: (p) => fs.existsSync(p) };
 
-export const SWITCH_ZONE = "Platform/Switch";
+const SWITCH_ZONE = "Platform/Switch";
 
 export function isSwitchTarget(cwd, fsx = defaultFs) {
   return fsx.exists(path.join(cwd, SWITCH_ZONE));

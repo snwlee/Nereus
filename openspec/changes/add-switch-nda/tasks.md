@@ -1,10 +1,10 @@
 # tasks — add-switch-nda
 
-- [ ] T1. NDA 경계 배선 검사를 먼저 깐다
+- [x] T1. NDA 경계 배선 검사를 먼저 깐다
   - Files: Create `tests/smoke/nda-wiring.test.ts`
   - Interfaces: Consumes `plugins/nereus-game/hooks/hooks.json` · Produces 없음
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       import { describe, it, expect } from "vitest";
       import fs from "node:fs";
@@ -32,16 +32,16 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/smoke/nda-wiring.test.ts` · Expected: FAIL (nda-guard·switch 스킬 없음)
-    - [ ] 최소 구현: 없음. 이 태스크는 검사만 만든다
-    - [ ] 커밋: `git add tests/smoke/nda-wiring.test.ts && git commit -m "test(game): NDA 경계 배선 검사를 먼저"`
+    - [x] 실패 확인: Run `npx vitest run tests/smoke/nda-wiring.test.ts` · Expected: FAIL (nda-guard·switch 스킬 없음)
+    - [x] 최소 구현: 없음. 이 태스크는 검사만 만든다
+    - [x] 커밋: `git add tests/smoke/nda-wiring.test.ts && git commit -m "test(game): NDA 경계 배선 검사를 먼저"`
   - Done when: 세 검사가 모두 실패하고 사유가 "아직 만들지 않음"이다
 
-- [ ] T2. NDA 구역 판정 순수 함수 [wave:2]
+- [x] T2. NDA 구역 판정 순수 함수 [wave:2]
   - Files: Create `plugins/nereus-game/lib/nda.mjs` · Test `tests/lib/nda.test.ts`
   - Interfaces: Consumes 없음 · Produces `isNdaPath(file, extraZones): boolean`, `NDA_ZONES: string[]`, `ndaPathsIn(text, extraZones): string[]`
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       import { describe, it, expect } from "vitest";
       import { isNdaPath, ndaPathsIn, NDA_ZONES } from "../../plugins/nereus-game/lib/nda.mjs";
@@ -81,17 +81,17 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/nda.test.ts` · Expected: FAIL (nda.mjs 없음)
-    - [ ] 최소 구현: `NDA_ZONES` 를 `["Platform/Switch/**", "**/NintendoSDK/**", "**/*.nx.*"]` 로 두고, 경로를 `/` 로 정규화한 뒤 글롭을 정규식으로 바꿔 검사한다. `ndaPathsIn` 은 공백으로 쪼갠 토큰 중 `isNdaPath` 를 만족하는 것만 돌려준다
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/nda.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-game/lib/nda.mjs tests/lib/nda.test.ts && git commit -m "feat(game): NDA 구역 판정"`
+    - [x] 실패 확인: Run `npx vitest run tests/lib/nda.test.ts` · Expected: FAIL (nda.mjs 없음)
+    - [x] 최소 구현: `NDA_ZONES` 를 `["Platform/Switch/**", "**/NintendoSDK/**", "**/*.nx.*"]` 로 두고, 경로를 `/` 로 정규화한 뒤 글롭을 정규식으로 바꿔 검사한다. `ndaPathsIn` 은 공백으로 쪼갠 토큰 중 `isNdaPath` 를 만족하는 것만 돌려준다
+    - [x] 통과 확인: Run `npx vitest run tests/lib/nda.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-game/lib/nda.mjs tests/lib/nda.test.ts && git commit -m "feat(game): NDA 구역 판정"`
   - Done when: 일곱 테스트가 통과하고 판정이 순수 함수다
 
-- [ ] T3. Luau Execution 2단 게이트 [wave:2]
+- [x] T3. Luau Execution 2단 게이트 [wave:2]
   - Files: Create `plugins/nereus-game/lib/luau-exec.mjs` · Test `tests/lib/luau-exec.test.ts`
   - Interfaces: Consumes 주입 가능한 `{ http, sleep }` · Produces `runLuauTask(input, deps)` — 결과 객체를 resolve 하는 Promise, `MAX_TASK_SECONDS`, `MAX_CONCURRENT`
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       import { describe, it, expect } from "vitest";
       import { runLuauTask, MAX_TASK_SECONDS, MAX_CONCURRENT } from "../../plugins/nereus-game/lib/luau-exec.mjs";
@@ -139,17 +139,17 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/luau-exec.test.ts` · Expected: FAIL (luau-exec.mjs 없음)
-    - [ ] 최소 구현: `MAX_TASK_SECONDS = 300`, `MAX_CONCURRENT = 10`. `apiKey` 가 비면 `{ configured: false, pass: false }` 를 돌려주고 http 를 부르지 않는다. 타임아웃이 상한을 넘으면 "태스크를 쪼개라"를 포함한 메시지로 throw. 그 외에는 POST 로 태스크를 만들고 `state` 가 `PROCESSING` 인 동안 `sleep` 후 다시 조회한다. `COMPLETE` 면 `pass: true`
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/luau-exec.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-game/lib/luau-exec.mjs tests/lib/luau-exec.test.ts && git commit -m "feat(game): Luau Execution 2단 게이트"`
+    - [x] 실패 확인: Run `npx vitest run tests/lib/luau-exec.test.ts` · Expected: FAIL (luau-exec.mjs 없음)
+    - [x] 최소 구현: `MAX_TASK_SECONDS = 300`, `MAX_CONCURRENT = 10`. `apiKey` 가 비면 `{ configured: false, pass: false }` 를 돌려주고 http 를 부르지 않는다. 타임아웃이 상한을 넘으면 "태스크를 쪼개라"를 포함한 메시지로 throw. 그 외에는 POST 로 태스크를 만들고 `state` 가 `PROCESSING` 인 동안 `sleep` 후 다시 조회한다. `COMPLETE` 면 `pass: true`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/luau-exec.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-game/lib/luau-exec.mjs tests/lib/luau-exec.test.ts && git commit -m "feat(game): Luau Execution 2단 게이트"`
   - Done when: 다섯 테스트가 통과하고 네트워크·자격증명 없이 전부 검증된다
 
-- [ ] T4. NDA 가드 훅
+- [x] T4. NDA 가드 훅
   - Files: Create `plugins/nereus-game/hooks/scripts/nda-guard.mjs` · Modify `plugins/nereus-game/hooks/hooks.json` · Test `tests/hooks/nda-guard.test.ts`
   - Interfaces: Consumes PreToolUse 입력, `lib/nda.mjs` · Produces `ndaGuard(input, opts): { block: boolean, reason: string }`
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       import { describe, it, expect } from "vitest";
       import { ndaGuard } from "../../plugins/nereus-game/hooks/scripts/nda-guard.mjs";
@@ -183,17 +183,17 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/hooks/nda-guard.test.ts` · Expected: FAIL (nda-guard.mjs 없음)
-    - [ ] 최소 구현: 외부 도구 목록을 `["codex", "agy", "ocr", "curl", "gh", "wget"]` 로 두고, Bash 명령에서 그 토큰과 `ndaPathsIn` 결과가 **둘 다** 있으면 차단한다. Bash 가 아닌 도구는 항상 통과. `mode` 가 `warn` 이면 `block: false` 로 사유만 남긴다. 기본 모드는 `block`. `hooks.json` 의 PreToolUse 에 `node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/nda-guard.mjs"` 를 추가한다
-    - [ ] 통과 확인: Run `npx vitest run tests/hooks/nda-guard.test.ts tests/smoke/nda-wiring.test.ts` · Expected: nda-guard PASS, nda-wiring 은 switch 스킬 항목만 FAIL
-    - [ ] 커밋: `git add plugins/nereus-game/hooks tests/hooks/nda-guard.test.ts && git commit -m "feat(game): NDA 가드 훅"`
+    - [x] 실패 확인: Run `npx vitest run tests/hooks/nda-guard.test.ts` · Expected: FAIL (nda-guard.mjs 없음)
+    - [x] 최소 구현: 외부 도구 목록을 `["codex", "agy", "ocr", "curl", "gh", "wget"]` 로 두고, Bash 명령에서 그 토큰과 `ndaPathsIn` 결과가 **둘 다** 있으면 차단한다. Bash 가 아닌 도구는 항상 통과. `mode` 가 `warn` 이면 `block: false` 로 사유만 남긴다. 기본 모드는 `block`. `hooks.json` 의 PreToolUse 에 `node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/nda-guard.mjs"` 를 추가한다
+    - [x] 통과 확인: Run `npx vitest run tests/hooks/nda-guard.test.ts tests/smoke/nda-wiring.test.ts` · Expected: nda-guard PASS, nda-wiring 은 switch 스킬 항목만 FAIL
+    - [x] 커밋: `git add plugins/nereus-game/hooks tests/hooks/nda-guard.test.ts && git commit -m "feat(game): NDA 가드 훅"`
   - Done when: 다섯 테스트가 통과하고 훅이 `hooks.json` 에 실제로 배선돼 있다
 
-- [ ] T5. Switch 스택 판정과 스킬
+- [x] T5. Switch 스택 판정과 스킬
   - Files: Create `plugins/nereus-game/lib/switch-stack.mjs` · Create `plugins/nereus-game/skills/switch/SKILL.md` · Test `tests/lib/switch-stack.test.ts`
   - Interfaces: Consumes 주입 가능한 `{ exists }`, 설정 객체 · Produces `isSwitchTarget(cwd, fsx)`, `detectSwitchBuild(cwd, fsx, config)`
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       import { describe, it, expect } from "vitest";
       import { isSwitchTarget, detectSwitchBuild } from "../../plugins/nereus-game/lib/switch-stack.mjs";
@@ -219,17 +219,17 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/switch-stack.test.ts` · Expected: FAIL (switch-stack.mjs 없음)
-    - [ ] 최소 구현: `isSwitchTarget` 은 `Platform/Switch` 디렉터리 존재로 판정한다. `detectSwitchBuild` 은 Switch 대상이고 `config.switch.build` 가 문자열이면 `{ command }`, 아니면 `null`. `SKILL.md` 에 플랫폼 추상화 요구(게임 로직을 플랫폼 무관 층에 두고 NDA 구역을 얇게 유지), NDA 경계 훅이 무엇을 막고 무엇을 안 막는지, Lotcheck 체크리스트를 `.nereus/lotcheck/` 에 두고 읽는 절차, 휴대·거치 두 모드와 슬립 복귀·컨트롤러 분리 점검을 적는다. 체크리스트 본문은 담지 않는다
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/switch-stack.test.ts tests/smoke/nda-wiring.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-game/lib/switch-stack.mjs plugins/nereus-game/skills/switch tests/lib/switch-stack.test.ts && git commit -m "feat(game): Switch 스택과 스킬"`
+    - [x] 실패 확인: Run `npx vitest run tests/lib/switch-stack.test.ts` · Expected: FAIL (switch-stack.mjs 없음)
+    - [x] 최소 구현: `isSwitchTarget` 은 `Platform/Switch` 디렉터리 존재로 판정한다. `detectSwitchBuild` 은 Switch 대상이고 `config.switch.build` 가 문자열이면 `{ command }`, 아니면 `null`. `SKILL.md` 에 플랫폼 추상화 요구(게임 로직을 플랫폼 무관 층에 두고 NDA 구역을 얇게 유지), NDA 경계 훅이 무엇을 막고 무엇을 안 막는지, Lotcheck 체크리스트를 `.nereus/lotcheck/` 에 두고 읽는 절차, 휴대·거치 두 모드와 슬립 복귀·컨트롤러 분리 점검을 적는다. 체크리스트 본문은 담지 않는다
+    - [x] 통과 확인: Run `npx vitest run tests/lib/switch-stack.test.ts tests/smoke/nda-wiring.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-game/lib/switch-stack.mjs plugins/nereus-game/skills/switch tests/lib/switch-stack.test.ts && git commit -m "feat(game): Switch 스택과 스킬"`
   - Done when: 네 테스트와 배선 검사 세 건이 모두 통과한다
 
-- [ ] T6. 리뷰어 헬스체크
+- [x] T6. 리뷰어 헬스체크
   - Files: Modify `plugins/nereus/skills/review/scripts/review.mjs` · Modify `tests/skills/review-merge.test.ts`
   - Interfaces: Consumes 기존 `planRunners(value, available)` 의 둘째 인자와 새 셋째 인자 `probe` · Produces `planRunners(value, available, probe)` — `plan.skipped` 에 사유를 함께 담는다
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       describe("리뷰어 헬스체크", () => {
         it("PATH 에 있어도 무응답이면 계획에서 빠진다", () => {
@@ -256,17 +256,17 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/skills/review-merge.test.ts` · Expected: FAIL (planRunners 가 셋째 인자를 안 받음)
-    - [ ] 최소 구현: `planRunners` 의 시그니처를 `(value, available, probe = null)` 로 넓힌다(기본 `available` 은 그대로 둔다). `available` 이 참일 때만 `probe` 를 부르고, `probe` 결과의 `ok` 가 거짓이면 `plan[id]` 를 켜지 않고 `plan.skipped` 에 `{ id, bin, why }` 를 넣는다. `probe` 가 없으면 기존 동작을 그대로 유지한다(기존 테스트가 깨지면 안 된다)
-    - [ ] 통과 확인: Run `npx vitest run tests/skills/review-merge.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus/skills/review/scripts/review.mjs tests/skills/review-merge.test.ts && git commit -m "fix(harness): 리뷰어 가용을 응답으로 판정"`
+    - [x] 실패 확인: Run `npx vitest run tests/skills/review-merge.test.ts` · Expected: FAIL (planRunners 가 셋째 인자를 안 받음)
+    - [x] 최소 구현: `planRunners` 의 시그니처를 `(value, available, probe = null)` 로 넓힌다(기본 `available` 은 그대로 둔다). `available` 이 참일 때만 `probe` 를 부르고, `probe` 결과의 `ok` 가 거짓이면 `plan[id]` 를 켜지 않고 `plan.skipped` 에 `{ id, bin, why }` 를 넣는다. `probe` 가 없으면 기존 동작을 그대로 유지한다(기존 테스트가 깨지면 안 된다)
+    - [x] 통과 확인: Run `npx vitest run tests/skills/review-merge.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus/skills/review/scripts/review.mjs tests/skills/review-merge.test.ts && git commit -m "fix(harness): 리뷰어 가용을 응답으로 판정"`
   - Done when: 새 테스트 네 건과 기존 review-merge 테스트가 모두 통과하고, probe 없이 부른 기존 호출부가 그대로 동작한다
 
-- [ ] T7. 확장 선언 갱신과 통합 검증 [flow]
+- [x] T7. 확장 선언 갱신과 통합 검증 [flow]
   - Files: Modify `plugins/nereus-game/nereus-extension.json` · Modify `plugins/nereus-game/README.md` · Modify `tests/smoke/game-wiring.test.ts`
   - Interfaces: Consumes `loadExtensions`, `routePrompt` · Produces 없음
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       it("switch 라우트가 선언돼 있고 스킬이 실재한다", () => {
         const ext = loadExtensions({ readJson, records });
@@ -275,10 +275,10 @@
         expect(hits.some((h) => h.skill === "nereus-game:switch")).toBe(true);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/smoke/game-wiring.test.ts` · Expected: FAIL (switch 라우트 미선언)
-    - [ ] 최소 구현: `nereus-extension.json` 의 `routes` 에 `{ skill: "nereus-game:switch", why: "닌텐도 스위치·NDA 경계·Lotcheck", re: "스위치|switch|닌텐도|nintendo|lotcheck|이식" }` 를 추가한다. README 의 지원 스택 표에서 Switch 행을 설계·경계 동작으로 바꾸고 NDA 경계 훅 설명을 추가한다
-    - [ ] 통과 확인: Run `npx vitest run tests/smoke/` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-game/nereus-extension.json plugins/nereus-game/README.md tests/smoke/game-wiring.test.ts && git commit -m "feat(game): switch 라우트 선언"`
+    - [x] 실패 확인: Run `npx vitest run tests/smoke/game-wiring.test.ts` · Expected: FAIL (switch 라우트 미선언)
+    - [x] 최소 구현: `nereus-extension.json` 의 `routes` 에 `{ skill: "nereus-game:switch", why: "닌텐도 스위치·NDA 경계·Lotcheck", re: "스위치|switch|닌텐도|nintendo|lotcheck|이식" }` 를 추가한다. README 의 지원 스택 표에서 Switch 행을 설계·경계 동작으로 바꾸고 NDA 경계 훅 설명을 추가한다
+    - [x] 통과 확인: Run `npx vitest run tests/smoke/` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-game/nereus-extension.json plugins/nereus-game/README.md tests/smoke/game-wiring.test.ts && git commit -m "feat(game): switch 라우트 선언"`
   - Done when: 스모크 전체가 통과하고 `npm test` 전체가 통과한다
 
 ## Global Constraints
