@@ -11,12 +11,17 @@ function readOr(fsx, p, fallback = "") {
   try { return fsx.readFile(p); } catch { return fallback; }
 }
 
-export function detectStack(cwd, fsx = defaultFs) {
+// 확장 스택은 코어 판정 뒤에 붙는다. 코어가 아는 스택이 항상 앞이다.
+// extraStacks 항목: { name, marker, ... } — 형제 플러그인의 nereus-extension.json 에서 온다.
+export function detectStack(cwd, fsx = defaultFs, { extraStacks = [] } = {}) {
   const has = (f) => fsx.exists(path.join(cwd, f));
   const out = [];
   if (has("pubspec.yaml")) out.push("flutter");
   if (has("build.gradle") || has("build.gradle.kts") || has("pom.xml")) out.push("spring");
   if (has("package.json")) out.push("node");
+  for (const s of extraStacks) {
+    if (s?.name && s?.marker && has(s.marker) && !out.includes(s.name)) out.push(s.name);
+  }
   return out;
 }
 

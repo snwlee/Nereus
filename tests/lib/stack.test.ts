@@ -40,3 +40,18 @@ describe("stack detection", () => {
     expect(isSourceFile("src/db/migrations/001.sql")).toBe(false);
   });
 });
+
+describe("확장 스택 병합", () => {
+  it("확장 스택 마커를 인식한다", () => {
+    const fsx = { exists: (p: string) => p.endsWith("default.project.json"), readFile: () => "" };
+    const extraStacks = [{ name: "roblox", marker: "default.project.json" }];
+    expect(detectStack("/proj", fsx, { extraStacks })).toContain("roblox");
+  });
+
+  it("코어 스택이 확장보다 앞에 온다", () => {
+    const fsx = { exists: () => true, readFile: () => "{}" };
+    const extraStacks = [{ name: "roblox", marker: "default.project.json" }];
+    const out = detectStack("/proj", fsx, { extraStacks });
+    expect(out.indexOf("flutter")).toBeLessThan(out.indexOf("roblox"));
+  });
+});
