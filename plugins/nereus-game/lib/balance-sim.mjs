@@ -47,6 +47,39 @@ export function simulate({ profile, economy, turns, seed = 1 }) {
   return { turns: log, summary: summarize({ profile, economy, log, stageIndex, stages }) };
 }
 
-function summarize({ log, stages, stageIndex }) {
-  return { clearedStages: stageIndex, lastResource: log.length ? log[log.length - 1].resource : 0, totalStages: stages.length };
+// 장르마다 실패 양상이 다르다 — 타이쿤은 병목(다음 단계 도달 불가), 오비는 절벽(난이도 급등).
+// 그래서 한 종류의 판정만 하지 않고 셋을 모두 낸다. 어느 것을 먼저 보는지는 프로파일이 정한다.
+function summarize({ profile, log, stages, stageIndex }) {
+  const bottlenecks = stages.slice(stageIndex).map((s) => s.name);
+
+  // 인플레: 마지막 턴 수입 증가율 − 단계 비용 증가율. 양수면 수입이 비용을 앞지른다.
+  const incomeGrowth = log.length > 1 && log[log.length - 2].income > 0
+    ? log[log.length - 1].income / log[log.length - 2].income - 1
+    : 0;
+  // 비용 증가율도 **턴 기준**으로 환산한다. 수입은 턴당, 비용은 단계당이라 그대로 빼면 차원이 안 맞는다.
+  // 실제로 밟은 경로(첫 클리어 → 마지막 클리어에 걸린 턴)로 나눈다.
+  const cleared = log.filter((t) => t.clearedStage);
+  const spanTurns = cleared.length > 1 ? cleared[cleared.length - 1].turn - cleared[0].turn : log.length || 1;
+  const costGrowth = stages.length > 1 && stages[0].cost > 0 && spanTurns > 0
+    ? (stages[stages.length - 1].cost / stages[0].cost) ** (1 / spanTurns) - 1
+    : 0;
+  const inflation = Number((incomeGrowth - costGrowth).toFixed(6));
+
+  // 절벽: 앞 단계 대비 비용 배수가 프로파일 임계를 넘는 지점.
+  const ratio = Number(profile?.balance?.cliffRatio) || Infinity;
+  const cliffs = [];
+  for (let i = 1; i < stages.length; i += 1) {
+    const prev = stages[i - 1].cost;
+    if (prev > 0 && stages[i].cost / prev >= ratio) cliffs.push(i);
+  }
+
+  return {
+    clearedStages: stageIndex,
+    totalStages: stages.length,
+    lastResource: log.length ? log[log.length - 1].resource : 0,
+    bottlenecks,
+    inflation,
+    cliffs,
+    primaryFailure: profile?.balance?.failureMode ?? null,
+  };
 }
