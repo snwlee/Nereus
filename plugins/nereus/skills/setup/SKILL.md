@@ -70,6 +70,19 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/companions.mjs"
 - 명령은 선언에서 유도된다. 확장이 명령 문자열을 직접 적지 않는다.
 - 실행은 여기서도 **사용자 승인 뒤**다. 업데이트는 재시작해야 적용된다.
 
+### 하네스 밖 스킬 위임
+
+마케팅 소재(광고 영상·프로모·모션그래픽)처럼 **전용 스킬이 이미 있는 일**은 만들지 않고 위임한다.
+설치돼 있으면 라우터가 자동으로 지목하고, 없으면 지목하지 않는다 —
+없는 스킬을 부르라고 하면 죽은 지시가 되고, 라우터를 한 번 헛돌게 하면 그 뒤로 통째로 무시된다.
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/lib/delegates.mjs"
+```
+
+이것들은 마켓플레이스 플러그인이 아니라 **스킬 디렉터리**(`~/.claude/skills/<이름>`)에 놓는 종류다.
+그래서 설치 명령을 만들어낼 수 없다. **있는 척하지 않고 놓일 위치만 알린다.**
+
 ## 4. 설정 파일
 
 사용자 전역 설정이 없으면 만든다. 위치는 macOS `~/.config/nereus/config.json`, Windows `%APPDATA%\nereus\config.json`.

@@ -6,6 +6,7 @@ import { readStdinJson, contextPayload, emit } from "./lib/io.mjs";
 import { projectStateDir } from "./lib/paths.mjs";
 import { routePrompt, routerNotice } from "./lib/router.mjs";
 import { loadExtensions } from "./lib/extensions.mjs";
+import { delegateRoutes } from "./lib/delegates.mjs";
 
 const seenFile = (cwd, sid) => path.join(projectStateDir(cwd), `.routed-${String(sid).replace(/[^A-Za-z0-9_-]/g, "_")}`);
 
@@ -21,7 +22,11 @@ export function handle(input, deps = {}) {
 
   const seen = parseSeen(readSeen());
   // 형제 플러그인(예: nereus-game)의 라우트를 함께 본다. 코어 라우트가 항상 앞이다.
-  const extraRoutes = (deps.extensions ?? (() => loadExtensions()))().routes;
+  // 형제 플러그인 라우트 + 하네스 밖 스킬 위임(설치된 것만). 코어 → 확장 → 위임 순이다.
+  const extraRoutes = [
+    ...(deps.extensions ?? (() => loadExtensions()))().routes,
+    ...(deps.delegates ?? (() => delegateRoutes()))(),
+  ];
   const hits = routePrompt(input.prompt, { seen, extraRoutes });
   if (!hits.length) return null;
 
