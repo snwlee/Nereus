@@ -387,28 +387,28 @@
     - [x] 커밋: `git add plugins tests && git commit -m "feat(l10n): 라우트 배선·companion·프로세스 리그"`
   - Done when: 가드가 실제로 물고 역검증 3건이 전부 빨개진다
 
-- [ ] T9. 게임 플러그인 정리와 설치·doctor·전체 테스트
+- [x] T9. 게임 플러그인 정리와 설치·doctor·전체 테스트
   - Files: Modify `plugins/nereus-game/skills/localization/SKILL.md` · Modify `plugins/nereus-game/.claude-plugin/plugin.json` · Modify `.claude-plugin/marketplace.json`
   - Interfaces: 없음
   - Steps:
-    - [ ] **남은 참조자 4곳을 고친다.** 이관 대상 모듈을 이름으로 가리키는 곳이다:
+    - [x] **남은 참조자 4곳을 고친다.** 이관 대상 모듈을 이름으로 가리키는 곳이다:
           `plugins/nereus-game/skills/asset/SKILL.md`(폰트 절 위임 문구) ·
           `tests/smoke/game-domain-liveops.test.ts:22,49`(스킬↔lib 대응표) ·
           `tests/smoke/liveops-rig.test.ts:45`(프로세스 리그 목록).
           Run `grep -rl "l10n-scan\|font-check\|lib/locales\.mjs" plugins tests` · Expected: `nereus-l10n` 밖 결과 없음
-    - [ ] `plugins/nereus-game/skills/localization/SKILL.md` 를 게임 고유분만 남기고 줄인다:
+    - [x] `plugins/nereus-game/skills/localization/SKILL.md` 를 게임 고유분만 남기고 줄인다:
           게임 임베딩 라이선스를 `requiredEmbedding: "game"` 으로 넘긴다는 것과 장르 폰트 예산 주입.
           나머지는 `nereus-l10n` 의 세 스킬을 가리킨다. **검사기를 프로세스로 부르는 명령을 적지 않는다.**
-    - [ ] `nereus-game` 버전을 올리고 마켓플레이스 등재 버전도 같이 올린다.
+    - [x] `nereus-game` 버전을 올리고 마켓플레이스 등재 버전도 같이 올린다.
           **버전을 안 올리면 설치 캐시가 낡은 채로 남는다**(2026-09-13 에 `nereus` 0.17.0 에서 겪었다).
-    - [ ] Run `node plugins/nereus/skills/spec/scripts/lint-tasks.mjs openspec/changes/2026-09-13-add-l10n-harness/tasks.md` · Expected: 위반 0
-    - [ ] Run `claude plugin validate plugins/nereus-l10n` · Expected: 통과
-    - [ ] Run `claude plugin marketplace update nereus && claude plugin install nereus-l10n@nereus && claude plugin update nereus-game@nereus` · Expected: 설치 성공
-    - [ ] 설치본과 저장소를 대조한다: Run `diff -rq ~/.claude/plugins/cache/nereus/nereus-l10n/0.1.0 plugins/nereus-l10n` · Expected: 차이 0
+    - [x] Run `node plugins/nereus/skills/spec/scripts/lint-tasks.mjs openspec/changes/2026-09-13-add-l10n-harness/tasks.md` · Expected: 위반 0
+    - [x] Run `claude plugin validate plugins/nereus-l10n` · Expected: 통과
+    - [x] Run `claude plugin marketplace update nereus && claude plugin install nereus-l10n@nereus && claude plugin update nereus-game@nereus` · Expected: 설치 성공
+    - [x] 설치본과 저장소를 대조한다: Run `diff -rq ~/.claude/plugins/cache/nereus/nereus-l10n/0.1.0 plugins/nereus-l10n` · Expected: 차이 0
           (설치 경로에 **버전이 한 겹 더 있다**)
-    - [ ] Run `node plugins/nereus/skills/doctor/scripts/doctor.mjs` · Expected: HIGH 충돌 0
-    - [ ] Run `node plugins/nereus/skills/build/scripts/run-tests.mjs` · Expected: PASS
-    - [ ] 커밋. **문서를 테스트 뒤에 쓰지 않는다** — evidence 가 STALE 이 된다
+    - [x] Run `node plugins/nereus/skills/doctor/scripts/doctor.mjs` · Expected: HIGH 충돌 0
+    - [x] Run `node plugins/nereus/skills/build/scripts/run-tests.mjs` · Expected: PASS
+    - [x] 커밋. **문서를 테스트 뒤에 쓰지 않는다** — evidence 가 STALE 이 된다
   - Done when: doctor 가 HIGH 0 이고 전체 테스트가 초록이며 설치본 차이가 0 이다
 
 ## Global Constraints

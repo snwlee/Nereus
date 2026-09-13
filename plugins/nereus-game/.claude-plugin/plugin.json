@@ -1,6 +1,6 @@
 {
   "name": "nereus-game",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "게임 개발 하네스: 로블록스·Unity(폰)·Switch 어댑터, 게임 도메인 스킬. nereus 코어의 워크플로 위에서 동작한다",
   "author": {
     "name": "snwlee",
