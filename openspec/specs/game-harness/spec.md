@@ -387,31 +387,6 @@ HTTP 호출은 주입 가능해야 한다 — 테스트가 네트워크나 자�
 - **WHEN** `metrics` 에 실측 리텐션이 주어지고 가정과의 편차가 프로파일의 허용치를 넘는다
 - **THEN** 위반에 `retention-drift` 가 들어 있고 `unmeasured` 는 비어 있다
 
-### Requirement: 현지화 위험을 번역 전에 판정해야 한다
-<!-- id: l10n.scan -->
-<!-- entities: Locale, StringTable, Source -->
-<!-- enforced: plugins/nereus-game/lib/l10n-scan.mjs -->
-<!-- invariant: 알 수 없는 로케일은 기본값으로 떨어지지 않고 던진다 -->
-
-시스템은 대상 로케일 집합을 `locales.json` 에서 데이터로 읽고, 소스의 하드코딩 문자열,
-로케일별 키 누락, 언어별 확장률을 적용했을 때 `maxWidth` 를 넘길 문자열을 찾아내야 한다.
-
-#### Scenario: 하드코딩 문자열
-- **WHEN** 소스에 문자열 테이블을 거치지 않은 사용자 노출 문자열이 있다
-- **THEN** 위반에 파일·줄과 함께 `hardcoded` 가 들어 있다
-
-#### Scenario: 로케일 키 누락
-- **WHEN** 어떤 로케일의 문자열 테이블에 기준 로케일의 키가 빠져 있다
-- **THEN** 위반에 로케일과 키 이름과 함께 `missing-key` 가 들어 있다
-
-#### Scenario: 확장률로 폭 초과
-- **WHEN** 기준 문자열 길이에 그 로케일의 확장률을 곱한 값이 `maxWidth` 를 넘는다
-- **THEN** 위반에 로케일·키와 함께 `overflow` 가 들어 있다
-
-#### Scenario: 알 수 없는 로케일
-- **WHEN** `locales.json` 에 없는 로케일을 대상으로 지정한다
-- **THEN** 기본값으로 떨어지지 않고 예외를 던진다
-
 ### Requirement: 새 도메인 스킬이 라우터에 실제로 배선되어야 한다
 <!-- id: liveops.routes -->
 <!-- entities: Plugin, Route -->
@@ -494,65 +469,6 @@ HTTP 호출은 주입 가능해야 한다 — 테스트가 네트워크나 자�
 #### Scenario: 교차 검증 통과
 - **WHEN** 모든 임팩트 큐의 `sound` 가 사운드 큐 목록 안에 있다
 - **THEN** `sound-missing` 위반이 없고 `unmeasured` 는 비어 있다
-
-### Requirement: 폰트를 라이선스·글리프·용량·가독성으로 판정해야 한다
-<!-- id: font.check -->
-<!-- entities: Font, Locale, Profile -->
-<!-- enforced: plugins/nereus-game/lib/font-check.mjs -->
-<!-- invariant: 게임 임베딩 허용을 선언하지 않은 폰트는 통과시키지 않는다 -->
-
-시스템은 선언된 폰트 목록을 대상 로케일과 대조해 위반 목록을 돌려주어야 한다.
-검사 항목은 다섯이다: 게임 임베딩 라이선스, 로케일이 요구하는 스크립트 커버리지,
-유저 생성 텍스트가 있을 때의 서브셋 금지, 파일 크기 예산, 최소 표시 크기.
-
-#### Scenario: 임베딩이 허용되지 않은 폰트
-- **WHEN** 폰트의 `embedding` 이 `"game"` 을 포함하지 않는다
-- **THEN** 위반에 그 폰트 이름과 함께 `license-embedding` 이 들어 있다
-
-#### Scenario: 임베딩 선언 자체가 없음
-- **WHEN** 폰트에 `embedding` 선언이 없다
-- **THEN** 위반에 `license-embedding` 이 들어 있다
-
-#### Scenario: 로케일 스크립트 미커버
-- **WHEN** 대상 로케일이 요구하는 `script` 를 어떤 폰트도 `scripts` 에 선언하지 않았다
-- **THEN** 위반에 그 로케일과 함께 `script-uncovered` 가 들어 있다
-
-#### Scenario: 유저 생성 텍스트가 있는데 서브셋
-- **WHEN** `userGeneratedText` 가 참인데 어떤 폰트의 `subset` 이 참이다
-- **THEN** 위반에 그 폰트 이름과 함께 `subset-unsafe` 가 들어 있다
-
-#### Scenario: 폰트 용량 초과
-- **WHEN** 폰트 파일 크기 합이 프로파일의 `typography.maxFontKb` 를 넘는다
-- **THEN** 위반에 `font-size-budget` 이 들어 있다
-
-#### Scenario: 최소 표시 크기 미만
-- **WHEN** 폰트의 `minSizePx` 가 프로파일의 `typography.minSizePx` 미만이다
-- **THEN** 위반에 그 폰트 이름과 함께 `min-size` 가 들어 있다
-
-#### Scenario: 프로파일에 기준이 없음
-- **WHEN** 장르 프로파일에 `typography` 키가 없다
-- **THEN** 예산·크기 항목을 판정하지 않고 `unmeasured` 에 `typography-baseline` 이 들어 있다
-
-### Requirement: 문자열 폭 판정은 근사 여부를 표시해야 한다
-<!-- id: l10n.approxWidth -->
-<!-- entities: Locale, Font, StringTable -->
-<!-- enforced: plugins/nereus-game/lib/l10n-scan.mjs -->
-<!-- invariant: 폰트 메트릭 없이 낸 폭 판정은 approx 로 표시한다. 조용한 근사는 틀린 확신을 만든다 -->
-
-시스템은 폰트 메트릭이 주어지면 그것으로 문자열 폭을 계산하고, 주어지지 않으면
-언어 확장률로 근사하되 그 위반에 근사임을 표시해야 한다. 기존 반환 형태는 유지한다.
-
-#### Scenario: 폰트 메트릭 없이 폭 판정
-- **WHEN** `fonts` 인자 없이 `maxWidth` 를 넘는 문자열을 검사한다
-- **THEN** `overflow` 위반이 나오고 그 위반의 `approx` 가 참이다
-
-#### Scenario: 폰트 메트릭으로 폭 판정
-- **WHEN** 그 로케일의 폰트 `avgCharWidth` 가 주어진다
-- **THEN** `overflow` 판정에 그 값이 쓰이고 위반의 `approx` 가 거짓이다
-
-#### Scenario: 기존 반환 형태 유지
-- **WHEN** `fonts` 를 주지 않고 기존처럼 호출한다
-- **THEN** `violations` 배열이 기존과 같은 코드 집합으로 나온다
 
 ### Requirement: 유료 확률 아이템의 확률 공개를 판정해야 한다
 <!-- id: compliance.paidRandom -->
@@ -744,51 +660,6 @@ HTTP 호출은 주입 가능해야 한다 — 테스트가 네트워크나 자�
 #### Scenario: 태스크 형식을 못 알아봤을 때의 추천
 - **WHEN** `matched` 가 `null` 인 scope 로 트랙을 추천한다
 - **THEN** 규모 임계 비교를 하지 않고 `reasons` 에 `scope-unknown` 을 싣는다
-
-### Requirement: 현지화 검사는 생성물과 개발자 메시지를 위반으로 보고하지 않아야 한다
-<!-- id: l10n.excludeNonUserFacing -->
-<!-- entities: Checker -->
-<!-- enforced: tests/lib/l10n-scan.test.ts -->
-
-`scanL10n` 은 l10n 도구 생성물 경로의 줄과 예외·단언·로그 줄을 `violations` 에 넣지 않아야 한다.
-대신 분류와 건수를 `skipped` 로 내야 한다. 조용히 버리면 검사되지 않은 것과 통과한 것이 구분되지 않는다.
-
-실측: ToonTone 에서 461건이 나왔고 그중 진짜 결함은 0건이었다.
-`lib/l10n/generated/app_localizations_en.dart` — l10n 도구가 만든 번역 테이블 자체가
-"하드코딩 문자열"로 잡혔다. 461:0 이면 사람이 게이트를 끈다.
-
-#### Scenario: 생성물
-- **WHEN** `lib/l10n/generated/app_localizations_en.dart` 의 번역 리터럴을 스캔한다
-- **THEN** `violations` 가 비어 있고 `skipped` 에 `generated` 가 1건 이상이다
-
-#### Scenario: 개발자 메시지
-- **WHEN** `throw ContentPackFormatException('최상위가 객체여야 한다');` 를 스캔한다
-- **THEN** `violations` 가 비어 있고 `skipped` 에 `dev-message` 가 1건 이상이다
-
-#### Scenario: 사용자 노출 문자열은 계속 잡는다
-- **WHEN** 생성물이 아닌 파일의 `Text('색을 맞춰보세요')` 를 스캔한다
-- **THEN** `violations` 에 `hardcoded` 가 1건 있다
-
-#### Scenario: 개발자 메시지가 섞인 파일의 사용자 문자열
-- **WHEN** 한 파일에 예외 줄과 위젯 줄이 같이 있다
-- **THEN** 위젯 줄만 `violations` 에 남는다
-
-### Requirement: 제외 규칙은 데이터로 덮어쓸 수 있어야 한다
-<!-- id: l10n.excludeIsData -->
-<!-- entities: Checker -->
-<!-- enforced: tests/lib/l10n-scan.test.ts -->
-
-생성물 경로 패턴과 개발자 메시지 토큰은 호출자가 `exclude` 로 덮어쓸 수 있어야 하며,
-덮어쓰지 않으면 기본값이 적용되어야 한다. 패턴은 언어·프레임워크마다 다르다
-(`.g.dart` 는 Dart, `.generated.cs` 는 Unity). 코드에 박으면 스택이 늘 때마다 lib 을 고치게 된다.
-
-#### Scenario: 기본값
-- **WHEN** `exclude` 없이 스캔한다
-- **THEN** Dart 기본 패턴(`generated/`, `.g.dart`, `.freezed.dart`)이 적용된다
-
-#### Scenario: 덮어쓰기
-- **WHEN** `exclude.generated` 에 `"__gen__/"` 만 준다
-- **THEN** `__gen__/` 경로만 생성물로 분류되고 `.g.dart` 는 분류되지 않는다
 
 ### Requirement: 계층 경계를 기계적으로 검사할 수 있어야 한다
 <!-- id: craft.purity -->
