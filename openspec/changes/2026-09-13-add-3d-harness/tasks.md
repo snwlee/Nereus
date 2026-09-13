@@ -49,11 +49,11 @@
     - [x] 커밋: `git add plugins/nereus-3d .claude-plugin/marketplace.json tests/lib && git commit -m "feat(3d): 플러그인 뼈대와 텍스처 슬롯 데이터"`
   - Done when: `claude plugin validate plugins/nereus-3d` 가 통과하고 네 테스트가 초록이다
 
-- [ ] T2. 정적 검사기 — 불완전한 dispose
+- [x] T2. 정적 검사기 — 불완전한 dispose
   - Files: Create `plugins/nereus-3d/lib/scene-scan.mjs` · Create `tests/lib/scene-scan.test.ts`
   - Interfaces: Produces `scanScene({ sources, data }): { violations, unmeasured }`
   - Steps:
-    - [ ] 실패 테스트를 `tests/lib/scene-scan.test.ts` 에 쓴다:
+    - [x] 실패 테스트를 `tests/lib/scene-scan.test.ts` 에 쓴다:
       ```ts
       import { describe, it, expect } from "vitest";
       import { scanScene } from "../../plugins/nereus-3d/lib/scene-scan.mjs";
@@ -99,11 +99,11 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 구현한다. 슬롯 목록은 `budget-data.mjs` 에서 읽는다 — 코드에 박지 않는다.
+    - [x] 실패 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 구현한다. 슬롯 목록은 `budget-data.mjs` 에서 읽는다 — 코드에 박지 않는다.
           본문에 `isTexture` 가 있으면 완전으로 본다. 없으면 언급된 슬롯을 세어 빠진 것을 낸다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-3d/lib tests/lib/scene-scan.test.ts && git commit -m "feat(3d): 불완전한 dispose 정적 검사"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-3d/lib tests/lib/scene-scan.test.ts && git commit -m "feat(3d): 불완전한 dispose 정적 검사"`
   - Done when: 네 시나리오가 통과한다
 
 - [ ] T3. 정적 검사기 — 배선되지 않은 dispose 와 계측 부재
