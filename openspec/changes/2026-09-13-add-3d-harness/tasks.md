@@ -106,11 +106,11 @@
     - [x] 커밋: `git add plugins/nereus-3d/lib tests/lib/scene-scan.test.ts && git commit -m "feat(3d): 불완전한 dispose 정적 검사"`
   - Done when: 네 시나리오가 통과한다
 
-- [ ] T3. 정적 검사기 — 배선되지 않은 dispose 와 계측 부재
+- [x] T3. 정적 검사기 — 배선되지 않은 dispose 와 계측 부재
   - Files: Modify `plugins/nereus-3d/lib/scene-scan.mjs` · Modify `tests/lib/scene-scan.test.ts`
   - Interfaces: Produces `violations` 에 `dispose-unwired` · `instrumentation-missing`
   - Steps:
-    - [ ] 실패 테스트를 덧붙인다:
+    - [x] 실패 테스트를 덧붙인다:
       ```ts
       describe("배선과 계측", () => {
         it("정의만 되고 호출이 없으면 잡는다", () => {
@@ -144,11 +144,11 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: FAIL
-    - [ ] 구현한다. 호출 탐지는 **전체 소스 집합**에서 본다 — 파일 하나만 보면 다른 파일의
+    - [x] 실패 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: FAIL
+    - [x] 구현한다. 호출 탐지는 **전체 소스 집합**에서 본다 — 파일 하나만 보면 다른 파일의
           호출을 놓쳐 거짓 위반을 낸다. 함수 정의 본문 안의 재귀 호출은 호출로 세지 않는다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-3d/lib tests/lib/scene-scan.test.ts && git commit -m "feat(3d): 배선되지 않은 dispose 와 계측 부재 검사"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/scene-scan.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-3d/lib tests/lib/scene-scan.test.ts && git commit -m "feat(3d): 배선되지 않은 dispose 와 계측 부재 검사"`
   - Done when: 여섯 시나리오가 통과한다
 
 - [ ] T4. 렌더 예산 검사기와 누수 판정

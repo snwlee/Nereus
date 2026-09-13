@@ -102,6 +102,17 @@ function mentions(text, token) {
   return new RegExp(`(?<![A-Za-z0-9_$])${token}(?![A-Za-z0-9_$])`).test(text);
 }
 
+/** 식별자 등장 위치를 전부 센다. `forEach(disposeMaterial)` 같은 참조도 배선이다. */
+function mentionIndexes(text, token) {
+  const re = new RegExp(`(?<![A-Za-z0-9_$])${token}(?![A-Za-z0-9_$])`, "g");
+  const out = [];
+  for (const m of text.matchAll(re)) out.push(m.index);
+  return out;
+}
+
+// 계측이 없으면 드로우콜도 GPU 메모리도 **측정 자체가 불가능**하다.
+const INSTRUMENTED = /(?<![A-Za-z0-9_$])[A-Za-z0-9_$]*\s*\.\s*info\s*\.\s*(?:render|memory|programs)/;
+
 /**
  * 씬 소스를 정적으로 훑는다.
  * @param {{ sources?: {file: string, text: string}[], data?: object }} input
@@ -122,8 +133,9 @@ export function scanScene({ sources = [], data = loadBudgetData() } = {}) {
 
   // 1) 모든 소스의 함수를 먼저 모은다. 위임 대상이 다른 파일에 있을 수 있다.
   const functions = [];
-  for (const { file, text } of sources) {
-    for (const fn of findFunctions(file, stripNoise(String(text ?? "")))) {
+  const cleaned = sources.map(({ file, text }) => ({ file, clean: stripNoise(String(text ?? "")) }));
+  for (const { file, clean } of cleaned) {
+    for (const fn of findFunctions(file, clean)) {
       const missingSlots = slots.filter((s) => !mentions(fn.body, s));
       functions.push({
         ...fn,
@@ -174,6 +186,44 @@ export function scanScene({ sources = [], data = loadBudgetData() } = {}) {
     });
   }
 
+  // dispose 헬퍼가 선언만 되고 호출되지 않으면 **정리가 된다는 착각**만 남는다.
+  // 호출은 **전체 소스 집합**에서 본다 — 파일 하나만 보면 다른 파일의 호출을 놓쳐 거짓 위반이 된다.
+  const disposeHelpers = [];
+  for (const f of functions) {
+    if (!f.fn || !/\.dispose\s*\(/.test(f.body)) continue;
+    if (!f.isCandidate && !mentions(f.body, sweep) && f.missingSlots.length !== 0) continue;
+    let callSites = 0;
+    for (const { file, clean } of cleaned) {
+      for (const at of mentionIndexes(clean, f.fn)) {
+        // 자기 정의 안의 등장(헤더·재귀)은 배선이 아니다.
+        if (file === f.file && at >= f.start && at <= f.end) continue;
+        callSites += 1;
+      }
+    }
+    disposeHelpers.push({ file: f.file, fn: f.fn, callSites, complete: f.isComplete });
+    if (callSites === 0) {
+      violations.push({
+        code: "dispose-unwired",
+        file: f.file,
+        fn: f.fn,
+        callSites,
+        why: "dispose 헬퍼가 정의만 되고 어디서도 호출되지 않는다. 선언은 정리가 된다는 착각을 만든다.",
+        fix: "씬을 버리는 경로에서 이 헬퍼를 실제로 부르거나, 쓰지 않는다면 지운다.",
+      });
+    }
+  }
+
+  // 계측 부재는 통과가 아니다 — 읽는 곳이 없으면 측정 자체가 불가능하다.
+  if (cleaned.length > 0 && !cleaned.some(({ clean }) => INSTRUMENTED.test(clean))) {
+    violations.push({
+      code: "instrumentation-missing",
+      why:
+        "소스 어디에서도 renderer.info 를 읽지 않는다. 드로우콜도 GPU 메모리도 측정할 수 없고, " +
+        "누수는 증상이 나타난 뒤에야 보인다.",
+      fix: "프레임 루프나 씬 전환 지점에서 renderer.info 를 표본으로 남긴다 — render-budget 검사기의 입력이다.",
+    });
+  }
+
   if (listedEverySlot) {
     unmeasured.push({
       what: `슬롯을 전부 나열한 dispose 는 슬롯 목록 확인일(${data.checkedAt}) 기준으로만 완전하다`,
@@ -183,5 +233,5 @@ export function scanScene({ sources = [], data = loadBudgetData() } = {}) {
     });
   }
 
-  return { violations, unmeasured };
+  return { violations, unmeasured, disposeHelpers };
 }

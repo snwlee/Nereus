@@ -82,3 +82,35 @@ describe("위임", () => {
     expect(codes(r)).toContain("incomplete-dispose");
   });
 });
+
+describe("배선과 계측", () => {
+  it("정의만 되고 호출이 없으면 잡는다", () => {
+    const text = `function disposeAll(o){ for (const key in o) { const v=o[key]; if (v && v.isTexture) v.dispose(); } o.dispose(); }`;
+    const r = scanScene({ sources: [{ file: "a.js", text }] });
+    const v = r.violations.find((x: any) => x.code === "dispose-unwired");
+    expect(v.fn).toBe("disposeAll");
+  });
+  it("자기 정의 밖에서 호출되면 통과한다", () => {
+    const text = `function disposeAll(o){ for (const key in o) { const v=o[key]; if (v && v.isTexture) v.dispose(); } o.dispose(); }\ndisposeAll(root);`;
+    const r = scanScene({ sources: [{ file: "a.js", text }] });
+    expect(codes(r)).not.toContain("dispose-unwired");
+  });
+  it("다른 파일에서 호출돼도 통과한다", () => {
+    const a = `function disposeAll(o){ for (const key in o) { const v=o[key]; if (v && v.isTexture) v.dispose(); } o.dispose(); }`;
+    const r = scanScene({ sources: [{ file: "a.js", text: a }, { file: "b.js", text: "disposeAll(root);" }] });
+    expect(codes(r)).not.toContain("dispose-unwired");
+  });
+  it("호출 지점 수를 같이 낸다", () => {
+    const a = `function disposeAll(o){ for (const key in o) { const v=o[key]; if (v && v.isTexture) v.dispose(); } o.dispose(); }\ndisposeAll(a);\ndisposeAll(b);`;
+    const r = scanScene({ sources: [{ file: "a.js", text: a }] });
+    expect(r.disposeHelpers.find((h: any) => h.fn === "disposeAll").callSites).toBe(2);
+  });
+  it("renderer.info 를 아무도 안 읽으면 잡는다 — 측정 자체가 불가능하다", () => {
+    const r = scanScene({ sources: [{ file: "a.js", text: "const x = 1;" }] });
+    expect(codes(r)).toContain("instrumentation-missing");
+  });
+  it("한 곳이라도 읽으면 통과한다", () => {
+    const r = scanScene({ sources: [{ file: "a.js", text: "console.log(renderer.info.render.calls);" }] });
+    expect(codes(r)).not.toContain("instrumentation-missing");
+  });
+});
