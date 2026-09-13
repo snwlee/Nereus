@@ -47,7 +47,7 @@ describe("nereus-ads 배선", () => {
   // 두 플러그인의 **에이전트끼리** 겹친 것이었다. 기준을 넓히면 진짜가 정상 쌍에 묻힌다.
   it.each(["skills", "agents"])("세 플러그인의 %s 이름이 겹치지 않는다", (kind) => {
     const names = (dir: string) => (fs.existsSync(dir) ? fs.readdirSync(dir).map((f) => f.replace(/\.md$/, "")) : []);
-    const all = ["nereus", "nereus-game", "nereus-ads"].flatMap((p) => names(`plugins/${p}/${kind}`));
+    const all = ["nereus", "nereus-game", "nereus-ads", "nereus-l10n"].flatMap((p) => names(`plugins/${p}/${kind}`));
     const dupes = all.filter((n, i) => all.indexOf(n) !== i);
     expect(dupes, `${kind} 중복: ${dupes.join(", ")} — 한쪽이 다른 쪽을 가린다`).toEqual([]);
   });

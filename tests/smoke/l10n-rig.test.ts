@@ -11,6 +11,8 @@ const runNode = (script: string, input: string) =>
   execFileSync("node", [script], { input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"], maxBuffer: 8 * 1024 * 1024 });
 
 const FONT = "plugins/nereus-l10n/lib/font-check.mjs";
+const STORE = "plugins/nereus-l10n/lib/store-l10n-check.mjs";
+const ASO = "plugins/nereus-l10n/lib/aso-advisor.mjs";
 
 describe("nereus-l10n 프로세스 리그", () => {
   it("폰트 검사기를 프로세스로 돌려 라이선스 위반을 받는다", () => {
@@ -54,5 +56,51 @@ describe("nereus-l10n 프로세스 리그", () => {
     expect(stderr).toContain("stdin 으로 받은 JSON");
     // V8 의 JSON 오류 메시지에 `at position` 이 들어간다 — 스택 *프레임* 모양으로만 본다.
     expect(stderr).not.toMatch(/^\s+at .*:\d+:\d+\)?$/m);
+  });
+
+  it("스토어 게이트를 프로세스로 돌린다", () => {
+    const out = runNode(STORE, JSON.stringify({ store: "play", declaredLocales: ["ko"], listings: { ko: { title: "A" } } }));
+    expect(JSON.parse(out).violations.map((v: any) => v.code)).toContain("locale-code-unknown");
+  });
+
+  it("스토어 게이트가 미달을 위반이 아니라 coverage 로 낸다", () => {
+    const out = runNode(STORE, JSON.stringify({
+      store: "play", declaredLocales: ["en-US"], listings: { "en-US": { title: "A" } },
+      doNotTranslate: [{ field: "title", why: "검색 키워드" }],
+    }));
+    const r = JSON.parse(out);
+    expect(r.violations).toEqual([]);
+    expect(r.coverage.required).toBe(86);
+    expect(r.coverage.missing.length).toBe(85);
+  });
+
+  it("조언자를 프로세스로 돌린다", () => {
+    const out = runNode(ASO, JSON.stringify({
+      coverage: { required: 86, present: 1, missing: ["pt-BR"] }, signals: { share: { "pt-BR": 0.13 } },
+    }));
+    const r = JSON.parse(out);
+    expect(r.levers[0].locale).toBe("pt-BR");
+    expect(r).not.toHaveProperty("violations");
+  });
+
+  it("세 검사기 전부 입력이 없어도 유효한 JSON 을 낸다 — 0바이트가 아니다", () => {
+    for (const s of [FONT, STORE, ASO]) {
+      const out = runNode(s, "");
+      expect(out.trim().length, s).toBeGreaterThan(0);
+      expect(() => JSON.parse(out), s).not.toThrow();
+    }
+  });
+
+  it("세 검사기 전부 깨진 JSON 에 스택 프레임 없이 사유만 낸다", () => {
+    for (const s of [FONT, STORE, ASO]) {
+      let failed = false;
+      try { runNode(s, "{bad json"); } catch (e: any) {
+        failed = true;
+        expect(e.status, s).not.toBe(0);
+        expect(String(e.stderr), s).toContain("stdin 으로 받은 JSON");
+        expect(String(e.stderr), s).not.toMatch(/^\s+at .*:\d+:\d+\)?$/m);
+      }
+      expect(failed, s).toBe(true);
+    }
   });
 });

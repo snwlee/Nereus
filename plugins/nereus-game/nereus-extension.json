@@ -53,8 +53,8 @@
     },
     {
       "skill": "nereus-game:localization",
-      "why": "현지화·번역·로케일",
-      "re": "현지화|로컬라이[즈제]이션|localization|l10n|번역|로케일|다국어"
+      "why": "게임 고유분만 남았다 — 폰트 게임 임베딩 라이선스와 장르 폰트 예산. 범용 현지화는 nereus-l10n 이 갖는다. 라우트를 좁히지 않으면 MAX_HITS=2 에서 실제 주인의 자리를 뺏는다.",
+      "re": "게임\\s?(현지화|폰트)|폰트\\s?게임\\s?임베딩|게임\\s?임베딩|장르\\s?폰트\\s?예산"
     },
     {
       "skill": "nereus-game:impact",
@@ -124,6 +124,13 @@
       "when": {
         "stack": "unity"
       }
+    },
+    {
+      "id": "nereus-l10n",
+      "marketplace": "nereus",
+      "label": "nereus-l10n",
+      "scope": "user",
+      "why": "현지화 검사기(소스 문자열·폰트 스크립트 커버리지·스토어 등재)가 이 플러그인에 있다. 게임 전용이 아니라 여기 두지 않았다 — 게임은 requiredEmbedding 과 장르 typography 예산만 값으로 넘긴다. 동반으로 건다: 형제 플러그인의 검사기를 직접 부르면 설치 조합에 따라 조용히 깨진다."
     }
   ]
 }

@@ -273,11 +273,11 @@
     - [x] 커밋: `git add plugins/nereus-l10n && git commit -m "docs(l10n): 스킬 3종·에이전트·README"`
   - Done when: 세 SKILL.md 와 에이전트가 존재하고 각각 자기 검사기를 가리킨다
 
-- [ ] T8. 라우트 배선·companion·가드·프로세스 리그
+- [x] T8. 라우트 배선·companion·가드·프로세스 리그
   - Files: Create `plugins/nereus-l10n/nereus-extension.json` · Modify `plugins/nereus-game/nereus-extension.json` · Create `tests/smoke/l10n-wiring.test.ts` · Create `tests/smoke/l10n-rig.test.ts` · Modify `tests/smoke/no-unwired-exports.test.ts` · Modify `tests/smoke/ads-wiring.test.ts`
   - Interfaces: Produces 라우트 3개 · `companions` 1건
   - Steps:
-    - [ ] 실패 테스트 `tests/smoke/l10n-wiring.test.ts` 를 쓴다:
+    - [x] 실패 테스트 `tests/smoke/l10n-wiring.test.ts` 를 쓴다:
       ```ts
       import { describe, it, expect } from "vitest";
       import fs from "node:fs";
@@ -335,7 +335,7 @@
         }
       });
       ```
-    - [ ] 실패 테스트 `tests/smoke/l10n-rig.test.ts` 를 쓴다:
+    - [x] 실패 테스트 `tests/smoke/l10n-rig.test.ts` 를 쓴다:
       ```ts
       import { describe, it, expect } from "vitest";
       import { execFileSync } from "node:child_process";
@@ -370,21 +370,21 @@
         }
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/smoke/l10n-wiring.test.ts tests/smoke/l10n-rig.test.ts` · Expected: FAIL
-    - [ ] `plugins/nereus-l10n/nereus-extension.json` 에 라우트 3개를 쓴다. 각 라우트에 `why` 를 적는다.
+    - [x] 실패 확인: Run `npx vitest run tests/smoke/l10n-wiring.test.ts tests/smoke/l10n-rig.test.ts` · Expected: FAIL
+    - [x] `plugins/nereus-l10n/nereus-extension.json` 에 라우트 3개를 쓴다. 각 라우트에 `why` 를 적는다.
           `l10n`: `현지화|l10n|로케일|locale|다국어|하드코딩\s?문자열|arb\s?파일`
           `storelisting`: `스토어\s?등재|등재\s?텍스트|앱\s?제목|스토어\s?설명|패치\s?노트|릴리스\s?노트|스크린샷\s?문구|\baso\b`
           `typeface`: `폰트\s?(커버리지|라이선스|예산)|두부|tofu|글리프|glyph|스크립트\s?커버리지|\brtl\b|서브셋`
-    - [ ] `plugins/nereus-game/nereus-extension.json` 의 `companions` 에 `nereus-l10n` 을 이유와 함께 더한다.
-    - [ ] `store-l10n-check.mjs` 와 `aso-advisor.mjs` 에 프로세스 진입점을 붙인다.
+    - [x] `plugins/nereus-game/nereus-extension.json` 의 `companions` 에 `nereus-l10n` 을 이유와 함께 더한다.
+    - [x] `store-l10n-check.mjs` 와 `aso-advisor.mjs` 에 프로세스 진입점을 붙인다.
           `pathToFileURL` 로 비교하고 성공 경로에서 `process.exit(0)` 을 부르지 않는다.
-    - [ ] `tests/smoke/no-unwired-exports.test.ts` 의 `ROOTS` 에 `plugins/nereus-l10n/lib` 를,
+    - [x] `tests/smoke/no-unwired-exports.test.ts` 의 `ROOTS` 에 `plugins/nereus-l10n/lib` 를,
           `SEARCH` 에 `plugins/nereus-l10n` 을 더한다.
-    - [ ] `tests/smoke/ads-wiring.test.ts` 의 이름 충돌 검사 플러그인 목록에 `nereus-l10n` 을 더한다.
-    - [ ] 통과 확인: Run `npx vitest run tests/smoke/` · Expected: PASS
-    - [ ] 역검증: 라우트 하나를 지우고 FAIL 하는지, `companions` 항목을 지우고 FAIL 하는지,
+    - [x] `tests/smoke/ads-wiring.test.ts` 의 이름 충돌 검사 플러그인 목록에 `nereus-l10n` 을 더한다.
+    - [x] 통과 확인: Run `npx vitest run tests/smoke/` · Expected: PASS
+    - [x] 역검증: 라우트 하나를 지우고 FAIL 하는지, `companions` 항목을 지우고 FAIL 하는지,
           진입점 하나를 지우고 FAIL 하는지 각각 확인하고 되돌린다. **새 파일은 `git checkout` 이 먹지 않는다** — 사본을 떠 둔다.
-    - [ ] 커밋: `git add plugins tests && git commit -m "feat(l10n): 라우트 배선·companion·프로세스 리그"`
+    - [x] 커밋: `git add plugins tests && git commit -m "feat(l10n): 라우트 배선·companion·프로세스 리그"`
   - Done when: 가드가 실제로 물고 역검증 3건이 전부 빨개진다
 
 - [ ] T9. 게임 플러그인 정리와 설치·doctor·전체 테스트
