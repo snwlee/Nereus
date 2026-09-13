@@ -54,6 +54,18 @@ describe("엔진 스킬은 자기 어댑터를 참조한다", () => {
     expect(text).toContain("unity-stack.mjs");
     expect(text).toContain("detectUnityRunner");
   });
+
+  it("unity 스킬이 공식 플러그인 위임 경계를 적는다", () => {
+    const text = fs.readFileSync(`${ROOT}/skills/unity/SKILL.md`, "utf8");
+    // 판정 없이 "쓰면 좋다"고만 적으면 아무 일도 일어나지 않는다.
+    expect(text).toContain("detectUnityAgentPlugin");
+    expect(text).toContain("unity@unity-agent-plugin");
+    // 넘기는 것과 넘기지 않는 것이 **둘 다** 있어야 경계다.
+    expect(text).toMatch(/위임하지 않는[^\n]*/);
+    for (const keep of ["TDD 게이트", "design", "compliance", "finish"]) {
+      expect(text, keep).toContain(keep);
+    }
+  });
 });
 
 describe("4차 배선", () => {

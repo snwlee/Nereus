@@ -42,7 +42,75 @@ Unity -runTests -batchmode -nographics -quit
 
 스프라이트 아틀라스를 쓴다. 드로우콜은 2D 에서 가장 흔한 성능 문제다.
 
-## 4. 하지 말 것
+## 4. Unity 공식 플러그인에 위임한다
+
+Unity 가 낸 first-party 플러그인이 있다 — `unity@unity-agent-plugin`.
+스킬 29개 + Unity CLI + Unity MCP 서버(에디터 실시간 제어). Unity 팀이 직접 쓰고 보안 검토하며
+**엔진 업데이트와 함께 갱신한다.** 그래서 엔진 API 절차는 우리가 들고 있지 않는다 —
+들고 있으면 엔진이 바뀔 때마다 낡고, 낡은 절차는 틀린 절차다.
+`policy.json` 을 출처·확인일과 함께 데이터로 둔 것과 같은 이유다:
+**남이 정하고 남이 바꾸는 값은 우리가 복사해두지 않는다.**
+
+먼저 판정한다. 설치돼 있지 않은데 위임을 지시하면 없는 스킬을 부른다.
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/lib/unity-stack.mjs"
+```
+
+`detectUnityAgentPlugin` 이 설치 인벤토리와 활성 설정을 읽어 판정한다.
+디스크에 파일이 있느냐가 아니라 **설정의 활성 상태**가 진실이다.
+
+| `status` | 뜻 | 할 것 |
+|---|---|---|
+| `ready` | 설치·활성 | 아래 표대로 위임한다 |
+| `disabled` | 설치됐으나 설정에서 꺼짐 | 사용자에게 알리고 **우리 절차로 진행한다**. 남의 설정을 켜지 않는다 |
+| `absent` | 미설치 | 우리 절차로 진행한다. 설치 명령만 안내한다 |
+| `unknown` | 인벤토리를 못 읽음 | **미설치로 단정하지 않는다.** 사유를 그대로 알리고 사용자에게 확인받는다 |
+
+`advice` 에 `scope-user` 가 있으면 알린다 — 전역 설치라 Unity 가 아닌 저장소에서도
+스킬 29개가 상시 로딩된다. 토큰 예산 손해다. Unity 저장소에서만 켜는 쪽을 권한다:
+
+```
+/plugin marketplace add Unity-Technologies/unity-agent-plugin
+claude plugin install unity@unity-agent-plugin --scope project
+```
+
+### 4.1 위임하는 것 — 엔진 API 절차
+
+| 우리 도메인 | 넘길 Unity 스킬 |
+|---|---|
+| gameux (UI·HUD) | `ui` · `ui-uitk` · `ui-ugui` · `ui-imgui` · `optimize-text-mesh-pro` |
+| asset (2D·스프라이트) | `sprite-editor` · `manage-sprite-atlas` · `2d-pixel-perfect` |
+| level (타일맵·내비) | `tilemap-palette-create` · `tilemap-ruletile-*` · `initialize-ai-navigation` |
+| sound | `audio-setup-mixers` · `optimize-audio` |
+| impact (연출) | `urp-postprocessing` · `shader-graph-create-custom-node` |
+| localization | `localization` (CJK 폰트 포함) |
+| liveops | `build-live-game` |
+| compliance (배선만) | `implement-in-app-purchases` · `levelplay-unity-integration` |
+| 빌드·패키지 | `unity-cli` · `unity-package-management` · `optimize-web` |
+
+**도메인 판정은 여전히 우리 것이다.** 넘기는 것은 "Unity 에서 이걸 어떻게 하느냐"이지
+"무엇을 해야 하느냐"가 아니다. 예: 확률 공개 판정은 `compliance` 가 하고,
+통과한 계획을 Unity IAP 로 배선하는 일만 넘긴다.
+
+### 4.2 위임하지 않는 것 — 게이트 전부
+
+- **TDD 게이트** — 테스트 먼저. 러너 판정은 `detectUnityRunner` 가 계속 한다
+- **design 게이트** — 화면·미감은 Gemini 피드백을 거친다
+- **review** · **security** — 2차 의견과 심각도 판정
+- **compliance 판정** — 규정은 엔진이 아니라 플랫폼과 법령이 정한다
+- **track 추천** · **finish** — 사업 판단과 완료 게이트
+
+게이트까지 넘기면 하네스에 남는 게 없다. **위임 경계는 "남이 바꾸는 값이냐"로 긋는다.**
+
+### 4.3 기대치를 부풀리지 않는다
+
+Unity 문서가 스스로 적은 한계다 — 단순 uGUI 작업은 개선 폭이 작고,
+Sonnet 5 에서는 주로 **정확성**을 보탤 뿐 기능 대부분은 플러그인 없이도 만든다.
+도입 근거는 "빨라진다"가 아니라 **"API 오답과 버전 드리프트가 줄어든다"** 이다.
+플러그인이 있다고 우리 게이트를 얇게 하지 않는다.
+
+## 5. 하지 말 것
 
 - **AltTester 를 도입하지 않는다.** GPL-3.0 이고 SDK 를 게임 빌드에 심는 구조라
   상용 게임에 라이선스가 전염될 위험이 실재한다. 비GPL UPM 경로를 확보하기 전에는 쓰지 않는다.

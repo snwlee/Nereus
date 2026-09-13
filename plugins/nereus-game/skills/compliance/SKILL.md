@@ -93,6 +93,16 @@ echo '{"plan":{...}}' | node "${CLAUDE_PLUGIN_ROOT}/lib/compliance-check.mjs"
 확률 합은 소수 6자리로 반올림해 비교한다. 부동소수점 오차(`0.1 + 0.2 !== 0.3`)로
 **정상인 계획을 위반으로 잡으면 게이트를 못 쓴다.**
 
+## 3.1 통과한 뒤의 배선
+
+판정이 통과하면 **SDK 배선은 우리가 하지 않는다.** Unity 스택이고 공식 플러그인이
+`ready` 면(`nereus-game:unity` 4장) `implement-in-app-purchases` · `levelplay-unity-integration`
+으로 넘긴다. 로블록스면 `roblox` 스킬의 `MarketplaceService` 경로를 쓴다.
+
+**판정 자체는 넘기지 않는다.** 규정은 엔진이 아니라 플랫폼과 법령이 정한다 —
+엔진 플러그인은 확률 합이 100 인지, 금지 지역 대체 경로가 있는지 모른다.
+순서는 항상 **판정 먼저, 배선 나중**이다. 거꾸로 하면 이미 배선한 것을 고치게 된다.
+
 ## 4. 정책이 바뀌면
 
 `policy.json` 의 `checkedAt` 을 보고, 오래됐으면 `source` 를 다시 읽어 수치를 갱신한다.
