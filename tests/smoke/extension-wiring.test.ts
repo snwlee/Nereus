@@ -69,3 +69,22 @@ describe("확장 스택 파일 규칙 배선", () => {
     for (const st of decl.stacks) for (const r of st.testRe ?? []) expect(() => new RegExp(r)).not.toThrow();
   });
 });
+
+// 회귀: 저장소에서 doctor.mjs 진입점을 고쳤는데(`b4d84cb`) **버전을 안 올려서**
+// 설치 캐시(`~/.claude/plugins/cache/<mp>/<plugin>/<version>/`)가 낡은 채로 남았다.
+// 설치본의 `node doctor.mjs` 는 그 뒤로도 0바이트를 냈다(2026-09-13 실측).
+// 캐시는 **버전 키로 잡히므로** 버전이 그대로면 `plugin update` 가 가져올 것이 없다.
+// 설치 상태 자체는 환경 의존이라 테스트할 수 없다. 대신 그 앞단 — 마켓플레이스 등재와
+// 매니페스트의 버전이 어긋나지 않는 것 — 을 전 플러그인에 대해 강제한다.
+describe("플러그인 버전 정합", () => {
+  const mp = JSON.parse(read(".claude-plugin/marketplace.json"));
+
+  it.each(mp.plugins.map((p: any) => p.name))("%s 의 등재 버전과 매니페스트 버전이 같다", (name) => {
+    const entry = mp.plugins.find((p: any) => p.name === name);
+    // source 는 `./plugins/<dir>` 형태다. 디렉터리 이름을 이름에서 추측하지 않는다.
+    const dir = String(entry.source).replace(/^\.\//, "");
+    const manifest = JSON.parse(read(`${dir}/.claude-plugin/plugin.json`));
+    expect(manifest.name, `${dir} 의 매니페스트 이름이 등재와 다르다`).toBe(name);
+    expect(entry.version, `${name}: 등재 ${entry.version} ≠ 매니페스트 ${manifest.version}`).toBe(manifest.version);
+  });
+});
