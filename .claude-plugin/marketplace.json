@@ -52,6 +52,12 @@
       "source": "./plugins/nereus-l10n",
       "version": "0.1.0",
       "description": "현지화 하네스: 소스 문자열·스토어 등재·ASO 를 한 로케일 집합으로 판정"
+    },
+    {
+      "name": "nereus-3d",
+      "source": "./plugins/nereus-3d",
+      "version": "0.1.0",
+      "description": "three.js 런타임 하네스: dispose 누락·드로우콜·GPU 메모리 누수 판정"
     }
   ]
 }

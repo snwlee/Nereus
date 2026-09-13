@@ -1,0 +1,43 @@
+{
+  "note": "three.js 렌더 예산·dispose 판정용 데이터. 텍스처 슬롯은 three.js 가 정하고 three.js 가 바꾸는 값이라 코드에 박지 않는다. **예산 수치는 여기 없다** — 드로우콜 상한·텍스처 예산은 기기 등급·해상도·씬 복잡도가 정하는 운영값이라 정책 파일에 넣으면 정책인 척하면서 낡는다. 검사기가 입력으로 받는다.",
+  "source": "https://github.com/mrdoob/three.js",
+  "checkedAt": "2026-09-13",
+  "extractedFrom": "three.module.js REVISION 160 (도너 FindDifferences3D 동봉본)",
+  "howExtracted": "번들에서 `this.<name>map|Map = null` 을 뽑아 중복을 제거하고 matcap 을 더했다. **정규식을 두 번 고쳤다**: `[a-zA-Z]+Map` 은 소문자 `this.map`(가장 중요한 슬롯)을 놓쳤고, `Map` 으로 끝나지 않는 `matcap` 도 놓쳤다. 테스트가 전자를 잡았다. 상류 dev 에는 r160 에 없는 diffuseRoughnessMap 이 있다 — 슬롯 목록은 리비전마다 달라지므로 이 목록은 r160 기준이다.",
+  "textureSlotsWhy": "머티리얼을 dispose 하면서 일부 슬롯만 정리하면 나머지 텍스처가 GPU 에 남는다. 에러가 나지 않고 프레임만 떨어진다. 그래서 '무엇이 슬롯인가'를 코드가 아니라 데이터가 정하고, 낡으면 이 파일만 고친다.",
+  "sweepMarkerWhy": "본문이 속성을 순회하며 isTexture 를 보면 슬롯 나열보다 강하다 — 상류가 슬롯을 늘려도 자동으로 덮인다. 나열 방식은 통과시키되 이 목록의 확인일 기준임을 결과에 남긴다.",
+  "sweepMarker": "isTexture",
+  "leakAxesWhy": "render.calls 는 프레임마다 달라 누수 축이 아니다. 누수는 같은 상태로 돌아왔는데 늘어난 것이고, 그것은 memory 쪽에서만 의미가 있다.",
+  "leakAxes": [
+    "geometries",
+    "textures"
+  ],
+  "textureSlots": [
+    "alphaMap",
+    "anisotropyMap",
+    "aoMap",
+    "bumpMap",
+    "clearcoatMap",
+    "clearcoatNormalMap",
+    "clearcoatRoughnessMap",
+    "displacementMap",
+    "emissiveMap",
+    "envMap",
+    "gradientMap",
+    "iridescenceMap",
+    "iridescenceThicknessMap",
+    "lightMap",
+    "map",
+    "matcap",
+    "metalnessMap",
+    "normalMap",
+    "roughnessMap",
+    "sheenColorMap",
+    "sheenRoughnessMap",
+    "specularColorMap",
+    "specularIntensityMap",
+    "specularMap",
+    "thicknessMap",
+    "transmissionMap"
+  ]
+}

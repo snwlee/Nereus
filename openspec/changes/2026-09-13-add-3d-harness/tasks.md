@@ -3,11 +3,11 @@
 `/Volumes/SKHY1TB/workspace/FindDifferences3D` 는 **읽기 전용**이다. 고치지 않는다.
 이 저장소에 병렬 세션이 붙는다 — 커밋 전 `git log` 를 본다.
 
-- [ ] T1. 플러그인 뼈대와 텍스처 슬롯 데이터
+- [x] T1. 플러그인 뼈대와 텍스처 슬롯 데이터
   - Files: Create `plugins/nereus-3d/.claude-plugin/plugin.json` · Create `plugins/nereus-3d/three-budget.json` · Create `plugins/nereus-3d/lib/cli-input.mjs` · Create `plugins/nereus-3d/lib/budget-data.mjs` · Modify `.claude-plugin/marketplace.json` · Create `tests/lib/three-budget-data.test.ts`
   - Interfaces: Produces `loadBudgetData(): { source, checkedAt, textureSlots, textureSlotsWhy }`
   - Steps:
-    - [ ] 실패 테스트를 `tests/lib/three-budget-data.test.ts` 에 쓴다:
+    - [x] 실패 테스트를 `tests/lib/three-budget-data.test.ts` 에 쓴다:
       ```ts
       import { describe, it, expect } from "vitest";
       import { loadBudgetData } from "../../plugins/nereus-3d/lib/budget-data.mjs";
@@ -32,20 +32,21 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/three-budget-data.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] `plugin.json` 을 쓴다: name `nereus-3d`, version `0.1.0`, license `MIT`.
-    - [ ] `three-budget.json` 을 쓴다. `textureSlots` 는 three.js 머티리얼의 텍스처 슬롯이다:
-          `map` · `normalMap` · `roughnessMap` · `metalnessMap` · `aoMap` · `emissiveMap` ·
-          `bumpMap` · `displacementMap` · `alphaMap` · `envMap` · `lightMap` · `specularMap`.
+    - [x] 실패 확인: Run `npx vitest run tests/lib/three-budget-data.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] `plugin.json` 을 쓴다: name `nereus-3d`, version `0.1.0`, license `MIT`.
+    - [x] `three-budget.json` 을 쓴다. `textureSlots` 는 three.js 머티리얼의 텍스처 슬롯이다:
+          **추측하지 않고 실제 번들에서 뽑았다** — 도너 동봉 `three.module.js`(r160)에서
+          `this.<name>map|Map = null` 을 추출해 **26종**. `matcap` 은 `Map` 으로 끝나지 않아
+          손으로 더했고, 소문자 `this.map` 은 `[a-zA-Z]+Map` 이 놓쳐 테스트가 잡았다.
           `source` 는 three.js 머티리얼 문서 URL, `checkedAt` 은 오늘 날짜.
           `textureSlotsWhy` 에 "three.js 가 정하고 three.js 가 바꾸는 값이라 코드에 박지 않는다"를 적는다.
           **예산 기본값을 넣지 않는다** — 운영값이라 여기 두면 정책인 척하면서 낡는다.
-    - [ ] `lib/cli-input.mjs` 를 **이 플러그인의 것으로** 쓴다. 다른 플러그인에서 import 하지 않는다.
+    - [x] `lib/cli-input.mjs` 를 **이 플러그인의 것으로** 쓴다. 다른 플러그인에서 import 하지 않는다.
           `runCli` 는 사유만 stderr 로 내고 1 로 끝난다. 성공 경로에서 `process.exit(0)` 을 부르지 않는다.
-    - [ ] `lib/budget-data.mjs` 에 `loadBudgetData` 를 쓴다. 경로는 `fileURLToPath` 로 잡는다.
-    - [ ] 마켓플레이스에 `nereus-3d` 항목을 더한다(`source: ./plugins/nereus-3d`, version 일치).
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/three-budget-data.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-3d .claude-plugin/marketplace.json tests/lib && git commit -m "feat(3d): 플러그인 뼈대와 텍스처 슬롯 데이터"`
+    - [x] `lib/budget-data.mjs` 에 `loadBudgetData` 를 쓴다. 경로는 `fileURLToPath` 로 잡는다.
+    - [x] 마켓플레이스에 `nereus-3d` 항목을 더한다(`source: ./plugins/nereus-3d`, version 일치).
+    - [x] 통과 확인: Run `npx vitest run tests/lib/three-budget-data.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-3d .claude-plugin/marketplace.json tests/lib && git commit -m "feat(3d): 플러그인 뼈대와 텍스처 슬롯 데이터"`
   - Done when: `claude plugin validate plugins/nereus-3d` 가 통과하고 네 테스트가 초록이다
 
 - [ ] T2. 정적 검사기 — 불완전한 dispose

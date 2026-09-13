@@ -1,0 +1,20 @@
+{
+  "name": "nereus-3d",
+  "version": "0.1.0",
+  "description": "three.js 런타임 하네스: dispose 누락·드로우콜·GPU 메모리 누수를 판정한다. 문서는 만들지 않는다 — Context7 과 pmndrs MCP 가 이미 한다",
+  "author": {
+    "name": "snwlee",
+    "email": "PGRRR119@gmail.com"
+  },
+  "homepage": "https://github.com/snwlee/Nereus",
+  "repository": "https://github.com/snwlee/Nereus",
+  "license": "MIT",
+  "keywords": [
+    "threejs",
+    "webgl",
+    "webgpu",
+    "3d",
+    "performance",
+    "harness"
+  ]
+}
