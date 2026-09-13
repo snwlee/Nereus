@@ -71,8 +71,9 @@ ComfyUI (워크플로 JSON 고정)  →  Pixelorama / 후처리  →  엔진
 요구하는 폰트가 흔하다.** 웹폰트 라이선스(웹페이지 배포용)로 게임 빌드에 넣는 것은 위반이다.
 
 반입 전에 확인할 것: 게임/앱 임베딩 허용 여부, 사용자 수·매출 상한 조항, 재배포 조항.
-판정은 `nereus-game:localization` 의 폰트 절(`lib/font-check.mjs`)이 한다 —
-로케일 글리프 커버리지·서브셋 안전성·용량 예산까지 같이 본다.
+판정은 `nereus-l10n:typeface` 가 한다 — 로케일 스크립트 커버리지·서브셋 안전성·용량 예산까지
+같이 본다. 게임이 넘길 값(`requiredEmbedding: "game"`, 장르 `typography` 예산)은
+`nereus-game:localization` 에 적혀 있다.
 
 ## 4. 도구가 없을 때
 

@@ -46,6 +46,12 @@
       "author": {
         "name": "snwlee"
       }
+    },
+    {
+      "name": "nereus-l10n",
+      "source": "./plugins/nereus-l10n",
+      "version": "0.1.0",
+      "description": "현지화 하네스: 소스 문자열·스토어 등재·ASO 를 한 로케일 집합으로 판정"
     }
   ]
 }

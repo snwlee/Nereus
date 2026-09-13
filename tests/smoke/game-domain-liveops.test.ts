@@ -19,7 +19,6 @@ describe("새 도메인 배선", () => {
     const pairs: Array<[string, string]> = [
       ["sound", "sound-budget.mjs"],
       ["liveops", "liveops-plan.mjs"],
-      ["localization", "l10n-scan.mjs"],
     ];
     for (const [skill, lib] of pairs) {
       const md = fs.readFileSync(`plugins/nereus-game/skills/${skill}/SKILL.md`, "utf8");
@@ -44,9 +43,18 @@ describe("새 도메인 배선", () => {
     const md = fs.readFileSync("plugins/nereus-game/skills/gameux/SKILL.md", "utf8");
     expect(md).toContain("nereus-game:impact");
   });
-  it("localization 스킬이 폰트 검사기를 부른다", () => {
+  // 경계가 바뀌었다: 현지화 검사기는 nereus-l10n 으로 이관됐고(2026-09-13),
+  // 게임 스킬은 **형제 플러그인의 검사기를 프로세스로 부르지 않는다**.
+  // 설치 조합에 따라 조용히 깨지기 때문이다. 부르지 않는 것을 단언한다.
+  it("localization 스킬이 형제 플러그인의 검사기를 부르지 않는다", () => {
     const md = fs.readFileSync("plugins/nereus-game/skills/localization/SKILL.md", "utf8");
-    expect(md).toContain("font-check.mjs");
+    expect(md).not.toMatch(/node .*nereus-l10n/);
+    expect(md).not.toContain("nereus-l10n/lib");
+  });
+  it("localization 스킬이 게임 고유분을 데이터로 넘기는 법을 적는다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/localization/SKILL.md", "utf8");
+    expect(md).toContain("requiredEmbedding");
+    expect(md).toContain("typography");
   });
   it("asset 스킬이 폰트 라이선스를 경유 규칙으로 갖는다", () => {
     const md = fs.readFileSync("plugins/nereus-game/skills/asset/SKILL.md", "utf8");

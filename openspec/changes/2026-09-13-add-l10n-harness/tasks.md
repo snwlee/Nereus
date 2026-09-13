@@ -3,16 +3,16 @@
 `~/workspace/claude-skills/wallpaper-deploy` 와 WallpaperEngineApp 은 **읽기 전용**이다.
 이 저장소에 병렬 세션이 붙는다 — 커밋 전 `git log` 를 본다.
 
-- [ ] T1. 플러그인 뼈대와 로케일 모듈 이관 + Play 86종
+- [x] T1. 플러그인 뼈대와 로케일 모듈 이관 + Play 86종
   - Files: Create `plugins/nereus-l10n/.claude-plugin/plugin.json` · Move `plugins/nereus-game/locales.json` · Move `plugins/nereus-game/lib/locales.mjs` · Create `plugins/nereus-l10n/lib/cli-input.mjs` · Modify `.claude-plugin/marketplace.json` · Modify `tests/lib/locales.test.ts`
   - Interfaces: Produces `loadLocales(): { source, checkedAt, howCounted, base, stores, locales }`
   - Steps:
-    - [ ] **기존 `tests/lib/locales.test.ts` 4케이스를 새 경로로 돌린다. 케이스를 다시 쓰지 않는다** —
+    - [x] **기존 `tests/lib/locales.test.ts` 4케이스를 새 경로로 돌린다. 케이스를 다시 쓰지 않는다** —
           기존 케이스가 이관의 안전망이다. 새로 쓰면 커버리지가 조용히 줄고 줄어든 것이 초록으로 보인다:
       ```bash
       sed -i '' 's|plugins/nereus-game/lib/locales.mjs|plugins/nereus-l10n/lib/locales.mjs|' tests/lib/locales.test.ts
       ```
-    - [ ] 같은 파일에 86종 확장분을 덧붙인다:
+    - [x] 같은 파일에 86종 확장분을 덧붙인다:
       ```ts
       const BASES = ["legacy-estimate", "group-estimate", "measured"];
       it("Play 로케일이 86종이고 각각 코드·라벨·스크립트·방향을 갖는다", () => {
@@ -52,51 +52,51 @@
         expect(rtl.length).toBeGreaterThanOrEqual(7);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/locales.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] `plugin.json` 을 쓴다: name `nereus-l10n`, version `0.1.0`, license `MIT`.
-    - [ ] `locales.json` 을 쓴다. 86종은 아래 명령으로 뽑은 목록을 쓴다 — 요약 모델로 세지 않는다:
+    - [x] 실패 확인: Run `npx vitest run tests/lib/locales.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] `plugin.json` 을 쓴다: name `nereus-l10n`, version `0.1.0`, license `MIT`.
+    - [x] `locales.json` 을 쓴다. 86종은 아래 명령으로 뽑은 목록을 쓴다 — 요약 모델로 세지 않는다:
       ```bash
       curl -sL -A "Mozilla/5.0" "https://support.google.com/googleplay/android-developer/answer/9844778?hl=en" \
         | python3 -c "import sys,re,html; t=html.unescape(re.sub(r'<[^>]+>','\n',sys.stdin.read())); ls=[l.strip() for l in t.split('\n') if l.strip()]; s=next(i for i,l in enumerate(ls) if l.startswith('Afrikaans')); e=max(i for i,l in enumerate(ls) if l.startswith('Vietnamese')); rows=[re.match(r'^(.+?)\s+[-–—]\s+([A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,4})?)$',l) for l in ls[s:e+1]]; print(len([r for r in rows if r]))"
       ```
       `howCounted` 에 행 수·중복 0·파싱실패 0 과 "요약 질의는 110·86·176 으로 갈렸다"를 적는다.
       `expansion` 은 기존 8종만 `legacy-estimate`, 나머지는 스크립트 그룹 대표값 `group-estimate`.
-    - [ ] `lib/cli-input.mjs` 를 **이 플러그인의 것으로** 쓴다. 다른 플러그인에서 import 하지 않는다.
+    - [x] `lib/cli-input.mjs` 를 **이 플러그인의 것으로** 쓴다. 다른 플러그인에서 import 하지 않는다.
           `runCli` 는 사유만 stderr 로 내고 1 로 끝난다. 성공 경로에서 `process.exit(0)` 을 부르지 않는다.
-    - [ ] `git mv plugins/nereus-game/lib/locales.mjs plugins/nereus-l10n/lib/locales.mjs` 하고
+    - [x] `git mv plugins/nereus-game/lib/locales.mjs plugins/nereus-l10n/lib/locales.mjs` 하고
           `git mv plugins/nereus-game/locales.json plugins/nereus-l10n/locales.json` 한다.
           **세 export(`loadLocales`·`localeIds`·`expansionOf`)의 반환 형태를 바꾸지 않는다.** 확장은 새 키로만 한다.
-    - [ ] 마켓플레이스에 `nereus-l10n` 항목을 더한다(`source: ./plugins/nereus-l10n`, version 일치).
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/locales.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-l10n .claude-plugin/marketplace.json tests/lib/locales.test.ts && git commit -m "feat(l10n): 플러그인 뼈대 + 로케일 모듈 이관 + Play 86종"`
+    - [x] 마켓플레이스에 `nereus-l10n` 항목을 더한다(`source: ./plugins/nereus-l10n`, version 일치).
+    - [x] 통과 확인: Run `npx vitest run tests/lib/locales.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-l10n .claude-plugin/marketplace.json tests/lib/locales.test.ts && git commit -m "feat(l10n): 플러그인 뼈대 + 로케일 모듈 이관 + Play 86종"`
   - Done when: `claude plugin validate plugins/nereus-l10n` 이 통과하고 기존 4케이스가 단언 그대로 초록이며 새 5케이스가 통과한다
 
-- [ ] T2. 소스 l10n 검사기 이관 — 기존 테스트를 들고 간다
+- [x] T2. 소스 l10n 검사기 이관 — 기존 테스트를 들고 간다
   - Files: Create `plugins/nereus-l10n/lib/l10n-scan.mjs` · Modify `tests/lib/l10n-scan.test.ts` · Delete `plugins/nereus-game/lib/l10n-scan.mjs`
   - Interfaces: Produces `scanL10n({ tables, sources, maxWidth, fonts, accessor, exclude }): { violations, skipped }`
   - Steps:
-    - [ ] **기존 테스트를 새 경로로 돌린다. 케이스를 다시 쓰지 않는다** — 기존 23케이스(`l10n-scan.test.ts`)가 이관의 안전망이다.
+    - [x] **기존 테스트를 새 경로로 돌린다. 케이스를 다시 쓰지 않는다** — 기존 23케이스(`l10n-scan.test.ts`)가 이관의 안전망이다.
           새로 쓰면 커버리지가 조용히 줄고, 줄어든 것이 초록으로 보인다:
       ```bash
       sed -i '' 's|plugins/nereus-game/lib/l10n-scan.mjs|plugins/nereus-l10n/lib/l10n-scan.mjs|' tests/lib/l10n-scan.test.ts
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/l10n-scan.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] `git mv plugins/nereus-game/lib/l10n-scan.mjs plugins/nereus-l10n/lib/l10n-scan.mjs` 한다.
+    - [x] 실패 확인: Run `npx vitest run tests/lib/l10n-scan.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] `git mv plugins/nereus-game/lib/l10n-scan.mjs plugins/nereus-l10n/lib/l10n-scan.mjs` 한다.
           로케일은 T1 이 옮긴 `./locales.mjs` 에서 읽는다. **반환 형태를 바꾸지 않는다.**
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/l10n-scan.test.ts` · Expected: PASS (23케이스 그대로)
-    - [ ] 커밋: `git add plugins tests && git commit -m "refactor(l10n): 소스 l10n 검사기와 로케일 모듈 이관"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/l10n-scan.test.ts` · Expected: PASS (23케이스 그대로)
+    - [x] 커밋: `git add plugins tests && git commit -m "refactor(l10n): 소스 l10n 검사기와 로케일 모듈 이관"`
   - Done when: 기존 23케이스가 **케이스 수 그대로** 초록이고 `plugins/nereus-game/lib/l10n-scan.mjs` 가 없다
 
-- [ ] T3. 폰트 검사기 이관과 requiredEmbedding 일반화
+- [x] T3. 폰트 검사기 이관과 requiredEmbedding 일반화
   - Files: Create `plugins/nereus-l10n/lib/font-check.mjs` · Modify `tests/lib/font-check.test.ts` · Delete `plugins/nereus-game/lib/font-check.mjs`
   - Interfaces: Produces `checkFonts({ fonts, targetLocales, userGeneratedText, requiredEmbedding, budget }): { violations }`
   - Steps:
-    - [ ] **기존 13케이스를 새 경로로 돌린다.** 임베딩 관련 케이스는 `requiredEmbedding: "game"` 을
+    - [x] **기존 13케이스를 새 경로로 돌린다.** 임베딩 관련 케이스는 `requiredEmbedding: "game"` 을
           넘기도록 인자만 더한다 — **단언을 바꾸지 않는다.** 단언을 바꾸면 이관이 아니라 동작 변경이다:
       ```bash
       sed -i '' 's|plugins/nereus-game/lib/font-check.mjs|plugins/nereus-l10n/lib/font-check.mjs|; s|plugins/nereus-game/lib/cli-input.mjs|plugins/nereus-l10n/lib/cli-input.mjs|' tests/lib/font-check.test.ts
       ```
-    - [ ] 같은 파일에 새 동작 3케이스를 덧붙인다:
+    - [x] 같은 파일에 새 동작 3케이스를 덧붙인다:
       ```ts
       const base = { name: "GameSans", embedding: ["game"], scripts: ["latin", "hangul"], sizeKb: 100, minSizePx: 18, subset: false };
       it("요구 임베딩을 주고 충족하면 통과한다", () => {
@@ -112,11 +112,11 @@
         expect(r.violations.map((v: any) => v.code)).toContain("required-embedding-undeclared");
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/font-check.test.ts` · Expected: FAIL
-    - [ ] `git mv` 로 옮기고 `embedding.includes("game")` 하드코딩을 `requiredEmbedding` 입력으로 바꾼다.
+    - [x] 실패 확인: Run `npx vitest run tests/lib/font-check.test.ts` · Expected: FAIL
+    - [x] `git mv` 로 옮기고 `embedding.includes("game")` 하드코딩을 `requiredEmbedding` 입력으로 바꾼다.
           장르 예산은 `budget` 입력으로 받는다 — `loadProfile` 을 부르지 않는다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/font-check.test.ts` · Expected: PASS (13+3 케이스)
-    - [ ] 커밋: `git add plugins tests && git commit -m "refactor(l10n): 폰트 검사기 이관 + requiredEmbedding 일반화"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/font-check.test.ts` · Expected: PASS (13+3 케이스)
+    - [x] 커밋: `git add plugins tests && git commit -m "refactor(l10n): 폰트 검사기 이관 + requiredEmbedding 일반화"`
   - Done when: 기존 13케이스가 단언 그대로 초록이고 새 3케이스가 통과하며 `plugins/nereus-game/lib/font-check.mjs` 가 없다
 
 - [ ] T4. 스토어 등재 게이트 — 커버리지와 선언 대조

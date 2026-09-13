@@ -1,0 +1,1141 @@
+{
+  "note": "로케일 데이터. 소스 문자열 표의 언어 집합과 스토어 로케일 집합은 **다른 집합**이다 — Play 는 ko-KR, 소스 표는 ko 를 쓴다. 하나로 뭉치면 한쪽이 반드시 깨지므로 별칭 항목으로 둘 다 둔다. expansion 은 영어 대비 평균 문자열 길이 비, avgCharWidth 는 1em 기준 평균 자폭 비율로 **다른 축**이다 — 한글은 글자 수가 줄지만(expansion 0.8) 글자당 폭은 전각이라 라틴의 두 배다(avgCharWidth 1.0).",
+  "source": "https://support.google.com/googleplay/android-developer/answer/9844778",
+  "checkedAt": "2026-09-13",
+  "howCounted": "출처 페이지 HTML 의 목록 블록(Afrikaans~Vietnamese)을 파싱해 직접 셌다 — 행 86 · 고유 코드 86 · 중복 0 · 파싱 실패 0. 같은 페이지에 요약 질의를 세 번 던졌을 때 110·86·176 으로 갈렸다. 요약 모델은 세는 데 못 믿는다.",
+  "base": "en",
+  "stores": {
+    "play": {
+      "source": "https://support.google.com/googleplay/android-developer/answer/9859152",
+      "checkedAt": "2026-09-13",
+      "localeCodeStyle": "play",
+      "fieldsWhy": "넘으면 잘린 채 발행되고 에러가 나지 않는다.",
+      "fields": {
+        "title": 30,
+        "shortDescription": 80,
+        "fullDescription": 4000
+      }
+    },
+    "appStore": {
+      "note": "이번 범위 밖. 자리만 둔다 — 로케일 코드 형식(ko·zh-Hans)과 필드 길이 제한이 Play 와 다르다. 한 벌로 뭉치면 반드시 갈린다."
+    }
+  },
+  "locales": {
+    "af": {
+      "label": "Afrikaans",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "am": {
+      "label": "Amharic",
+      "script": "ethiopic",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ar": {
+      "label": "Arabic",
+      "script": "arabic",
+      "direction": "rtl",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "az-AZ": {
+      "label": "Azerbaijani",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "be": {
+      "label": "Belarusian",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "bg": {
+      "label": "Bulgarian",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "bn-BD": {
+      "label": "Bangla",
+      "script": "bengali",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ca": {
+      "label": "Catalan",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "cs-CZ": {
+      "label": "Czech",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "da-DK": {
+      "label": "Danish",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "de": {
+      "label": "German",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.35,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [],
+      "aliasOf": "de-DE",
+      "why": "소스 문자열 표가 쓰는 맨 언어 코드다. 스토어 로케일이 아니라 스토어 판정 대상에서 빠진다."
+    },
+    "de-DE": {
+      "label": "German",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.35,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "el-GR": {
+      "label": "Greek",
+      "script": "greek",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "en": {
+      "label": "English (United States)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [],
+      "aliasOf": "en-US",
+      "why": "소스 문자열 표가 쓰는 맨 언어 코드다. 스토어 로케일이 아니라 스토어 판정 대상에서 빠진다."
+    },
+    "en-AU": {
+      "label": "English (Australia)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "en-CA": {
+      "label": "English (Canada)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "en-GB": {
+      "label": "English (United Kingdom)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "en-IN": {
+      "label": "English",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "en-SG": {
+      "label": "English",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "en-US": {
+      "label": "English (United States)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "en-ZA": {
+      "label": "English",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.0,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "es": {
+      "label": "Spanish (Spain)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [],
+      "aliasOf": "es-ES",
+      "why": "소스 문자열 표가 쓰는 맨 언어 코드다. 스토어 로케일이 아니라 스토어 판정 대상에서 빠진다."
+    },
+    "es-419": {
+      "label": "Spanish (Latin America)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "es-ES": {
+      "label": "Spanish (Spain)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "es-US": {
+      "label": "Spanish (United States)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "et": {
+      "label": "Estonian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "eu-ES": {
+      "label": "Basque",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fa": {
+      "label": "Persian",
+      "script": "arabic",
+      "direction": "rtl",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fa-AE": {
+      "label": "Persian",
+      "script": "arabic",
+      "direction": "rtl",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fa-AF": {
+      "label": "Persian",
+      "script": "arabic",
+      "direction": "rtl",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fa-IR": {
+      "label": "Persian",
+      "script": "arabic",
+      "direction": "rtl",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fi-FI": {
+      "label": "Finnish",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fil": {
+      "label": "Filipino",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fr": {
+      "label": "French (France)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [],
+      "aliasOf": "fr-FR",
+      "why": "소스 문자열 표가 쓰는 맨 언어 코드다. 스토어 로케일이 아니라 스토어 판정 대상에서 빠진다."
+    },
+    "fr-CA": {
+      "label": "French (Canada)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "fr-FR": {
+      "label": "French (France)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "gl-ES": {
+      "label": "Galician",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "gu": {
+      "label": "Gujarati",
+      "script": "gujarati",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "hi-IN": {
+      "label": "Hindi",
+      "script": "devanagari",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "hr": {
+      "label": "Croatian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "hu-HU": {
+      "label": "Hungarian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "hy-AM": {
+      "label": "Armenian",
+      "script": "armenian",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "id": {
+      "label": "Indonesian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "is-IS": {
+      "label": "Icelandic",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "it-IT": {
+      "label": "Italian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "iw-IL": {
+      "label": "Hebrew",
+      "script": "hebrew",
+      "direction": "rtl",
+      "expansion": 0.9,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ja": {
+      "label": "Japanese",
+      "script": "kana-kanji",
+      "direction": "ltr",
+      "expansion": 0.6,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [],
+      "aliasOf": "ja-JP",
+      "why": "소스 문자열 표가 쓰는 맨 언어 코드다. 스토어 로케일이 아니라 스토어 판정 대상에서 빠진다."
+    },
+    "ja-JP": {
+      "label": "Japanese",
+      "script": "kana-kanji",
+      "direction": "ltr",
+      "expansion": 0.6,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ka-GE": {
+      "label": "Georgian",
+      "script": "georgian",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "kk": {
+      "label": "Kazakh",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "km-KH": {
+      "label": "Khmer",
+      "script": "khmer",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "kn-IN": {
+      "label": "Kannada",
+      "script": "kannada",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ko": {
+      "label": "Korean",
+      "script": "hangul",
+      "direction": "ltr",
+      "expansion": 0.8,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [],
+      "aliasOf": "ko-KR",
+      "why": "소스 문자열 표가 쓰는 맨 언어 코드다. 스토어 로케일이 아니라 스토어 판정 대상에서 빠진다."
+    },
+    "ko-KR": {
+      "label": "Korean",
+      "script": "hangul",
+      "direction": "ltr",
+      "expansion": 0.8,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ky-KG": {
+      "label": "Kyrgyz",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "lo-LA": {
+      "label": "Lao",
+      "script": "lao",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "lt": {
+      "label": "Lithuanian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "lv": {
+      "label": "Latvian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "mk-MK": {
+      "label": "Macedonian",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ml-IN": {
+      "label": "Malayalam",
+      "script": "malayalam",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "mn-MN": {
+      "label": "Mongolian",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "mr-IN": {
+      "label": "Marathi",
+      "script": "devanagari",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ms": {
+      "label": "Malay",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ms-MY": {
+      "label": "Malay (Malaysia)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "my-MM": {
+      "label": "Burmese",
+      "script": "myanmar",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ne-NP": {
+      "label": "Nepali",
+      "script": "devanagari",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "nl-NL": {
+      "label": "Dutch",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "no-NO": {
+      "label": "Norwegian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "pa": {
+      "label": "Punjabi",
+      "script": "gurmukhi",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "pl-PL": {
+      "label": "Polish",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "pt-BR": {
+      "label": "Portuguese (Brazil)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "pt-PT": {
+      "label": "Portuguese (Portugal)",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "rm": {
+      "label": "Romansh",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ro": {
+      "label": "Romanian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.25,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ru-RU": {
+      "label": "Russian",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "si-LK": {
+      "label": "Sinhala",
+      "script": "sinhala",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "sk": {
+      "label": "Slovak",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "sl": {
+      "label": "Slovenian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "sq": {
+      "label": "Albanian",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "sr": {
+      "label": "Serbian",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "sv-SE": {
+      "label": "Swedish",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.3,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "sw": {
+      "label": "Swahili",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ta-IN": {
+      "label": "Tamil",
+      "script": "tamil",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "te-IN": {
+      "label": "Telugu",
+      "script": "telugu",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "th": {
+      "label": "Thai",
+      "script": "thai",
+      "direction": "ltr",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.6,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "tr-TR": {
+      "label": "Turkish",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "uk": {
+      "label": "Ukrainian",
+      "script": "cyrillic",
+      "direction": "ltr",
+      "expansion": 1.2,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "ur": {
+      "label": "Urdu",
+      "script": "arabic",
+      "direction": "rtl",
+      "expansion": 1.1,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "vi": {
+      "label": "Vietnamese",
+      "script": "latin",
+      "direction": "ltr",
+      "expansion": 1.15,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 0.5,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "zh": {
+      "label": "Chinese (Simplified)",
+      "script": "han",
+      "direction": "ltr",
+      "expansion": 0.6,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [],
+      "aliasOf": "zh-CN",
+      "why": "소스 문자열 표가 쓰는 맨 언어 코드다. 스토어 로케일이 아니라 스토어 판정 대상에서 빠진다."
+    },
+    "zh-CN": {
+      "label": "Chinese (Simplified)",
+      "script": "han",
+      "direction": "ltr",
+      "expansion": 0.6,
+      "expansionBasis": "legacy-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "legacy-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "zh-HK": {
+      "label": "Chinese (Hong Kong)",
+      "script": "han",
+      "direction": "ltr",
+      "expansion": 0.6,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    },
+    "zh-TW": {
+      "label": "Chinese (Traditional)",
+      "script": "han",
+      "direction": "ltr",
+      "expansion": 0.6,
+      "expansionBasis": "group-estimate",
+      "avgCharWidth": 1.0,
+      "avgCharWidthBasis": "group-estimate",
+      "stores": [
+        "play"
+      ]
+    }
+  }
+}

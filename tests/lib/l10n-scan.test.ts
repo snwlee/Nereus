@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { scanL10n } from "../../plugins/nereus-game/lib/l10n-scan.mjs";
-import { loadLocales } from "../../plugins/nereus-game/lib/locales.mjs";
+import { scanL10n } from "../../plugins/nereus-l10n/lib/l10n-scan.mjs";
+import { loadLocales } from "../../plugins/nereus-l10n/lib/locales.mjs";
 
 const locales = loadLocales();
 const codes = (r: any) => r.violations.map((v: any) => v.code);

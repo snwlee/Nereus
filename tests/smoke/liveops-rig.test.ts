@@ -34,15 +34,12 @@ describe("도메인 검사기 실행 진입점", () => {
     const out = runNode("plugins/nereus-game/lib/impact-budget.mjs", JSON.stringify({ genre: "battle-pvp", plan, soundCues: ["swing"] }));
     expect(JSON.parse(out).violations.map((v: any) => v.code)).toContain("sound-missing");
   });
-  it("폰트 검사기를 프로세스로 돌려 라이선스 위반을 받는다", () => {
-    const fonts = [{ name: "WebOnly", embedding: ["web"], scripts: ["latin"], sizeKb: 100, minSizePx: 20 }];
-    const out = runNode("plugins/nereus-game/lib/font-check.mjs", JSON.stringify({ genre: "obby-platformer", fonts, targetLocales: ["en"] }));
-    expect(JSON.parse(out).violations.map((v: any) => v.code)).toContain("license-embedding");
-  });
+  // 폰트 검사기 케이스는 tests/smoke/l10n-rig.test.ts 로 **옮겼다** —
+  // font-check.mjs 가 nereus-l10n 으로 이관됐다(2026-09-13). 지운 것이 아니다.
   // gemini 리뷰 [HIGH] 후속: 사유 있는 메시지를 만들어도 uncaught 로 던지면 스택트레이스에 묻힌다.
   // CLI 는 사유만 내고 종료해야 한다.
   it("깨진 JSON 은 스택트레이스 없이 사유만 내고 종료한다", () => {
-    for (const lib of ["sound-budget", "liveops-plan", "impact-budget", "font-check"]) {
+    for (const lib of ["sound-budget", "liveops-plan", "impact-budget"]) {
       let stderr = "";
       let status = 0;
       try {

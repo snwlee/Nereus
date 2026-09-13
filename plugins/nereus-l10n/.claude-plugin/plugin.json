@@ -1,0 +1,20 @@
+{
+  "name": "nereus-l10n",
+  "version": "0.1.0",
+  "description": "현지화 하네스: 소스 문자열·스토어 등재 텍스트·이미지 안 텍스트를 한 로케일 집합으로 판정한다. 무엇을 번역하지 않을지도 선언 대상이다",
+  "author": {
+    "name": "snwlee",
+    "email": "PGRRR119@gmail.com"
+  },
+  "homepage": "https://github.com/snwlee/Nereus",
+  "repository": "https://github.com/snwlee/Nereus",
+  "license": "MIT",
+  "keywords": [
+    "l10n",
+    "localization",
+    "i18n",
+    "store-listing",
+    "aso",
+    "harness"
+  ]
+}
