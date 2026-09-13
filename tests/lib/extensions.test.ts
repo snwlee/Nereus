@@ -24,12 +24,12 @@ describe("loadExtensions", () => {
     const readJson = () => {
       throw new Error("bad json");
     };
-    expect(loadExtensions({ readJson, records })).toEqual({ routes: [], stacks: [] });
+    expect(loadExtensions({ readJson, records })).toEqual({ routes: [], stacks: [], companions: [] });
   });
 
   it("비활성 플러그인은 로드하지 않는다", () => {
     const readJson = () => ({ routes: [{ skill: "x:y", why: "z", re: "z" }] });
-    expect(loadExtensions({ readJson, records: [{ name: "nereus-game@nereus", enabled: false, installPath: "/p/game" }] })).toEqual({ routes: [], stacks: [] });
+    expect(loadExtensions({ readJson, records: [{ name: "nereus-game@nereus", enabled: false, installPath: "/p/game" }] })).toEqual({ routes: [], stacks: [], companions: [] });
   });
 
   it("companions 를 모은다 — 설치 명령은 선언에서 유도한다", () => {

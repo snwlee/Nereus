@@ -34,3 +34,31 @@
     - [x] Run `node plugins/nereus/skills/build/scripts/run-tests.mjs` · Expected: PASS
     - [x] 커밋한다. 문서를 테스트 뒤에 쓰지 않는다 — evidence 가 STALE 이 된다
   - Done when: 전체 초록이고 evidence FRESH 다
+
+## 2차 — 설치·업데이트 경로
+
+판정만으로는 반쪽이다. 설치돼 있지 않을 때 **어떻게 깔지**, 깔려 있을 때 **어떻게 올릴지**가 없었다.
+
+- [x] T5. 확장 계약에 companions 를 더한다
+  - Files: Modify `plugins/nereus/hooks/scripts/lib/extensions.mjs` · Modify `tests/lib/extensions.test.ts`
+  - Steps:
+    - [x] 실패 테스트: 수집 · 유도 불가 선언 버리기 · 미선언 확장도 안 깨짐
+    - [x] `toCompanion` 을 더한다. 명령 문자열은 받지 않는다 — id·marketplace·scope 에서 유도한다
+    - [x] 기존 반환 형태 비교 테스트를 `companions: []` 포함으로 갱신한다
+  - Done when: `npx vitest run tests/lib/extensions.test.ts` 초록
+
+- [x] T6. setup 이 상태에 맞는 명령을 낸다
+  - Files: Add `plugins/nereus/skills/setup/scripts/companions.mjs` · Add `tests/lib/companions.test.ts` · Modify `plugins/nereus/skills/setup/SKILL.md`
+  - Steps:
+    - [x] 실패 테스트 6갈래: 미설치 · 설치됨(업데이트) · 비활성(enable) · 무관 · when 없음 · 스택 선언 없음
+    - [x] `companionRows` · `renderCompanions` 를 만든다. 코어는 Unity 를 모른다
+    - [x] setup SKILL 3장에 실행 절차를 적는다
+  - Done when: `npx vitest run tests/lib/companions.test.ts` 초록
+
+- [x] T7. 게임 확장이 Unity 플러그인을 선언한다
+  - Files: Modify `plugins/nereus-game/nereus-extension.json` · Modify `plugins/nereus-game/skills/unity/SKILL.md`
+  - Steps:
+    - [x] `companions` 에 `unity@unity-agent-plugin` 을 `when.stack: "unity"`, `scope: "project"` 로 선언
+    - [x] unity 스킬의 `absent`·`disabled` 분기에서 setup 표를 가리킨다. **명령을 두 번 적지 않는다**
+    - [x] Unity 버전을 올리면 플러그인도 올린다고 적는다 — 갱신을 못 받으면 위임할 이유가 사라진다
+  - Done when: 확장 선언 → setup 표 → 명령까지 실제로 이어지는 것을 확인한다

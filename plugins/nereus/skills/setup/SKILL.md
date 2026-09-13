@@ -54,6 +54,22 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/doctor.mjs"
 - 공식 마켓플레이스: skill-creator, plugin-dev, hookify, mcp-server-dev, claude-security, security-guidance, code-simplifier, 그리고 스택 LSP(typescript-lsp, jdtls-lsp, kotlin-lsp)
 - credstore: `/plugin install credstore@nereus` (CredStore npm 게시 후 동작)
 
+### 확장이 선언한 동반 플러그인
+
+위 목록은 코어가 아는 것이고, **설치된 확장이 자기 것을 따로 선언한다.**
+코어는 게임·모바일 같은 도메인을 모르므로 여기서 데이터로만 받는다.
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/companions.mjs"
+```
+
+- 현재 프로젝트의 스택과 **관련 있는 것만** 나온다. 관련 없으면 권하지 않는다 —
+  안 쓸 플러그인의 스킬이 상시 로딩되면 토큰 예산만 깎인다.
+- 상태에 따라 다음 명령이 달라진다: 미설치면 마켓 추가 + 설치, **설치돼 있으면 업데이트**,
+  꺼져 있으면 enable. 설치만 안내하고 업데이트를 안 하면 낡은 채로 남는다.
+- 명령은 선언에서 유도된다. 확장이 명령 문자열을 직접 적지 않는다.
+- 실행은 여기서도 **사용자 승인 뒤**다. 업데이트는 재시작해야 적용된다.
+
 ## 4. 설정 파일
 
 사용자 전역 설정이 없으면 만든다. 위치는 macOS `~/.config/nereus/config.json`, Windows `%APPDATA%\nereus\config.json`.

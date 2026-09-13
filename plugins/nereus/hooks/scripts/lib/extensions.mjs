@@ -34,6 +34,25 @@ function toRoute(raw) {
   }
 }
 
+/**
+ * 동반 플러그인 한 건. **설치 명령을 문자열로 받지 않는다** — id·marketplace·scope 에서
+ * 유도한다. 명령을 손으로 적게 하면 id 와 명령이 서로 어긋나도 아무도 모른다.
+ * 유도할 수 없는 선언(id·marketplace 없음)은 버린다.
+ */
+function toCompanion(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const { id, marketplace, label, why, scope, when } = raw;
+  if (typeof id !== "string" || !id || typeof marketplace !== "string" || !marketplace) return null;
+  return {
+    id,
+    marketplace,
+    label: typeof label === "string" ? label : id,
+    why: typeof why === "string" ? why : "",
+    scope: typeof scope === "string" ? scope : "user",
+    when: when && typeof when === "object" ? when : null,
+  };
+}
+
 function toStack(raw) {
   if (!raw || typeof raw !== "object") return null;
   return typeof raw.name === "string" && typeof raw.marker === "string" ? { ...raw } : null;
@@ -45,12 +64,15 @@ function toStack(raw) {
  * `records` 를 직접 주면 그것을 쓰고(테스트·재사용), 없으면 `pluginsFile`/`settingsFile` 로
  * readInventory 를 돌린다. 둘 다 없으면 사용자 홈의 기본 경로를 쓴다.
  *
- * @returns {{ routes: Array<{skill: string, why: string, re: RegExp}>, stacks: Array<object> }}
+ * @returns {{ routes: Array<{skill: string, why: string, re: RegExp}>, stacks: Array<object>,
+ *             companions: Array<{id: string, marketplace: string, label: string, why: string,
+ *                                scope: string, when: object|null}> }}
  */
 export function loadExtensions({ readJson = defaultReadJson, records, pluginsFile, settingsFile, home } = {}) {
   const list = records ?? inventoryOf({ readJson, pluginsFile, settingsFile, home });
   const routes = [];
   const stacks = [];
+  const companions = [];
   for (const rec of Array.isArray(list) ? list : []) {
     if (!rec?.enabled || typeof rec.installPath !== "string" || !rec.installPath) continue;
     let decl;
@@ -68,8 +90,12 @@ export function loadExtensions({ readJson = defaultReadJson, records, pluginsFil
       const stack = toStack(raw);
       if (stack) stacks.push(stack);
     }
+    for (const raw of Array.isArray(decl.companions) ? decl.companions : []) {
+      const companion = toCompanion(raw);
+      if (companion) companions.push(companion);
+    }
   }
-  return { routes, stacks };
+  return { routes, stacks, companions };
 }
 
 function inventoryOf({ readJson, pluginsFile, settingsFile, home }) {
