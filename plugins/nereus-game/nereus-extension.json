@@ -60,6 +60,11 @@
       "skill": "nereus-game:impact",
       "why": "타격감·임팩트·연출 예산",
       "re": "타격감|임팩트|히트스톱|화면\\s?흔들|스크린셰이크|파티클|연출|게임필|game\\s?feel"
+    },
+    {
+      "skill": "nereus-game:compliance",
+      "why": "확률형 아이템·규정 준수",
+      "re": "확률형|뽑기|가챠|루트\\s?박스|lootbox|랜덤\\s?상자|확률\\s?공개|규정|심의|연령\\s?등급"
     }
   ],
   "stacks": [

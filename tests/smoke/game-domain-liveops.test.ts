@@ -56,4 +56,18 @@ describe("새 도메인 배선", () => {
     const md = fs.readFileSync("plugins/nereus-game/skills/gameux/SKILL.md", "utf8");
     expect(md).toMatch(/폰트/);
   });
+  it("compliance 스킬이 배선돼 있고 자기 검사기를 부른다", () => {
+    const skills = ext.routes.map((r: any) => r.skill);
+    expect(skills).toContain("nereus-game:compliance");
+    const md = fs.readFileSync("plugins/nereus-game/skills/compliance/SKILL.md", "utf8");
+    expect(md).toContain("compliance-check.mjs");
+  });
+  it("compliance SKILL 이 출처를 밝힌다 — 법적 요건은 근거 없이 적지 않는다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/compliance/SKILL.md", "utf8");
+    expect(md).toContain("create.roblox.com");
+  });
+  it("balance 가 확률 아이템을 compliance 로 넘긴다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/balance/SKILL.md", "utf8");
+    expect(md).toContain("nereus-game:compliance");
+  });
 });

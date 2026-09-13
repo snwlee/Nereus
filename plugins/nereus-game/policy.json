@@ -1,0 +1,19 @@
+{
+  "source": "https://create.roblox.com/docs/production/monetization/paid-random-items",
+  "checkedAt": "2026-09-13",
+  "note": "플랫폼 정책은 남이 정하고 남이 바꾼다. 코드에 박지 말고 여기에 두고, 바뀌면 checkedAt 을 갱신한다.",
+  "paidRandom": {
+    "oddsDecimalsForDisclaimer": 4,
+    "baseSurfaces": ["game"],
+    "markets": {
+      "KR": {
+        "surfaces": ["game", "website", "ad"],
+        "law": "게임산업진흥에 관한 법률(확률형 아이템 정보공개 의무)",
+        "effective": "2024-03-22",
+        "penalty": "시정명령 불이행 시 2년 이하 징역 또는 2천만원 이하 벌금",
+        "source": "https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=2858&ccfNo=1&cciNo=2&cnpClsNo=2",
+        "unresolved": "로블록스 UGC 경험 제작자가 직접 의무 주체인지는 미확정이다. 법률 자문 영역이며 하네스가 판정하지 않는다."
+      }
+    }
+  }
+}

@@ -68,4 +68,12 @@ describe("도메인 검사기 실행 진입점", () => {
     const parsed = JSON.parse(out);
     expect(parsed.violations.length).toBe(8000);
   });
+  it("compliance 검사기를 프로세스로 돌려 확률 합 위반을 받는다", () => {
+    const plan = { markets: ["KR"], restrictedFallback: "", boxes: [{ name: "egg", paid: true, disclosedBeforePurchase: true, disclosureSurfaces: ["game"], outcomes: [{ item: "a", odds: 50 }, { item: "b", odds: 30 }] }] };
+    const out = runNode("plugins/nereus-game/lib/compliance-check.mjs", JSON.stringify({ plan }));
+    const codes = JSON.parse(out).violations.map((v: any) => v.code);
+    expect(codes).toContain("odds-sum");
+    expect(codes).toContain("no-restricted-fallback");
+    expect(codes).toContain("disclosure-surface");
+  });
 });
