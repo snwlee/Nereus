@@ -1,0 +1,44 @@
+{
+  "note": "광고 정책 데이터. 구글이 정하고 구글이 바꾸는 값이라 코드에 박지 않고 출처·확인일과 함께 둔다. 우리 계정의 실측 수익 수치(eCPM·RPM·show rate 실제값)는 여기 넣지 않는다 — 시점 종속이라 빨리 낡고, 조용히 낡은 수치가 틀린 확신을 만든다.",
+  "source": "https://developers.google.com/admob/android/test-ads",
+  "checkedAt": "2026-09-13",
+  "formats": [
+    "appOpen",
+    "anchoredAdaptiveBanner",
+    "fixedBanner",
+    "interstitial",
+    "rewarded",
+    "rewardedInterstitial",
+    "native"
+  ],
+  "interruptiveFormatsWhy": "사용자가 시작하지 않았는데 화면을 덮는 포맷. 첫 세션 보호 대상이다. 리워드는 사용자가 스스로 고른 것이라 빠지고, 배너는 화면을 덮지 않으며, 앱오픈은 실행 횟수로 따로 게이트된다.",
+  "interruptiveFormats": [
+    "interstitial",
+    "rewardedInterstitial",
+    "native"
+  ],
+  "userInitiatedFormats": [
+    "rewarded"
+  ],
+  "demoUnitsWhy": "디버그 빌드가 프로덕션 광고 단위에 트래픽을 만들면 무효 트래픽으로 집계되고 누적되면 계정이 정지된다. 되돌릴 수 없는 손실이라 판정을 코드가 아니라 표로 둔다.",
+  "demoUnits": {
+    "android": {
+      "appOpen": "ca-app-pub-3940256099942544/9257395921",
+      "anchoredAdaptiveBanner": "ca-app-pub-3940256099942544/9214589741",
+      "fixedBanner": "ca-app-pub-3940256099942544/6300978111",
+      "interstitial": "ca-app-pub-3940256099942544/1033173712",
+      "rewarded": "ca-app-pub-3940256099942544/5224354917",
+      "rewardedInterstitial": "ca-app-pub-3940256099942544/5354046379",
+      "native": "ca-app-pub-3940256099942544/2247696110"
+    },
+    "ios": {
+      "appOpen": "ca-app-pub-3940256099942544/5575463023",
+      "anchoredAdaptiveBanner": "ca-app-pub-3940256099942544/2435281174",
+      "fixedBanner": "ca-app-pub-3940256099942544/2934735716",
+      "interstitial": "ca-app-pub-3940256099942544/4411468910",
+      "rewarded": "ca-app-pub-3940256099942544/1712485313",
+      "rewardedInterstitial": "ca-app-pub-3940256099942544/6978759866",
+      "native": "ca-app-pub-3940256099942544/3986624511"
+    }
+  }
+}

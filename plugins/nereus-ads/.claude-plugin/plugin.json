@@ -1,0 +1,19 @@
+{
+  "name": "nereus-ads",
+  "version": "0.1.0",
+  "description": "AdMob 운영 하네스: 무효 트래픽 방어·첫 세션 보호·동의 순서 게이트와 퍼널 수익 레버 조언. 게임·비게임을 가리지 않는다",
+  "author": {
+    "name": "snwlee",
+    "email": "PGRRR119@gmail.com"
+  },
+  "homepage": "https://github.com/snwlee/Nereus",
+  "repository": "https://github.com/snwlee/Nereus",
+  "license": "MIT",
+  "keywords": [
+    "admob",
+    "ads",
+    "monetization",
+    "consent",
+    "harness"
+  ]
+}

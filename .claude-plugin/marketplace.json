@@ -36,6 +36,16 @@
       "author": {
         "name": "snwlee"
       }
+    },
+    {
+      "name": "nereus-ads",
+      "description": "AdMob 운영 하네스: 정책 게이트와 퍼널 수익 레버 조언",
+      "source": "./plugins/nereus-ads",
+      "category": "workflow",
+      "version": "0.1.0",
+      "author": {
+        "name": "snwlee"
+      }
     }
   ]
 }
