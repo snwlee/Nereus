@@ -43,6 +43,31 @@
 | Unity (2D 폰) | **동작** | Unity Test Framework (`-batchmode -nographics`) |
 | Nintendo Switch | **경계·절차 동작** (실기기 검증은 승인 필요) | 빌드 명령은 설정에서 읽음 |
 
+## 스택 어댑터 — Flutter
+
+코어 `plugins/nereus/hooks/scripts/lib/stack.mjs` 가 이미 `pubspec.yaml` → flutter,
+`flutter_test` → `flutter test` 를 판정한다. **`stacks` 에 flutter 를 다시 선언하지 않는다** —
+같은 것을 두 곳이 정하면 어긋날 때 어느 쪽이 진실인지 알 수 없다.
+
+`lib/flutter-stack.mjs` 의 `detectFlutterGame` 은 그 위에 **게임에 필요한 사실**을 얹는다.
+한 번 돌리면 다른 검사기의 입력이 전부 나온다:
+
+```
+detectFlutterGame(root) → { runner, flame, flavors, layers, notes }
+                                        ↓        ↓
+                               parity-check   purity-check
+```
+
+- 플레이버는 `android/app/src/<flavor>/` 에서 읽는다. Gradle 이 그 디렉터리를 스캔해
+  productFlavor 를 **동적 생성**하는 구조에서는 `build.gradle` 에 이름이 하나도 없다.
+- **`flavors: null` 은 "없다"가 아니라 "못 찾았다"** 이고 이유가 `notes` 에 실린다.
+- Flame 은 **없어도 결함이 아니다.** 위젯으로 충분한 장르는 순수 Flutter 가 맞는 선택이다.
+  Flame 유무가 계층 경계를 바꾸지 않는다 — 순수 층은 어느 쪽에서도 같다.
+
+> 검증(2026-09-13): ToonTone 에 돌려 플레이버 8종·러너·경계 3종이 자동으로 나왔고,
+> **손으로 만든 입력 없이** purity(위반 0) · parity(applicable true, 위반 0)까지 이어졌다.
+> 앞 두 사이클에서 손으로 만들던 입력이 그것과 같은 값이었다.
+
 ## 제작 층 (craft)
 
 **게임 자체를 만드는 층.** 스택 스킬들이 "로직을 엔진에서 떼어내는 설계가 곧 1단 커버리지"라고

@@ -112,3 +112,18 @@ describe("제작 층", () => {
   });
 });
 
+// 검증 대상(ToonTone)이 Flutter 폰게임인데 스택 스킬이 없어 하네스가 정식으로 못 붙었다.
+describe("flutter 스택", () => {
+  it("스킬이 있고 자기 어댑터를 가리킨다", () => {
+    expect(fs.existsSync(`${ROOT}/skills/flutter/SKILL.md`)).toBe(true);
+    const text = fs.readFileSync(`${ROOT}/skills/flutter/SKILL.md`, "utf8");
+    expect(text).toContain("flutter-stack.mjs");
+    expect(text).toContain("detectFlutterGame");
+  });
+
+  it("스택을 다시 선언하지 않는다 — 코어 stack.mjs 가 이미 판정한다", () => {
+    const ext = JSON.parse(fs.readFileSync(`${ROOT}/nereus-extension.json`, "utf8"));
+    expect((ext.stacks ?? []).map((s: any) => s.name)).not.toContain("flutter");
+  });
+});
+

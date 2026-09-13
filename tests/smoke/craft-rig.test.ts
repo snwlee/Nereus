@@ -1,6 +1,9 @@
 // 회귀: 픽스처 초록은 검증이 아니다. 새 확장점은 프로세스 수준 리그를 같이 넣는다.
 import { describe, it, expect } from "vitest";
 import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 const runNode = (script: string, input: string) =>
   execFileSync("node", [script], { input, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"], maxBuffer: 64 * 1024 * 1024 });
@@ -63,5 +66,35 @@ describe("제작 층 검사기 실행 진입점", () => {
     const out = runNode(PURITY, JSON.stringify({ engine: "flutter", sources }));
     expect(out.length).toBeGreaterThan(65536);
     expect(JSON.parse(out).violations).toHaveLength(4000);
+  });
+});
+
+describe("flutter 감지 실행 진입점", () => {
+  const FLUTTER = "plugins/nereus-game/lib/flutter-stack.mjs";
+
+  it("Flutter 프로젝트가 아니면 사유를 내고 0 이 아닌 코드로 끝난다", () => {
+    try {
+      runNode(FLUTTER, JSON.stringify({ root: "/nonexistent-xyz" }));
+      throw new Error("종료되지 않았다");
+    } catch (e: any) {
+      expect(e.status).not.toBe(0);
+      expect(String(e.stderr)).toContain("pubspec.yaml");
+      expect(String(e.stderr)).not.toMatch(/^\s+at .*:\d+:\d+\)?$/m);
+    }
+  });
+
+  it("감지 결과가 purity-check 에 그대로 넘어간다 — 손으로 만든 입력이 없다", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "nereus-rig-flutter-"));
+    try {
+      fs.writeFileSync(path.join(root, "pubspec.yaml"), "name: t\ndev_dependencies:\n  flutter_test:\n    sdk: flutter\n");
+      const d = JSON.parse(runNode(FLUTTER, JSON.stringify({ root })));
+      const out = runNode(PURITY, JSON.stringify({
+        declarations: d.layers,
+        sources: [{ file: "lib/core/a.dart", text: "import 'dart:ui';\n" }],
+      }));
+      expect(JSON.parse(out).violations[0].forbidden).toBe("dart:ui");
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });

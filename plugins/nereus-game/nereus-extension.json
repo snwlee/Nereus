@@ -75,6 +75,11 @@
       "skill": "nereus-game:craft",
       "why": "코어 루프·계층 경계·수직 슬라이스·서버 권위",
       "re": "코어\\s?루프|core\\s?loop|아키텍처|폴더\\s?구조|계층\\s?경계|수직\\s?슬라이스|프로토타입|어디부터\\s?만들|서버\\s?권위|패리티|플레이버\\s?분기"
+    },
+    {
+      "skill": "nereus-game:flutter",
+      "why": "Flutter 게임·Flame·플레이버 다작",
+      "re": "플러터|flutter|dart\\s?게임|flame|플레이버|flavor|pubspec|골든\\s?테스트"
     }
   ],
   "stacks": [
