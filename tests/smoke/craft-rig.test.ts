@@ -98,3 +98,31 @@ describe("flutter 감지 실행 진입점", () => {
     }
   });
 });
+
+describe("원격 설정 검사기 실행 진입점", () => {
+  const RC = "plugins/nereus-game/lib/remote-config-check.mjs";
+
+  it("사고를 프로세스로 재현한다 — 하위 폴백을 죽이는 키가 번들에 있다", () => {
+    const out = runNode(RC, JSON.stringify({
+      declared: ["ad_collapsible_banner_enabled"],
+      classified: { builtInGoverns: ["ad_collapsible_banner_enabled"] },
+      bundleDefaults: ["ad_collapsible_banner_enabled"],
+    }));
+    const v = JSON.parse(out).violations.find((x: any) => x.code === "bundle-unsafe");
+    expect(v.severity).toBe("incident");
+    expect(String(v.how)).toContain("설정됨");
+  });
+
+  it("깨끗하면 위반이 없다", () => {
+    const out = runNode(RC, JSON.stringify({
+      declared: ["ad_show_timing_gate_enabled"],
+      classified: { safeDefaultOn: ["ad_show_timing_gate_enabled"] },
+      bundleDefaults: ["ad_show_timing_gate_enabled"],
+    }));
+    expect(JSON.parse(out).violations).toEqual([]);
+  });
+
+  it("알 수 없는 분류는 0 이 아닌 코드로 끝난다", () => {
+    expect(() => runNode(RC, JSON.stringify({ declared: [], classified: { nope: [] } }))).toThrow();
+  });
+});

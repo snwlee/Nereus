@@ -49,7 +49,7 @@
     {
       "skill": "nereus-game:liveops",
       "why": "라이브옵스·이벤트·리텐션·운영",
-      "re": "라이브옵스|liveops|이벤트\\s?캘린더|리텐션|시즌|운영\\s?지표|롤백"
+      "re": "라이브옵스|liveops|이벤트\\s?캘린더|리텐션|시즌|운영\\s?지표|롤백|원격\\s?설정|remote\\s?config|번들\\s?기본값|다크십|dark\\s?ship|킬\\s?스위치|피처\\s?플래그|feature\\s?flag"
     },
     {
       "skill": "nereus-game:localization",
