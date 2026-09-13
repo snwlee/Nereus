@@ -1,0 +1,322 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Nereus Workflow",
+    "animation": "none",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "happy-path",
+        "label": "Intake to finish",
+        "focus": [
+          "intake",
+          "spec",
+          "build",
+          "e2e",
+          "review",
+          "finish"
+        ],
+        "note": "Each stage calls the next only when its own gate passes."
+      },
+      {
+        "id": "gates",
+        "label": "Where work is blocked",
+        "focus": [
+          "build",
+          "review",
+          "finish"
+        ],
+        "note": "Tests, severity and fresh evidence each stop the flow independently."
+      },
+      {
+        "id": "baton",
+        "label": "Context handoff",
+        "focus": [
+          "warn",
+          "handoff",
+          "resume"
+        ],
+        "note": "Baton runs ahead of auto-compaction so state survives a fresh session."
+      }
+    ],
+    "legend": {
+      "mode": "all",
+      "entries": {
+        "external": {
+          "label": "Entry point"
+        },
+        "frontend": {
+          "label": "Spec artifact"
+        },
+        "backend": {
+          "label": "Implementation stage"
+        },
+        "security": {
+          "label": "Gate"
+        },
+        "database": {
+          "label": "Committed state"
+        },
+        "messagebus": {
+          "label": "Baton step"
+        },
+        "cloud": {
+          "label": "Fresh session"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "plan",
+      "label": "Plan"
+    },
+    {
+      "id": "make",
+      "label": "Build"
+    },
+    {
+      "id": "verify",
+      "label": "Verify"
+    },
+    {
+      "id": "baton",
+      "label": "Baton — context handoff",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "shape",
+      "label": "Shape the work",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "implement",
+      "label": "Implement",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "ship",
+      "label": "Verify + ship",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "groups": [
+    {
+      "id": "tdd_loop",
+      "label": "TDD loop",
+      "lane": "make",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "gate_path",
+      "label": "Severity + evidence gates",
+      "lane": "verify",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "security"
+    },
+    {
+      "id": "handoff_path",
+      "label": "Survives a fresh session",
+      "lane": "baton",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "intake",
+    "spec",
+    "build",
+    "e2e",
+    "review",
+    "finish"
+  ],
+  "nodes": [
+    {
+      "id": "intake",
+      "lane": "plan",
+      "col": 0,
+      "type": "external",
+      "label": "intake",
+      "sublabel": "interview",
+      "tag": "ambiguity ≤ 0.2",
+      "width": 140
+    },
+    {
+      "id": "spec",
+      "lane": "plan",
+      "col": 1,
+      "type": "frontend",
+      "label": "spec",
+      "sublabel": "tasks + done criteria",
+      "width": 140
+    },
+    {
+      "id": "build",
+      "lane": "make",
+      "col": 2,
+      "type": "backend",
+      "label": "build",
+      "sublabel": "RED → GREEN → REFACTOR",
+      "tag": "TDD enforced by hooks",
+      "width": 160
+    },
+    {
+      "id": "e2e",
+      "lane": "make",
+      "col": 3,
+      "type": "backend",
+      "label": "e2e",
+      "sublabel": "[flow] tasks only",
+      "width": 140
+    },
+    {
+      "id": "review",
+      "lane": "verify",
+      "col": 4,
+      "type": "security",
+      "label": "review",
+      "sublabel": "OCR · Codex · Gemini",
+      "tag": "CRITICAL/HIGH = 0",
+      "width": 152
+    },
+    {
+      "id": "finish",
+      "lane": "verify",
+      "col": 5,
+      "type": "database",
+      "label": "finish",
+      "sublabel": "commit · archive · handoff",
+      "tag": "fresh evidence",
+      "width": 160
+    },
+    {
+      "id": "warn",
+      "lane": "baton",
+      "col": 3,
+      "type": "messagebus",
+      "label": "50% warn",
+      "sublabel": "finish current task",
+      "width": 140
+    },
+    {
+      "id": "handoff",
+      "lane": "baton",
+      "col": 4,
+      "type": "messagebus",
+      "label": "handoff.md",
+      "sublabel": "write · commit · stop",
+      "width": 140
+    },
+    {
+      "id": "resume",
+      "lane": "baton",
+      "col": 5,
+      "type": "cloud",
+      "label": "/clear",
+      "sublabel": "SessionStart resumes",
+      "width": 140
+    }
+  ],
+  "edges": [
+    {
+      "id": "intake-spec",
+      "from": "intake",
+      "to": "spec",
+      "label": "requirements settled",
+      "variant": "emphasis"
+    },
+    {
+      "id": "spec-build",
+      "from": "spec",
+      "to": "build",
+      "variant": "emphasis"
+    },
+    {
+      "id": "build-e2e",
+      "from": "build",
+      "to": "e2e",
+      "label": "tests pass",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2e-review",
+      "from": "e2e",
+      "to": "review",
+      "variant": "emphasis"
+    },
+    {
+      "id": "review-finish",
+      "from": "review",
+      "to": "finish",
+      "label": "no CRITICAL/HIGH",
+      "variant": "emphasis"
+    },
+    {
+      "id": "review-build",
+      "from": "review",
+      "to": "build",
+      "label": "findings",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "build-warn",
+      "from": "build",
+      "to": "warn",
+      "label": "context ≥ 50%",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "warn-handoff",
+      "from": "warn",
+      "to": "handoff",
+      "variant": "dashed"
+    },
+    {
+      "id": "handoff-resume",
+      "from": "handoff",
+      "to": "resume",
+      "variant": "dashed"
+    },
+    {
+      "id": "resume-build",
+      "from": "resume",
+      "to": "build",
+      "label": "same stage",
+      "variant": "dashed",
+      "role": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Gate contract",
+      "items": [
+        "A stage calls the next only when its own gate passes",
+        "finish demands fresh test evidence, not a past run"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Day to day",
+      "items": [
+        "You type /nereus:intake and nothing else",
+        "Baton fires before auto-compaction loses the state"
+      ]
+    }
+  ]
+}

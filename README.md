@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="docs/assets/nereus-hero.webp" alt="Nereus" width="760">
+  <img src="docs/assets/nereus-social-oldman.png" alt="Nereus — hold fast for the truth" width="900">
 </p>
-
-<h1 align="center">Nereus</h1>
 
 <p align="center"><strong>An opinionated development harness for Claude Code.</strong></p>
 
@@ -29,30 +27,39 @@ Interview first. Spec before code. TDD enforced by hooks. Three reviewers in par
 
 Requires Node 20+ and Git. `setup` detects the external tools, installs what you approve, and writes the config file.
 
-## Flow
+### Plugins
 
-```mermaid
-flowchart LR
-    I[intake<br/>interview] -->|ambiguity ≤ 0.2| S[spec<br/>tasks + done criteria]
-    S --> B[build<br/>RED → GREEN → REFACTOR]
-    B -->|tests pass| E{"[flow] tasks?"}
-    E -->|yes| Q[e2e]
-    E -->|no| R
-    Q -->|pass| R[review<br/>OCR · Codex · Gemini]
-    R -->|CRITICAL/HIGH = 0| F[finish<br/>commit · archive · handoff]
-    R -->|findings| B
+The core harness is the workflow. Domain packs add skills and one expert agent each, and are installed only if you need them — they never patch the core, they attach through a data-only `nereus-extension.json`.
 
-    subgraph Baton [Baton — context handoff]
-        direction LR
-        W[50% warn:<br/>finish current task] --> H[write handoff.md<br/>commit · stop]
-        H --> N[/clear<br/>auto-resumes]
-    end
+| Plugin | Version | What it adds |
+|---|---|---|
+| `nereus` | 0.17.1 | The workflow itself: 23 skills, 10 expert agents, Node hooks, Baton handoff, setup and doctor |
+| `nereus-game` | 0.3.0 | Game development: Roblox, Unity (mobile), Switch, Flutter/Flame adapters plus level, balance, narrative, sound, liveops and compliance skills |
+| `nereus-ads` | 0.1.0 | AdMob operations: the policy gate that keeps an account alive, placement design, and revenue levers |
+| `nereus-l10n` | 0.1.0 | Localization: source strings, store listings and ASO, plus typeface coverage — the constraint that silently breaks a whole locale |
+| `nereus-3d` | 0.1.0 | three.js: incomplete `dispose`, unwired dispose helpers, missing `renderer.info` instrumentation, draw-call budgets and GPU leaks |
 
-    B -. context ≥ 50% .-> W
-    N -. continues at same stage .-> B
+```
+/plugin install nereus-game@nereus     # or nereus-ads, nereus-l10n, nereus-3d
+/nereus:doctor                         # after installing anything, check for shadowed MCP servers and routes
 ```
 
-Each stage calls the next when its gate passes. Day to day you only type `/nereus:intake`.
+Each pack routes narrowly on its own vocabulary. `/nereus:doctor` reports collisions; it never uninstalls anything.
+
+## Flow
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/nereus-flow-dark.png">
+    <img src="docs/assets/nereus-flow-light.png" alt="Nereus workflow: intake → spec → build → e2e → review → finish, with the Baton context handoff" width="900">
+  </picture>
+</p>
+
+Each stage calls the next only when its own gate passes. Day to day you only type `/nereus:intake`.
+
+Baton runs ahead of Claude Code's own auto-compaction (a lossy summary). At 50% of the context window it tells you to finish the current task; at 70% it stops and demands a handoff. `/nereus:setup` offers to set `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` so the order is 50% warn → 70% hard stop → 80% compaction as a last resort.
+
+<sub>Built with <a href="https://github.com/tt-a1i/archify">archify</a> (MIT) from a checked-in JSON IR, not hand-drawn: <a href="docs/diagrams/nereus-flow.workflow.json"><code>docs/diagrams/nereus-flow.workflow.json</code></a>. Regenerate with <code>archify deliver workflow docs/diagrams/nereus-flow.workflow.json out.html --quality showcase</code>.</sub>
 
 ## Commands
 
@@ -72,6 +79,7 @@ Each stage calls the next when its gate passes. Day to day you only type `/nereu
 | `/nereus:continue on\|off` | Continue remaining tasks inside the current session (off by default, auto-disarms at the context warning) |
 | `/nereus:learn` | Review and approve what the hooks observed; approved rules are injected next session |
 | `/nereus:hud` | One-line status: task progress, verification state, context % |
+| `/nereus:doctor` | Report conflicts with other harness plugins — shadowed MCP servers, duplicate agent or skill names, shared hook points. Reports only, never uninstalls |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | Standalone skills |
 
 ## Skill routing
@@ -84,9 +92,11 @@ Process skills (`debug`, `intake`) come before implementation skills.
 
 ## Agents
 
-`architect` `backend` `frontend` `app` `researcher` `seo` `reviewer` `security` `qa` `writer`
+Core: `architect` `backend` `frontend` `app` `researcher` `seo` `reviewer` `security` `qa` `writer`
 
-Each agent is a persona, an allow-list of tools, and an output contract. Agents never call each other; the workflow skills orchestrate.
+Domain packs add one expert each: `gameplay-engineer` `level-designer` `economy-designer` `narrative-writer` `art-director` `game-ux` (game) · `ads-engineer` · `l10n-engineer` · `graphics-engineer` (3D).
+
+Each agent is a persona, an allow-list of tools, and an output contract. Agents never call each other; the workflow skills orchestrate. Domain agents do not redefine the TDD procedure — they reuse `nereus:build`.
 
 ## Hooks
 
@@ -110,6 +120,8 @@ All hooks are Node scripts. No bash, zero runtime dependencies, identical on mac
   "secondOpinion": "both",
   "baton": { "warn": 0.5, "hard": 0.7 },
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/generated/**"] },
+  "design": { "enforce": "block", "widths": [320, 768, 1440] },
+  "commitQuality": { "block": ["secret", "env_file"], "warn": ["debug_log"] },
   "pdf": { "engine": "typst", "font": "Noto Sans KR" },
   "image": { "backend": "auto" }
 }
@@ -117,8 +129,8 @@ All hooks are Node scripts. No bash, zero runtime dependencies, identical on mac
 
 `secondOpinion` picks the reviewers: `"both"` (default), `"codex"`, `"gemini"`, `"none"` (deterministic OCR pass only), or an explicit array such as `["ocr", "gemini"]`.
 
+`design.enforce` defaults to `"block"`: touching a design surface without a Gemini critique round stops `finish`. Set it to `"warn"` if you want the warning without the gate.
 
-Baton runs ahead of Claude Code's own auto-compaction (a lossy summary). `/nereus:setup` offers to set `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` so the order is 50% warn → 70% hard stop → 80% compaction as a last resort.
 
 ## Development
 
