@@ -8,7 +8,17 @@ const USER_FACING = /[가-힣ぁ-んァ-ヶ一-龥]|[A-Za-z]{2,}\s/;
 const LITERAL = /"([^"\n]{2,})"|'([^'\n]{2,})'/g;
 const COMMENT = /^\s*(--|\/\/|#)/;
 
-export function scanL10n({ locales, base = "", tables = {}, sources = [], maxWidth = 0, accessor = "L(", fontMetrics = null } = {}) {
+// 사용자에게 도달하지 않는 문자열. ToonTone 실측에서 461건 중 진짜 결함이 0건이었고,
+// 그중 상당수가 l10n 도구가 **직접 만든** 번역 테이블이었다 — 정확히 거꾸로다.
+// 461:0 이면 사람이 게이트를 끈다. 끄게 만드는 게이트는 게이트가 아니다. (2026-09-13)
+//
+// 패턴은 언어·프레임워크마다 다르다(`.g.dart` 는 Dart, `.generated.cs` 는 Unity).
+// 코드에 박으면 스택이 늘 때마다 이 파일을 고치게 되므로 호출자가 exclude 로 덮어쓸 수 있다.
+// 기본값이 없으면 호출자가 매번 전부 선언해야 해서 아무도 안 쓴다.
+const DEFAULT_GENERATED = ["generated/", ".g.dart", ".freezed.dart", ".gen.dart", ".generated.cs", ".designer.cs"];
+const DEFAULT_DEV_MESSAGE = ["throw ", "assert(", "Exception(", "Error(", "debugPrint(", "console.error", "console.warn", "Debug.Log"];
+
+export function scanL10n({ locales, base = "", tables = {}, sources = [], maxWidth = 0, accessor = "L(", fontMetrics = null, exclude = null } = {}) {
   const known = new Set(localeIds(locales));
   for (const id of Object.keys(tables)) {
     // 조용히 건너뛰면 그 로케일이 검사되지 않은 채 통과한다. 던지는 편이 낫다.
@@ -23,14 +33,41 @@ export function scanL10n({ locales, base = "", tables = {}, sources = [], maxWid
   const baseId = base || locales?.base;
   const violations = [];
 
+  const generatedPatterns = exclude?.generated ?? DEFAULT_GENERATED;
+  const devMessageTokens = exclude?.devMessage ?? DEFAULT_DEV_MESSAGE;
+  // 제외한 것은 조용히 버리지 않고 셈과 이유를 같이 낸다 —
+  // 버리기만 하면 "검사해서 통과한 것"과 "아예 안 본 것"이 구분되지 않는다.
+  const skippedCounts = new Map();
+  const skip = (reason) => skippedCounts.set(reason, (skippedCounts.get(reason) ?? 0) + 1);
+
   for (const src of sources) {
+    const file = src?.file ?? "";
+    // 생성물 판정은 파일 단위지만, 개발자 메시지 판정은 **줄 단위**다.
+    // 생성물이 아닌 파일에도 개발자 메시지는 섞여 있고 그 파일의 사용자 문자열은 계속 검사되어야 한다.
+    const isGenerated = generatedPatterns.some((p) => file.includes(p));
     const lines = String(src?.text ?? "").split("\n");
+    // 예외 메시지는 대부분 여러 줄에 걸친다 — `throw` 는 앞 줄에 있고 문자열은 다음 줄에 온다.
+    // 줄 하나만 보면 ToonTone 에서 한 파일에 22건이 그대로 새어 나왔다. 그래서 문장이 끝날 때까지
+    // 개발자 문맥을 들고 간다. 괄호 균형으로 문장 끝을 잡는다 — 괄호가 닫히면 문맥도 끝나
+    // 파일 나머지를 삼키지 않는다. 파서가 아니라 근사이고, 그래서 문자열 안의 괄호도 센다.
+    let devDepth = 0;
     lines.forEach((line, i) => {
       if (COMMENT.test(line) || line.includes(accessor)) return;
-      for (const m of line.matchAll(LITERAL)) {
-        const text = m[1] ?? m[2] ?? "";
-        if (USER_FACING.test(text)) violations.push({ code: "hardcoded", file: src?.file ?? "", line: i + 1, text });
+      const inDevStatement = devDepth > 0;
+      const startsDevStatement = devMessageTokens.some((t) => line.includes(t));
+      if (inDevStatement || startsDevStatement) {
+        const opened = (line.match(/\(/g) ?? []).length;
+        const closed = (line.match(/\)/g) ?? []).length;
+        devDepth = Math.max(0, (inDevStatement ? devDepth : 0) + opened - closed);
       }
+
+      const hits = [...line.matchAll(LITERAL)]
+        .map((m) => m[1] ?? m[2] ?? "")
+        .filter((text) => USER_FACING.test(text));
+      if (hits.length === 0) return;
+      if (isGenerated) return skip("generated");
+      if (inDevStatement || startsDevStatement) return skip("dev-message");
+      for (const text of hits) violations.push({ code: "hardcoded", file, line: i + 1, text });
     });
   }
 
@@ -58,5 +95,5 @@ export function scanL10n({ locales, base = "", tables = {}, sources = [], maxWid
     }
   }
 
-  return { violations };
+  return { violations, skipped: [...skippedCounts].map(([reason, count]) => ({ reason, count })) };
 }
