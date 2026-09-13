@@ -4,6 +4,8 @@
 // 잡는 것: 머티리얼을 dispose 하면서 텍스처 슬롯을 일부만 정리하는 코드.
 // 빠진 슬롯의 텍스처는 GPU 에 남고 **아무 에러도 나지 않는다** — 프레임만 떨어진다.
 import { loadBudgetData } from "./budget-data.mjs";
+import { pathToFileURL } from "node:url";
+import { readCliInput, runCli } from "./cli-input.mjs";
 
 /** 검사 대상 소스의 한 조각. */
 const IDENT = "[A-Za-z0-9_$]";
@@ -13,7 +15,7 @@ const IDENT = "[A-Za-z0-9_$]";
  * 중괄호 짝 세기와 토큰 탐지가 문자열 안의 `{` 나 주석 안의 `dispose` 에 속지 않게 한다.
  * 길이를 보존하므로 원본 인덱스가 그대로 유효하다.
  */
-export function stripNoise(text) {
+function stripNoise(text) {
   const out = text.split("");
   let i = 0;
   const blank = (from, to) => {
@@ -77,7 +79,7 @@ function matchBrace(text, open) {
  * 이름 있는 함수 정의를 뽑는다. 문자열·주석은 지운 텍스트에서 본다.
  * @returns `[{ file, fn, body, start, end }]`
  */
-export function findFunctions(file, clean) {
+function findFunctions(file, clean) {
   const found = [];
   FN_HEAD.lastIndex = 0;
   let m;
@@ -234,4 +236,13 @@ export function scanScene({ sources = [], data = loadBudgetData() } = {}) {
   }
 
   return { violations, unmeasured, disposeHelpers };
+}
+
+// 프로세스 진입점. stdin JSON → stdout JSON.
+// `process.exit(0)` 을 부르지 않는다 — 파이프로 나가는 stdout 쓰기가 끝나기 전에 죽으면
+// 출력이 64KiB 버퍼에서 잘린다. 본문이 끝나면 프로세스는 알아서 0 으로 끝난다.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runCli(() => {
+    process.stdout.write(`${JSON.stringify(scanScene(readCliInput()), null, 2)}\n`);
+  });
 }

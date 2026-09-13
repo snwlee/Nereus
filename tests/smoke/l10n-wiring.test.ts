@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = "plugins/nereus-l10n";
-const PLUGINS = ["nereus", "nereus-game", "nereus-ads", "nereus-l10n"];
+const PLUGINS = ["nereus", "nereus-game", "nereus-ads", "nereus-l10n", "nereus-3d"];
 const walk = (d: string): string[] =>
   fs.readdirSync(d, { withFileTypes: true }).flatMap((e) =>
     e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)],

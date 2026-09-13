@@ -6,6 +6,8 @@
 // 2. **누수는 단발 스냅샷으로 판정하지 않는다.** 지오메트리 99,999개는 누수가 아니라 큰 씬일 수 있다.
 //    같은 라벨(= 같은 상태로 돌아왔다)의 두 표본을 비교해 늘었을 때만 누수로 본다.
 import { loadBudgetData } from "./budget-data.mjs";
+import { pathToFileURL } from "node:url";
+import { readCliInput, runCli } from "./cli-input.mjs";
 
 /** `renderer.info` 에서 판정 축과 값을 뽑는다. 없는 축은 싣지 않는다. */
 function axesOf(info = {}) {
@@ -110,4 +112,11 @@ export function checkRenderBudget({ samples = [], budgets = null, data = loadBud
   }
 
   return { violations, unmeasured, samples: samples.length };
+}
+
+// 프로세스 진입점. stdin JSON → stdout JSON. 성공 경로에서 process.exit(0) 금지.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runCli(() => {
+    process.stdout.write(`${JSON.stringify(checkRenderBudget(readCliInput()), null, 2)}\n`);
+  });
 }

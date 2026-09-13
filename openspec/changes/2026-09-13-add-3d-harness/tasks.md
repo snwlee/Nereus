@@ -232,11 +232,11 @@
     - [x] 커밋: `git add plugins/nereus-3d && git commit -m "docs(3d): 스킬 2종·에이전트·README"`
   - Done when: 두 SKILL.md 와 에이전트가 존재하고 각각 자기 검사기를 가리킨다
 
-- [ ] T6. 배선·프로세스 리그·도너 검증
+- [x] T6. 배선·프로세스 리그·도너 검증
   - Files: Create `plugins/nereus-3d/nereus-extension.json` · Create `tests/smoke/three-wiring.test.ts` · Create `tests/smoke/three-rig.test.ts` · Create `tests/smoke/three-donor.test.ts` · Modify `tests/smoke/no-unwired-exports.test.ts` · Modify `tests/smoke/l10n-wiring.test.ts`
   - Interfaces: Produces 라우트 2개
   - Steps:
-    - [ ] 실패 테스트 `tests/smoke/three-wiring.test.ts` 를 쓴다:
+    - [x] 실패 테스트 `tests/smoke/three-wiring.test.ts` 를 쓴다:
       ```ts
       import { describe, it, expect } from "vitest";
       import fs from "node:fs";
@@ -279,7 +279,7 @@
         });
       });
       ```
-    - [ ] 실패 테스트 `tests/smoke/three-rig.test.ts` 를 쓴다:
+    - [x] 실패 테스트 `tests/smoke/three-rig.test.ts` 를 쓴다:
       ```ts
       import { describe, it, expect } from "vitest";
       import { execFileSync } from "node:child_process";
@@ -320,7 +320,7 @@
         });
       });
       ```
-    - [ ] 실패 테스트 `tests/smoke/three-donor.test.ts` 를 쓴다. **픽스처가 아니라 실제 프로젝트다**:
+    - [x] 실패 테스트 `tests/smoke/three-donor.test.ts` 를 쓴다. **픽스처가 아니라 실제 프로젝트다**:
       ```ts
       import { describe, it, expect } from "vitest";
       import fs from "node:fs";
@@ -349,19 +349,19 @@
         expect(typeof has).toBe("boolean");
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/smoke/three-wiring.test.ts tests/smoke/three-rig.test.ts tests/smoke/three-donor.test.ts` · Expected: FAIL
-    - [ ] `nereus-extension.json` 에 라우트 2개를 쓴다. 각 라우트에 `why` 를 적는다.
+    - [x] 실패 확인: Run `npx vitest run tests/smoke/three-wiring.test.ts tests/smoke/three-rig.test.ts tests/smoke/three-donor.test.ts` · Expected: FAIL
+    - [x] `nereus-extension.json` 에 라우트 2개를 쓴다. 각 라우트에 `why` 를 적는다.
           `threejs`: `three\.?js|webgl|webgpu|gltf|glb\b|orbitcontrols|3d\s?씬|메시\s?생성`
           `renderbudget`: `드로우\s?콜|draw\s?call|renderer\.info|gpu\s?메모리|프레임\s?(드랍|저하)|dispose|텍스처\s?예산`
-    - [ ] 두 검사기에 프로세스 진입점을 붙인다. `pathToFileURL` 로 비교하고 `process.exit(0)` 금지.
-    - [ ] `tests/smoke/no-unwired-exports.test.ts` 의 `ROOTS` 에 `plugins/nereus-3d/lib` 를,
+    - [x] 두 검사기에 프로세스 진입점을 붙인다. `pathToFileURL` 로 비교하고 `process.exit(0)` 금지.
+    - [x] `tests/smoke/no-unwired-exports.test.ts` 의 `ROOTS` 에 `plugins/nereus-3d/lib` 를,
           `SEARCH` 에 `plugins/nereus-3d` 를 더한다.
-    - [ ] `tests/smoke/l10n-wiring.test.ts` 의 `PLUGINS` 배열에 `nereus-3d` 를 더한다.
-    - [ ] 통과 확인: Run `npx vitest run tests/smoke/` · Expected: PASS
-    - [ ] 역검증: 라우트 하나를 지우고 FAIL 하는지, 진입점 하나를 지우고 FAIL 하는지,
+    - [x] `tests/smoke/l10n-wiring.test.ts` 의 `PLUGINS` 배열에 `nereus-3d` 를 더한다.
+    - [x] 통과 확인: Run `npx vitest run tests/smoke/` · Expected: PASS
+    - [x] 역검증: 라우트 하나를 지우고 FAIL 하는지, 진입점 하나를 지우고 FAIL 하는지,
           슬롯 목록에서 `normalMap` 을 빼고 도너 테스트가 FAIL 하는지 확인하고 되돌린다.
           **새 파일은 `git checkout` 이 먹지 않는다** — 사본을 떠 둔다.
-    - [ ] 커밋: `git add plugins tests && git commit -m "feat(3d): 라우트 배선·프로세스 리그·도너 검증"`
+    - [x] 커밋: `git add plugins tests && git commit -m "feat(3d): 라우트 배선·프로세스 리그·도너 검증"`
   - Done when: 가드가 실제로 물고 역검증 3건이 전부 빨개지며 도너 테스트가 실제 결함을 잡는다
 
 - [ ] T7. 설치·doctor·전체 테스트
