@@ -119,11 +119,11 @@
     - [x] 커밋: `git add plugins tests && git commit -m "refactor(l10n): 폰트 검사기 이관 + requiredEmbedding 일반화"`
   - Done when: 기존 13케이스가 단언 그대로 초록이고 새 3케이스가 통과하며 `plugins/nereus-game/lib/font-check.mjs` 가 없다
 
-- [ ] T4. 스토어 등재 게이트 — 커버리지와 선언 대조
+- [x] T4. 스토어 등재 게이트 — 커버리지와 선언 대조
   - Files: Create `plugins/nereus-l10n/lib/store-l10n-check.mjs` · Create `tests/lib/store-l10n-check.test.ts`
   - Interfaces: Produces `checkStoreL10n({ store, declaredLocales, listings, doNotTranslate, excluded }): { violations, coverage, skipped }`
   - Steps:
-    - [ ] 실패 테스트를 `tests/lib/store-l10n-check.test.ts` 에 쓴다:
+    - [x] 실패 테스트를 `tests/lib/store-l10n-check.test.ts` 에 쓴다:
       ```ts
       import { checkStoreL10n } from "../../plugins/nereus-l10n/lib/store-l10n-check.mjs";
       const listing = (title: string, short = "s") => ({ title, shortDescription: short });
@@ -158,18 +158,18 @@
         expect(v.limit).toBe(30);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 구현한다. 필드 길이 제한과 로케일 코드 형식은 `locales.json` 의 `stores.play` 에서 읽는다 —
+    - [x] 실패 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 구현한다. 필드 길이 제한과 로케일 코드 형식은 `locales.json` 의 `stores.play` 에서 읽는다 —
           코드에 박지 않는다. 제한이 선언되지 않은 스토어는 통과로 내지 않고 미검사로 보고한다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-l10n/lib tests/lib/store-l10n-check.test.ts && git commit -m "feat(l10n): 스토어 등재 커버리지와 선언 대조 게이트"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-l10n/lib tests/lib/store-l10n-check.test.ts && git commit -m "feat(l10n): 스토어 등재 커버리지와 선언 대조 게이트"`
   - Done when: 다섯 시나리오가 통과한다
 
-- [ ] T5. 번역 제외 선언·두부 증거·RTL 런
+- [x] T5. 번역 제외 선언·두부 증거·RTL 런
   - Files: Modify `plugins/nereus-l10n/lib/store-l10n-check.mjs` · Modify `tests/lib/store-l10n-check.test.ts`
   - Interfaces: Consumes `doNotTranslate: [{ field, why }]` · `render: { [locale]: { glyphCheck, titleRuns } }`
   - Steps:
-    - [ ] 실패 테스트를 덧붙인다:
+    - [x] 실패 테스트를 덧붙인다:
       ```ts
       const two = { "en-US": listing("Same", "a"), "ko-KR": listing("Same", "b") };
       it("전 로케일 동일 문자열인데 선언이 없으면 잡는다", () => {
@@ -211,18 +211,18 @@
         expect(r.violations.map((x: any) => x.code)).not.toContain("rtl-split-run");
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: FAIL
-    - [ ] 구현한다. RTL 판정은 `locales.json` 의 `direction` 으로만 한다 — 코드에 목록을 박지 않는다.
+    - [x] 실패 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: FAIL
+    - [x] 구현한다. RTL 판정은 `locales.json` 의 `direction` 으로만 한다 — 코드에 목록을 박지 않는다.
           `render` 를 주지 않은 로케일은 렌더 대상이 아니므로 두부 검사를 하지 않는다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-l10n/lib tests/lib/store-l10n-check.test.ts && git commit -m "feat(l10n): 번역 제외 선언·두부 증거·RTL 런 게이트"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/store-l10n-check.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-l10n/lib tests/lib/store-l10n-check.test.ts && git commit -m "feat(l10n): 번역 제외 선언·두부 증거·RTL 런 게이트"`
   - Done when: 일곱 시나리오가 통과한다
 
-- [ ] T6. ASO 조언자
+- [x] T6. ASO 조언자
   - Files: Create `plugins/nereus-l10n/lib/aso-advisor.mjs` · Create `tests/lib/aso-advisor.test.ts`
   - Interfaces: Produces `adviseAso({ coverage, signals }): { levers, unanswerable }`
   - Steps:
-    - [ ] 실패 테스트를 `tests/lib/aso-advisor.test.ts` 에 쓴다:
+    - [x] 실패 테스트를 `tests/lib/aso-advisor.test.ts` 에 쓴다:
       ```ts
       import { adviseAso } from "../../plugins/nereus-l10n/lib/aso-advisor.mjs";
       const coverage = { required: 86, present: 2, missing: ["pt-BR", "fr-FR"], skipped: [] };
@@ -248,11 +248,11 @@
         expect(r.unanswerable.every((u: any) => u.question.length > 0 && u.needs.length > 0)).toBe(true);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/aso-advisor.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 구현한다. **실측 점유율을 파일에 넣지 않는다** — `signals` 로만 받는다.
+    - [x] 실패 확인: Run `npx vitest run tests/lib/aso-advisor.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 구현한다. **실측 점유율을 파일에 넣지 않는다** — `signals` 로만 받는다.
           진입점을 붙인다: `pathToFileURL` 비교, 성공 경로에서 `process.exit(0)` 금지.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/aso-advisor.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-l10n/lib tests/lib/aso-advisor.test.ts && git commit -m "feat(l10n): ASO 로케일 우선순위 조언자"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/aso-advisor.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-l10n/lib tests/lib/aso-advisor.test.ts && git commit -m "feat(l10n): ASO 로케일 우선순위 조언자"`
   - Done when: 다섯 시나리오가 통과한다
 
 - [ ] T7. 스킬 3종과 에이전트와 README
