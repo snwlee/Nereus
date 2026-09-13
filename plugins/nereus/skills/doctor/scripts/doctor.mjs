@@ -160,3 +160,60 @@ function undo({ ledger, settings, writeSettings }) {
   writeSettings(setAt(current, entry.path, entry.before));
   return `되돌렸습니다(${plan.reason}): ${entry.path.join(".")}`;
 }
+
+// ── 실행 진입점 ──────────────────────────────────────────────────────────────
+//
+// **이 블록이 없어서 `node doctor.mjs` 가 0바이트를 내고 exit 0 으로 끝났다**(2026-09-13 실측).
+// runDoctor · structuralConflicts · curatedConflicts · readInventory · 원장 I/O 가 전부
+// 단위 테스트 초록이었는데 프로세스로 묶는 곳이 없었다 — SKILL.md 와 setup 이 문서화한
+// 바로 그 명령이고, SessionStart 는 새 플러그인을 발견하면 여기로 보낸다.
+// 충돌이 없어서 조용한 것과 검사기가 아예 안 도는 것이 구분되지 않았다.
+//
+// 부수 효과는 전부 여기서만 만든다. runDoctor 는 계속 순수하게 둔다 —
+// 테스트가 실제 홈·설정을 건드리지 않는 이유가 그것이다.
+if (process.argv[1] && /doctor\.mjs$/.test(process.argv[1])) {
+  const { readInventory } = await import("../../../hooks/scripts/lib/plugin-inventory.mjs");
+  const { structuralConflicts } = await import("../../../hooks/scripts/lib/plugin-conflicts.mjs");
+  const { curatedConflicts } = await import("../../../hooks/scripts/lib/plugin-curated.mjs");
+  const { readLedger, appendLedger: appendLedgerFile, writeSettingsAtomic } = await import("./ledger-io.mjs");
+  const { ledgerPathFor } = await import("./apply.mjs");
+  const fs = await import("node:fs");
+  const os = await import("node:os");
+  const nodePath = await import("node:path");
+
+  const argv = process.argv.slice(2);
+  const home = process.env.HOME || os.homedir();
+  // 테스트가 프로젝트 스코프를 실제 cwd 와 분리해 검사할 수 있게 한다.
+  // 없으면 cwd 다 — 평소 동작은 바뀌지 않는다.
+  const cwd = process.env.NEREUS_DOCTOR_CWD || process.cwd();
+
+  // 지금은 전역 스코프만 판정한다. 프로젝트 스코프 판정이 생기면 여기서 갈린다 —
+  // 원장 경로가 스코프마다 다르므로(ledgerPathFor) 섞으면 다른 프로젝트에서도 조용해진다.
+  const scope = "global";
+  const settingsFile = nodePath.join(home, ".claude", "settings.json");
+  const pluginsFile = nodePath.join(home, ".claude", "plugins", "installed_plugins.json");
+
+  const readJsonSafe = (p) => {
+    try {
+      return JSON.parse(fs.readFileSync(p, "utf8"));
+    } catch {
+      return undefined;
+    }
+  };
+
+  const records = readInventory({ pluginsFile, settingsFile, readJson: readJsonSafe });
+  const conflicts = [...structuralConflicts(records, scope), ...curatedConflicts(records, scope)];
+
+  const ledgerFile = ledgerPathFor(scope, { home, cwd });
+  const result = runDoctor(argv, {
+    conflicts,
+    ledger: readLedger({ file: ledgerFile }),
+    settings: readJsonSafe(settingsFile) ?? {},
+    appendLedger: (entry) => appendLedgerFile({ file: ledgerFile, entry }),
+    writeSettings: (settings) => writeSettingsAtomic({ file: settingsFile, settings }),
+  });
+
+  // process.exit(0) 을 부르지 않는다. 파이프로 나가는 stdout 쓰기는 비동기로 끝나므로
+  // 쓰기 완료 전에 exit 하면 출력이 파이프 버퍼(64KiB)에서 잘린다.
+  process.stdout.write(result.output + "\n");
+}
