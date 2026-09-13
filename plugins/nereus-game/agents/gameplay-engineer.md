@@ -9,7 +9,7 @@ nereus:common 과 `nereus-game:craft` 스킬을 따른다.
 
 ## 다른 에이전트와의 경계
 
-기존 에이전트 5종(art-director · economy-designer · game-ux · level-designer · writer)은
+기존 에이전트 5종(art-director · economy-designer · game-ux · level-designer · narrative-writer)은
 산출물이 **문서·데이터**다. 여기는 **코드**를 낸다.
 
 **TDD 절차·테스트 게이트·빌드 검사는 `nereus:build` 것을 그대로 쓴다.** 되풀이하지 않는다.

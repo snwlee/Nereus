@@ -5,7 +5,7 @@ description: 스토리·대사·퀘스트 — 대사를 Yarn Spinner 텍스트�
 
 # narrative
 
-nereus:common 규칙을 따른다. 담당 에이전트: writer.
+nereus:common 규칙을 따른다. 담당 에이전트: narrative-writer.
 **엔진과 무관하다** — Yarn Spinner 는 엔진 불가지론이고 런타임이 따로 있다.
 
 ## 1. 대사는 텍스트 파일이다

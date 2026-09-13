@@ -127,3 +127,25 @@ describe("flutter 스택", () => {
   });
 });
 
+// 회귀: nereus-game 을 설치하자마자 doctor 가 HIGH agent-shadow 를 냈다 —
+// 코어와 게임 플러그인이 둘 다 `writer` 라는 이름의 에이전트를 선언했는데
+// 하는 일은 완전히 다르다(문서화 vs 스토리). 에이전트 이름은 이름 공간이 하나뿐인
+// 표면이라 한쪽이 다른 쪽을 **가린다.** 이름을 한 번 고치는 것으로는 다음 에이전트에서
+// 또 충돌하므로 가드로 고정한다.
+describe("에이전트 이름은 코어와 겹치지 않는다", () => {
+  const namesIn = (dir: string) =>
+    fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith(".md"))
+      .map((f) => {
+        const m = fs.readFileSync(path.join(dir, f), "utf8").match(/^name:\s*(\S+)/m);
+        return m ? m[1] : f.replace(/\.md$/, "");
+      });
+
+  it("코어 에이전트와 이름이 하나도 겹치지 않는다", () => {
+    const core = new Set(namesIn("plugins/nereus/agents"));
+    const overlap = namesIn(`${ROOT}/agents`).filter((n) => core.has(n));
+    expect(overlap, `코어와 겹치는 에이전트 이름: ${overlap.join(", ")}`).toEqual([]);
+  });
+});
+

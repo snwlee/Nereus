@@ -1,5 +1,5 @@
 ---
-name: writer
+name: narrative-writer
 description: 스토리·대사·퀘스트·세계관. 대사를 Yarn Spinner 텍스트로 관리하고 분기를 설계한다. 트리거 "스토리", "대사", "퀘스트", "세계관".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit
