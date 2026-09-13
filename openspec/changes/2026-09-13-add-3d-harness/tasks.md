@@ -215,21 +215,21 @@
     - [x] 커밋: `git add plugins/nereus-3d/lib tests/lib/render-budget.test.ts && git commit -m "feat(3d): 렌더 예산과 누수 판정"`
   - Done when: 일곱 시나리오가 통과한다
 
-- [ ] T5. 스킬 2종·에이전트·README
+- [x] T5. 스킬 2종·에이전트·README
   - Files: Create `plugins/nereus-3d/skills/threejs/SKILL.md` · Create `plugins/nereus-3d/skills/renderbudget/SKILL.md` · Create `plugins/nereus-3d/agents/graphics-engineer.md` · Create `plugins/nereus-3d/README.md`
   - Interfaces: 없음
   - Steps:
-    - [ ] `skills/threejs/SKILL.md` — 정적 검사. `scene-scan.mjs` 호출법.
+    - [x] `skills/threejs/SKILL.md` — 정적 검사. `scene-scan.mjs` 호출법.
           **문서는 Context7 `/mrdoob/three.js` 와 pmndrs MCP 로 조회하고 여기 복사하지 않는다**를
           원칙으로 적는다. 도너의 두 dispose 구현 비교를 근거로 싣는다.
-    - [ ] `skills/renderbudget/SKILL.md` — 런타임 증거. `render-budget.mjs` 호출법.
+    - [x] `skills/renderbudget/SKILL.md` — 런타임 증거. `render-budget.mjs` 호출법.
           `renderer.info` 를 어떻게 수집해 표본으로 만드는지, **누수는 같은 라벨 두 표본 비교**임을 적는다.
           **예산 기본 수치를 적지 않는다** — 운영값이다.
-    - [ ] `agents/graphics-engineer.md` — 이름이 다른 네 플러그인과 겹치지 않게 한다.
+    - [x] `agents/graphics-engineer.md` — 이름이 다른 네 플러그인과 겹치지 않게 한다.
           TDD 절차는 `nereus:build` 것을 쓴다고 적는다.
-    - [ ] README 에 두 검사기·경계(`nereus-game:asset` 은 파일, 여기는 프레임)·
+    - [x] README 에 두 검사기·경계(`nereus-game:asset` 은 파일, 여기는 프레임)·
           "문서를 만들지 않는 이유"(awesome 목록 셋 모두 3D 매치 0건, 스킬팩 3종 라이선스 없음)를 적는다.
-    - [ ] 커밋: `git add plugins/nereus-3d && git commit -m "docs(3d): 스킬 2종·에이전트·README"`
+    - [x] 커밋: `git add plugins/nereus-3d && git commit -m "docs(3d): 스킬 2종·에이전트·README"`
   - Done when: 두 SKILL.md 와 에이전트가 존재하고 각각 자기 검사기를 가리킨다
 
 - [ ] T6. 배선·프로세스 리그·도너 검증
