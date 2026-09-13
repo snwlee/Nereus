@@ -151,11 +151,11 @@
     - [x] 커밋: `git add plugins/nereus-3d/lib tests/lib/scene-scan.test.ts && git commit -m "feat(3d): 배선되지 않은 dispose 와 계측 부재 검사"`
   - Done when: 여섯 시나리오가 통과한다
 
-- [ ] T4. 렌더 예산 검사기와 누수 판정
+- [x] T4. 렌더 예산 검사기와 누수 판정
   - Files: Create `plugins/nereus-3d/lib/render-budget.mjs` · Create `tests/lib/render-budget.test.ts`
   - Interfaces: Produces `checkRenderBudget({ samples, budgets }): { violations, unmeasured }`
   - Steps:
-    - [ ] 실패 테스트를 `tests/lib/render-budget.test.ts` 에 쓴다:
+    - [x] 실패 테스트를 `tests/lib/render-budget.test.ts` 에 쓴다:
       ```ts
       import { describe, it, expect } from "vitest";
       import { checkRenderBudget } from "../../plugins/nereus-3d/lib/render-budget.mjs";
@@ -208,11 +208,11 @@
         });
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/render-budget.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 구현한다. 누수 축은 `memory.geometries` 와 `memory.textures` 만 본다 —
+    - [x] 실패 확인: Run `npx vitest run tests/lib/render-budget.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 구현한다. 누수 축은 `memory.geometries` 와 `memory.textures` 만 본다 —
           `render.calls` 는 프레임마다 달라 누수 축이 아니다.
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/render-budget.test.ts` · Expected: PASS
-    - [ ] 커밋: `git add plugins/nereus-3d/lib tests/lib/render-budget.test.ts && git commit -m "feat(3d): 렌더 예산과 누수 판정"`
+    - [x] 통과 확인: Run `npx vitest run tests/lib/render-budget.test.ts` · Expected: PASS
+    - [x] 커밋: `git add plugins/nereus-3d/lib tests/lib/render-budget.test.ts && git commit -m "feat(3d): 렌더 예산과 누수 판정"`
   - Done when: 일곱 시나리오가 통과한다
 
 - [ ] T5. 스킬 2종·에이전트·README
