@@ -36,7 +36,7 @@
     - [x] `plugin.json` 을 쓴다: name `nereus-3d`, version `0.1.0`, license `MIT`.
     - [x] `three-budget.json` 을 쓴다. `textureSlots` 는 three.js 머티리얼의 텍스처 슬롯이다:
           **추측하지 않고 실제 번들에서 뽑았다** — 도너 동봉 `three.module.js`(r160)에서
-          `this.<name>map|Map = null` 을 추출해 **26종**. `matcap` 은 `Map` 으로 끝나지 않아
+          `this.` 뒤에 오는 map/Map 속성 초기화를 추출해 **26종**. `matcap` 은 `Map` 으로 끝나지 않아
           손으로 더했고, 소문자 `this.map` 은 `[a-zA-Z]+Map` 이 놓쳐 테스트가 잡았다.
           `source` 는 three.js 머티리얼 문서 URL, `checkedAt` 은 오늘 날짜.
           `textureSlotsWhy` 에 "three.js 가 정하고 three.js 가 바꾸는 값이라 코드에 박지 않는다"를 적는다.
@@ -364,20 +364,20 @@
     - [x] 커밋: `git add plugins tests && git commit -m "feat(3d): 라우트 배선·프로세스 리그·도너 검증"`
   - Done when: 가드가 실제로 물고 역검증 3건이 전부 빨개지며 도너 테스트가 실제 결함을 잡는다
 
-- [ ] T7. 설치·doctor·전체 테스트
+- [x] T7. 설치·doctor·전체 테스트
   - Files: none
   - Interfaces: 없음
   - Steps:
-    - [ ] Run `node plugins/nereus/skills/spec/scripts/lint-tasks.mjs openspec/changes/2026-09-13-add-3d-harness/tasks.md` · Expected: 위반 0
-    - [ ] Run `claude plugin validate plugins/nereus-3d` · Expected: 통과
-    - [ ] Run `claude plugin marketplace update nereus && claude plugin install nereus-3d@nereus` · Expected: 설치 성공
-    - [ ] 설치본과 저장소를 대조한다: Run `diff -rq ~/.claude/plugins/cache/nereus/nereus-3d/0.1.0 plugins/nereus-3d` · Expected: 차이 0
+    - [x] Run `node plugins/nereus/skills/spec/scripts/lint-tasks.mjs openspec/changes/2026-09-13-add-3d-harness/tasks.md` · Expected: 위반 0
+    - [x] Run `claude plugin validate plugins/nereus-3d` · Expected: 통과
+    - [x] Run `claude plugin marketplace update nereus && claude plugin install nereus-3d@nereus` · Expected: 설치 성공
+    - [x] 설치본과 저장소를 대조한다: Run `diff -rq ~/.claude/plugins/cache/nereus/nereus-3d/0.1.0 plugins/nereus-3d` · Expected: 차이 0
           (설치 경로에 **버전이 한 겹 더 있다**)
-    - [ ] 라우트가 실제로 좁게 무는지 프로브로 확인한다. `확률형 아이템 규정`·`광고 단위`·
+    - [x] 라우트가 실제로 좁게 무는지 프로브로 확인한다. `확률형 아이템 규정`·`광고 단위`·
           `스토어 등재`·`3D`·`씬`·`렌더` 가 이 플러그인 라우트에 매치되지 않아야 한다.
-    - [ ] Run `node plugins/nereus/skills/doctor/scripts/doctor.mjs` · Expected: HIGH 충돌 0
-    - [ ] Run `node plugins/nereus/skills/build/scripts/run-tests.mjs` · Expected: PASS
-    - [ ] 커밋. **문서를 테스트 뒤에 쓰지 않는다** — evidence 가 STALE 이 된다
+    - [x] Run `node plugins/nereus/skills/doctor/scripts/doctor.mjs` · Expected: HIGH 충돌 0
+    - [x] Run `node plugins/nereus/skills/build/scripts/run-tests.mjs` · Expected: PASS
+    - [x] 커밋. **문서를 테스트 뒤에 쓰지 않는다** — evidence 가 STALE 이 된다
   - Done when: doctor 가 HIGH 0 이고 전체 테스트가 초록이며 설치본 차이가 0 이다
 
 ## Global Constraints
