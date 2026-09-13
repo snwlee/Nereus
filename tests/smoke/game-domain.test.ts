@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = "plugins/nereus-game";
-const DOMAIN_SKILLS = ["level", "narrative", "gameux", "asset", "balance"];
+const DOMAIN_SKILLS = ["level", "narrative", "gameux", "asset", "balance", "craft"];
 const ENGINE_TOKENS = [/game\.Players/, /:GetService/, /MonoBehaviour/, /UnityEngine/];
 
 describe("선언한 자산은 실재한다", () => {
@@ -85,3 +85,30 @@ describe("4차 배선", () => {
     expect(text).toContain("assetDoctor");
   });
 });
+
+// 제작 층. 에이전트 5종이 전부 디자인 산출물을 내고 게임플레이 코드를 짜는 주체가 없었다.
+// 스택 스킬들이 "로직을 엔진에서 떼어내는 설계가 곧 1단 커버리지"라고 적어놓고
+// 어떻게 떼는지를 비워두었다 — 선언만 하고 검사를 안 붙이면 다음 사이클에 바로 샌다.
+describe("제작 층", () => {
+  it("craft 스킬이 있다", () => {
+    expect(fs.existsSync(`${ROOT}/skills/craft/SKILL.md`)).toBe(true);
+  });
+
+  it("gameplay-engineer 에이전트가 있다", () => {
+    expect(fs.existsSync(`${ROOT}/agents/gameplay-engineer.md`)).toBe(true);
+  });
+
+  it("craft 스킬이 두 검사기를 가리킨다 — 만들고 부르는 곳이 없으면 게이트가 아니다", () => {
+    const text = fs.readFileSync(`${ROOT}/skills/craft/SKILL.md`, "utf8");
+    expect(text).toContain("purity-check.mjs");
+    expect(text).toContain("parity-check.mjs");
+  });
+
+  it("계층 경계가 데이터로 있고 엔진 3종을 덮는다", () => {
+    const data = JSON.parse(fs.readFileSync(`${ROOT}/layers.json`, "utf8"));
+    for (const engine of ["flutter", "roblox", "unity"]) {
+      expect(data.engines[engine]?.length, engine).toBeGreaterThan(0);
+    }
+  });
+});
+

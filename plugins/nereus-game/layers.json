@@ -1,0 +1,41 @@
+{
+  "note": "계층 경계는 엔진마다 다르지만 구조는 같다. 검사기는 이 파일을 집행할 뿐 계층도 금지 문자열도 모른다. 스택이 늘면 여기만 고친다. flutter 경계는 ToonTone test/architecture_test.dart 에서 채굴했다(2026-09-13).",
+  "engines": {
+    "flutter": [
+      {
+        "layer": "lib/core",
+        "forbid": ["package:flutter/", "package:flutter_test/", "dart:ui", "dart:io", "package:shared_preferences/", "package:firebase_core/", "package:cloud_firestore/", "package:google_mobile_ads/", "package:provider/", "package:path_provider/"],
+        "why": "규칙을 위젯 트리와 기기 없이 테스트할 수 있어야 한다. 밀리초 안에 도는 규칙은 실제로 테스트된다. 경계가 무너지면 규칙 변경이 느리고 불안정한 통합 테스트를 매번 통과해야 한다."
+      },
+      {
+        "layer": "lib/content",
+        "forbid": ["package:flutter/", "dart:ui", "dart:io"],
+        "why": "콘텐츠 파싱·검증은 순수 함수여야 CI 에서 팩 전수 검사가 돈다. I/O 가 섞이면 팩 하나 검사에 기기가 필요해진다."
+      },
+      {
+        "layer": "lib/game",
+        "forbid": ["/features/", "/shared/", "/design/"],
+        "why": "게임 규칙은 광고·원격 설정·화면을 몰라야 한다. 원격 설정이 규칙 계층에 스며들면 플래그 하나가 규칙을 바꾸는 경로가 숨고, 규칙을 위젯 없이 테스트할 수 없게 된다. 설정과 규칙을 잇는 코드는 설정 계층에 둔다."
+      }
+    ],
+    "roblox": [
+      {
+        "layer": "src/rules",
+        "forbid": ["game:GetService", "game.Players", "script.Parent", "workspace.", "Instance.new"],
+        "why": "규칙이 DataModel 을 만지는 순간 lune 으로 돌릴 수 없고 스튜디오를 켜야만 검증된다. 스튜디오를 켜야 하는 검사는 CI 에서 안 돌고, CI 에서 안 도는 검사는 결국 안 돈다."
+      },
+      {
+        "layer": "src/shared",
+        "forbid": ["game.Players.LocalPlayer", "UserInputService", "game:GetService(\"RunService\"):IsClient"],
+        "why": "서버와 클라이언트가 함께 쓰는 코드가 클라이언트 전역을 만지면 서버에서 터진다. 공유 계층은 어느 쪽에서 실행되는지 몰라야 한다."
+      }
+    ],
+    "unity": [
+      {
+        "layer": "Assets/Scripts/Core",
+        "forbid": ["UnityEngine", "MonoBehaviour", "ScriptableObject", "UnityEditor"],
+        "why": "MonoBehaviour 에 묻은 만큼 EditMode 로 못 옮긴다. EditMode 는 빠르고 PlayMode 는 느리다 — 순수 로직이 PlayMode 에 남으면 테스트가 느려지고 느린 테스트는 안 돌린다."
+      }
+    ]
+  }
+}
