@@ -255,22 +255,22 @@
     - [x] 커밋: `git add plugins/nereus-l10n/lib tests/lib/aso-advisor.test.ts && git commit -m "feat(l10n): ASO 로케일 우선순위 조언자"`
   - Done when: 다섯 시나리오가 통과한다
 
-- [ ] T7. 스킬 3종과 에이전트와 README
+- [x] T7. 스킬 3종과 에이전트와 README
   - Files: Create `plugins/nereus-l10n/skills/l10n/SKILL.md` · Create `plugins/nereus-l10n/skills/storelisting/SKILL.md` · Create `plugins/nereus-l10n/skills/typeface/SKILL.md` · Create `plugins/nereus-l10n/agents/l10n-engineer.md` · Create `plugins/nereus-l10n/README.md`
   - Interfaces: 없음
   - Steps:
-    - [ ] `skills/l10n/SKILL.md` — 소스 문자열 검사. `l10n-scan.mjs` 호출법, 제외 규칙,
+    - [x] `skills/l10n/SKILL.md` — 소스 문자열 검사. `l10n-scan.mjs` 호출법, 제외 규칙,
           ToonTone 461:0 사건("끄게 만드는 게이트는 게이트가 아니다")을 그대로 적는다.
-    - [ ] `skills/storelisting/SKILL.md` — 등재 텍스트. `store-l10n-check.mjs` 호출법.
+    - [x] `skills/storelisting/SKILL.md` — 등재 텍스트. `store-l10n-check.mjs` 호출법.
           **"번역하지 않기로 한 것은 이유와 함께 선언한다"를 원칙으로 적는다.**
           앱 이름이 검색 키워드라는 도너 판정을 적되 **실측 점유율은 적지 않는다**.
-    - [ ] `skills/typeface/SKILL.md` — 스크립트 커버리지·두부·RTL. `font-check.mjs` 호출법.
+    - [x] `skills/typeface/SKILL.md` — 스크립트 커버리지·두부·RTL. `font-check.mjs` 호출법.
           "렌더러는 빠진 글리프를 두부로 그리고 exit 0 한다"를 적는다.
           하네스가 폰트를 파싱하지 않고 **증거를 요구**하는 이유를 적는다.
-    - [ ] `agents/l10n-engineer.md` — 이름이 다른 세 플러그인과 겹치지 않게 한다.
+    - [x] `agents/l10n-engineer.md` — 이름이 다른 세 플러그인과 겹치지 않게 한다.
           TDD 절차는 `nereus:build` 것을 쓴다고 적는다.
-    - [ ] README 에 세 스킬·두 검사기·이관 내역과 "게임 고유 2건은 `nereus-game` 이 데이터로 주입한다"를 적는다.
-    - [ ] 커밋: `git add plugins/nereus-l10n && git commit -m "docs(l10n): 스킬 3종·에이전트·README"`
+    - [x] README 에 세 스킬·두 검사기·이관 내역과 "게임 고유 2건은 `nereus-game` 이 데이터로 주입한다"를 적는다.
+    - [x] 커밋: `git add plugins/nereus-l10n && git commit -m "docs(l10n): 스킬 3종·에이전트·README"`
   - Done when: 세 SKILL.md 와 에이전트가 존재하고 각각 자기 검사기를 가리킨다
 
 - [ ] T8. 라우트 배선·companion·가드·프로세스 리그
