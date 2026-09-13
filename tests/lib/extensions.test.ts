@@ -32,6 +32,39 @@ describe("loadExtensions", () => {
     expect(loadExtensions({ readJson, records: [{ name: "nereus-game@nereus", enabled: false, installPath: "/p/game" }] })).toEqual({ routes: [], stacks: [] });
   });
 
+  it("companions 를 모은다 — 설치 명령은 선언에서 유도한다", () => {
+    const readJson = () => ({
+      companions: [
+        {
+          id: "unity@unity-agent-plugin",
+          label: "Unity 공식 플러그인",
+          why: "엔진 절차 위임",
+          marketplace: "Unity-Technologies/unity-agent-plugin",
+          scope: "project",
+          when: { stack: "unity" },
+        },
+      ],
+    });
+    const out = loadExtensions({ readJson, records });
+    expect(out.companions).toHaveLength(1);
+    expect(out.companions[0]).toMatchObject({
+      id: "unity@unity-agent-plugin",
+      marketplace: "Unity-Technologies/unity-agent-plugin",
+      scope: "project",
+      when: { stack: "unity" },
+    });
+  });
+
+  it("id 나 marketplace 가 없는 companion 은 버린다 — 명령을 유도할 수 없다", () => {
+    const readJson = () => ({ companions: [{ label: "이름만 있다" }, { id: "x@y" }] });
+    expect(loadExtensions({ readJson, records }).companions).toEqual([]);
+  });
+
+  it("companions 를 선언하지 않은 확장도 깨지지 않는다", () => {
+    const readJson = () => ({ routes: [{ skill: "x:y", why: "z", re: "z" }] });
+    expect(loadExtensions({ readJson, records }).companions).toEqual([]);
+  });
+
   it("컴파일 안 되는 정규식 항목은 버린다", () => {
     const readJson = () => ({ routes: [{ skill: "x:y", why: "z", re: "(" }] });
     expect(loadExtensions({ readJson, records }).routes).toEqual([]);
