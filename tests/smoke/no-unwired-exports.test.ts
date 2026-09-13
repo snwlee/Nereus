@@ -12,8 +12,10 @@ const ROOTS = [
   "plugins/nereus-game/hooks/scripts",
   "plugins/nereus/hooks/scripts",
   "plugins/nereus/skills",
+  // 2026-09-13: nereus-ads 를 더했다. 빠져 있으면 이 플러그인만 MUST NOT 1번이 가드되지 않는다.
+  "plugins/nereus-ads/lib",
 ];
-const SEARCH = ["plugins/nereus", "plugins/nereus-game", "tests"];
+const SEARCH = ["plugins/nereus", "plugins/nereus-game", "plugins/nereus-ads", "tests"];
 
 function walk(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

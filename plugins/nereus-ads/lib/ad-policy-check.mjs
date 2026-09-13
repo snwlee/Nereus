@@ -7,7 +7,8 @@
 // 한 파일에 섞으면 "정지 위험"과 "돈 더 벌 수 있음"이 같은 무게로 나와 진짜가 묻힌다.
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { readCliInput, runCli } from "./cli-input.mjs";
 
 // new URL(...).pathname 은 Windows 에서 `/C:/...` 가 된다. 메인 개발 환경이 Windows 다.
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -145,4 +146,14 @@ export function checkAdPolicy({ build = null, units = null, session = null, plan
   }
 
   return { violations };
+}
+
+// 실행 진입점. **검사기를 만들고 프로세스로 부르는 곳이 없으면 그것은 게이트가 아니다.**
+// 코어 doctor 가 정확히 그 상태였다(단위 테스트 전부 초록 · `node doctor.mjs` 는 0바이트, 2026-09-13).
+// pathToFileURL 을 쓴다 — `file://${argv[1]}` 은 Windows 경로에서 깨진다.
+// 성공 경로에서 process.exit(0) 을 부르지 않는다 — 파이프 stdout 이 64KiB 에서 잘린다.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runCli(() => {
+    process.stdout.write(JSON.stringify(checkAdPolicy(readCliInput())) + "\n");
+  });
 }

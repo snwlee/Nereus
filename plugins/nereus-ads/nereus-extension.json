@@ -1,0 +1,20 @@
+{
+  "note": "코어 확장점에 붙는 순수 데이터. 코어는 이 파일을 읽기만 하고 코드를 import() 하지 않는다. 라우트는 좁게 쓴다 — 플러그인이 셋이고 MAX_HITS 가 2 라, 넓은 라우트 하나가 다른 둘의 자리를 뺏는다. 특히 `광고` 단독 단어는 쓰지 않는다: nereus-game:compliance(규정)와 ad-video 델리게이트(광고 영상)가 같은 단어를 놓고 경쟁한다.",
+  "routes": [
+    {
+      "skill": "nereus-ads:adpolicy",
+      "why": "정지 사유를 다룬다. 무효 트래픽·첫 세션 보호·동의 순서는 어기는 순간 아무 에러도 안 나고 나중에 계정 정지로 온다",
+      "re": "광고\\s?단위|ad\\s?unit\\s?id|ca-app-pub|테스트\\s?광고|데모\\s?광고|무효\\s?트래픽|invalid\\s?traffic|admob|\\bump\\b|광고\\s?동의|동의\\s?순서|개인화\\s?동의|첫\\s?세션\\s?전면"
+    },
+    {
+      "skill": "nereus-ads:adplacement",
+      "why": "배치는 정지 사유가 아니라 설계다. 노출을 줄이지 않고 타이밍·지면·포맷만 옮긴다",
+      "re": "전면\\s?광고|인터스티셜|interstitial|리워드\\s?광고|rewarded|앱오픈|app\\s?open\\s?ad|광고\\s?(배치|지면|타이밍|쿨다운|위치)|배너\\s?(배치|위치|지면)|네이티브\\s?광고|세션\\s?상한"
+    },
+    {
+      "skill": "nereus-ads:adrevenue",
+      "why": "퍼널 단계를 뭉치지 않고 레버 순서를 정한다. 게이트가 아니라 조언이다 — 어디에 힘을 쓸지는 사업 판단이다",
+      "re": "ecpm|\\brpm\\b|매치율|match\\s?rate|show\\s?rate|노출률|필\\s?레이트|fill\\s?rate|광고\\s?(수익|퍼널|매출)|ad\\s?revenue|미디에이션|mediation|광고\\s?리포트"
+    }
+  ]
+}
