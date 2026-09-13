@@ -76,4 +76,13 @@ describe("도메인 검사기 실행 진입점", () => {
     expect(codes).toContain("no-restricted-fallback");
     expect(codes).toContain("disclosure-surface");
   });
+  it("트랙 추천기를 프로세스로 돌려 로블록스 강제를 받는다", () => {
+    const input = JSON.stringify({ tasksText: "- [ ] T1. a\n- [x] T2. b [flow]\n", model: { platform: "roblox", revenue: "iap" } });
+    const out = runNode("plugins/nereus-game/lib/track-advisor.mjs", input);
+    const r = JSON.parse(out);
+    expect(r.recommendation).toBe("deep");
+    expect(r.reasons.map((x: any) => x.code)).toContain("platform-roblox");
+    expect(r.scope.tasks).toBe(2);
+    expect(r.scope.flows).toBe(1);
+  });
 });

@@ -70,4 +70,14 @@ describe("새 도메인 배선", () => {
     const md = fs.readFileSync("plugins/nereus-game/skills/balance/SKILL.md", "utf8");
     expect(md).toContain("nereus-game:compliance");
   });
+  it("track 스킬이 배선돼 있고 자기 추천기를 부른다", () => {
+    const skills = ext.routes.map((r: any) => r.skill);
+    expect(skills).toContain("nereus-game:track");
+    const md = fs.readFileSync("plugins/nereus-game/skills/track/SKILL.md", "utf8");
+    expect(md).toContain("track-advisor.mjs");
+  });
+  it("track SKILL 이 추천은 강제가 아님을 밝힌다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/track/SKILL.md", "utf8");
+    expect(md).toMatch(/강제하지 않는다|게이트가 아니다/);
+  });
 });
