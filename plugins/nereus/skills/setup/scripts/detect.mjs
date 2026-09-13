@@ -25,6 +25,7 @@ export const TOOLS = [
   { bin: "skillspector", label: "SkillSpector (스킬 보안 스캔)", required: false, group: "선택", install: { darwin: "uv tool install git+https://github.com/NVIDIA/skillspector.git", win32: "uv tool install git+https://github.com/NVIDIA/skillspector.git", linux: "uv tool install git+https://github.com/NVIDIA/skillspector.git" } },
   { bin: "strix", label: "Strix (앱 보안, Docker 필요)", required: false, group: "선택", install: { darwin: "curl -sSL https://strix.ai/install | bash", win32: "WSL2에서 curl -sSL https://strix.ai/install | bash", linux: "curl -sSL https://strix.ai/install | bash" } },
   { bin: "xelatex", label: "XeLaTeX (PDF LaTeX 옵션)", required: false, group: "선택", install: { darwin: "brew install --cask basictex", win32: "winget install MiKTeX.MiKTeX", linux: "apt install texlive-xetex" } },
+  { bin: "cloakbrowser", label: "CloakBrowser (조사 전용 — 차단 우회 브라우저)", required: false, group: "선택", install: npm("cloakbrowser"), note: "무료 티어로 **고정해서** 쓴다 — `export CLOAKBROWSER_VERSION=146.0.7680.177.5`. 고정하지 않으면 최신(v148+)을 받고 그건 Pro 구독이 있어야 내려받아진다. 우리 앱의 E2E·design·SEO 는 계속 chrome-devtools MCP 가 한다" },
   { bin: "flutter", label: "Flutter SDK", required: false, group: "스택", install: { darwin: "brew install --cask flutter", win32: "winget install Google.Flutter", linux: "https://docs.flutter.dev/get-started/install" } },
   { bin: "java", label: "JDK 21", required: false, group: "스택", install: { darwin: "brew install openjdk@21", win32: "winget install EclipseAdoptium.Temurin.21.JDK", linux: "apt install openjdk-21-jdk" } },
 ];

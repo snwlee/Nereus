@@ -16,6 +16,15 @@ describe("setup detect", () => {
       expect(t.install.win32).toBeTruthy();
     }
   });
+  it("cloakbrowser 는 선택이고 note 가 무료 핀을 못박는다", () => {
+    const t = TOOLS.find((x: any) => x.bin === "cloakbrowser");
+    expect(t, "cloakbrowser 행").toBeTruthy();
+    expect(t.required).toBe(false);
+    // 고정하지 않으면 최신(Pro)을 받는다. 설치 안내에 그 사실이 없으면 유료로 새어나간다.
+    expect(t.note).toContain("CLOAKBROWSER_VERSION");
+    expect(t.note).toContain("146");
+  });
+
   it("reports present/missing using injected probe and platform", () => {
     const probe = (bin: string) => ["node", "git", "typst"].includes(bin);
     const r = detect({ platform: "win32", probe });
