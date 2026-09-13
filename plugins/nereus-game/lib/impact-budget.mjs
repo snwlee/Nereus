@@ -9,7 +9,7 @@
 // 그리고 **사운드 큐와 교차 검증한다.** 사운드 검사는 "선언된 큐가 예산 안"이라 하고
 // 임팩트 검사는 "이펙트가 예산 안"이라 하는데, 둘이 서로를 안 보면
 // 소리 없이 터지는 이펙트를 아무도 못 잡는다. 도메인별 초록의 합은 게임의 초록이 아니다.
-import { readFileSync } from "node:fs";
+import { readCliInput, runCli } from "./cli-input.mjs";
 import { loadProfile } from "./profiles.mjs";
 
 export function checkImpact({ profile, plan, soundCues = null } = {}) {
@@ -70,14 +70,12 @@ export function checkImpact({ profile, plan, soundCues = null } = {}) {
 
 // 실행 진입점. stdin 으로 { genre, plan, soundCues } 를 받아 결과를 JSON 으로 낸다.
 // 검사기를 만들고 부르는 곳이 없으면 그것은 게이트가 아니다.
-function readStdin() {
-  try { return readFileSync(0, "utf8"); } catch { return ""; }
-}
 
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
-  const input = JSON.parse(readStdin() || "{}");
-  // loadProfile 이 알 수 없는 장르에 던진다 — 그때 프로세스는 0 이 아닌 코드로 끝난다.
-  const profile = loadProfile(input.genre);
-  process.stdout.write(JSON.stringify(checkImpact({ profile, plan: input.plan, soundCues: input.soundCues ?? null })) + "\n");
-  process.exit(0);
+  runCli(() => {
+    const input = readCliInput();
+    // loadProfile 이 알 수 없는 장르에 던진다 — 그때 프로세스는 0 이 아닌 코드로 끝난다.
+    const profile = loadProfile(input.genre);
+    process.stdout.write(JSON.stringify(checkImpact({ profile, plan: input.plan, soundCues: input.soundCues ?? null })) + "\n");
+  });
 }

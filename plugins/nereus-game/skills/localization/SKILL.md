@@ -35,14 +35,15 @@ cat "${CLAUDE_PLUGIN_ROOT}/locales.json"
 |---|---|
 | `tables` | 로케일별 문자열 테이블. `{ en: { "hud.jump": "Jump" }, ko: { ... } }` |
 | `sources` | 훑을 소스. `[{ file, text }]` |
-| `maxWidth` | UI 폭(문자 수). 장르 프로파일의 `l10n.maxWidth` 를 쓴다. 0 이면 폭 검사를 하지 않는다 |
+| `maxWidth` | UI 폭. 장르 프로파일의 `l10n.maxWidth` 를 쓴다. 0 이면 폭 검사를 하지 않는다 |
+| `fonts` | 로케일별 폰트 메트릭 `{ ko: { avgCharWidth: 1.0 } }`. 주면 실측 폭, 안 주면 근사 |
 | `accessor` | 문자열 테이블 접근자. 기본 `L(` |
 
 | 위반 코드 | 뜻 |
 |---|---|
 | `hardcoded` | 접근자를 거치지 않은 사용자 노출 문자열 |
 | `missing-key` | 기준 로케일에 있는 키가 그 로케일에 없다 |
-| `overflow` | 확장률을 곱하면 `maxWidth` 를 넘는다 |
+| `overflow` | 폭이 `maxWidth` 를 넘는다. `fonts` 를 주지 않으면 위반에 `approx: true` 가 붙는다 |
 
 ## 2. 하드코딩 판정 기준
 
@@ -57,3 +58,39 @@ cat "${CLAUDE_PLUGIN_ROOT}/locales.json"
 
 문자열 테이블에 문장을 통째로 넣는다. `"You have " .. n .. " coins"` 처럼 조각내면
 복수형·어순이 다른 언어에서 고칠 방법이 없다. 자리표시자를 쓴다.
+
+## 4. 폰트 — 게임에서는 미감이 아니라 라이선스·용량 문제다
+
+```bash
+echo '{"genre":"obby-platformer","fonts":[...],"targetLocales":["en","ko"],"userGeneratedText":true}' \
+  | node "${CLAUDE_PLUGIN_ROOT}/lib/font-check.mjs"
+```
+
+폰트 선언 형태:
+```json
+{ "name": "GameSans", "embedding": ["game"], "scripts": ["latin", "hangul"], "sizeKb": 400, "minSizePx": 18, "subset": false }
+```
+
+| 위반 코드 | 뜻 |
+|---|---|
+| `license-embedding` | `embedding` 에 `"game"` 이 없거나 **선언 자체가 없다** |
+| `script-uncovered` | 대상 로케일이 요구하는 스크립트를 어떤 폰트도 안 덮는다 |
+| `subset-unsafe` | 유저 생성 텍스트가 있는데 서브셋했다 |
+| `font-size-budget` | 폰트 용량 합이 장르 예산을 넘는다 |
+| `min-size` | 최소 표시 크기가 장르 하한 미만이다 |
+
+**선언이 없으면 허용으로 치지 않는다.** 상당수 폰트가 게임 임베딩을 금지하거나 별도 계약을
+요구한다. 웹폰트 라이선스로 게임에 넣는 것은 위반이다. 모름은 허용이 아니다.
+
+**유저 생성 텍스트가 있으면 서브셋을 금지한다.** 한글 11,172자를 다 넣으면 폰트가 수 MB 라
+서브셋이 표준 해법이다. 그런데 닉네임·채팅은 **어떤 글자가 올지 모른다** — 서브셋한 폰트에서는
+유저 이름이 두부(□□□)가 된다. 용량 최적화의 대가가 그거면 최적화가 아니다.
+
+글리프 판정은 **선언 대조**다(폰트 파일을 파싱하지 않는다). 실제 파일 검사보다 약하다 —
+선언과 실제가 다르면 못 잡는다. 필요해지면 파싱을 얹되, 선언이 있어야 얹을 자리가 생긴다.
+
+### 폭 판정은 폰트 메트릭이 있을 때만 실측이다
+
+`avgCharWidth` 는 `expansion` 과 **다른 축**이다. 한글은 번역하면 글자 수가 줄지만
+(`expansion` 0.8) 글자당 폭은 전각이라 라틴의 두 배다(`avgCharWidth` 1.0).
+둘을 섞으면 안 된다. `fonts` 를 주지 않으면 확장률 근사이고, 위반에 `approx: true` 가 붙는다.

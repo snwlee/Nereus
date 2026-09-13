@@ -42,5 +42,10 @@
     "maxParticles": 150,
     "minInputBufferMs": 60,
     "note": "연출이 대사 흐름을 끊으면 안 된다"
+  },
+  "typography": {
+    "maxFontKb": 2000,
+    "minSizePx": 15,
+    "note": "대사량이 많아 글리프 커버리지 요구가 가장 넓다"
   }
 }

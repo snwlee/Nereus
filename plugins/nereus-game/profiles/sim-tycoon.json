@@ -41,5 +41,10 @@
     "maxParticles": 200,
     "minInputBufferMs": 80,
     "note": "타이쿤은 타격이 거의 없다. 정지·흔들림을 쓰면 오히려 조작이 끊긴 것처럼 읽힌다"
+  },
+  "typography": {
+    "maxFontKb": 1200,
+    "minSizePx": 14,
+    "note": "상점·업그레이드 라벨이 작고 촘촘하다"
   }
 }

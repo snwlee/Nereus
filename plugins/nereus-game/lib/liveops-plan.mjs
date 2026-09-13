@@ -3,7 +3,7 @@
 // 실제 운영 지표는 아직 없다. 그래도 **계획의 내적 정합성**은 지금 판정할 수 있다 —
 // 구간 겹침 · 싱크/소스 균형 · 리텐션 곡선 형태 · 롤백 경로 존재는 지표와 무관하다.
 // 지표가 필요한 항목만 unmeasured 로 남긴다. 미설정과 실패를 구분한다.
-import { readFileSync } from "node:fs";
+import { readCliInput, runCli } from "./cli-input.mjs";
 import { loadProfile } from "./profiles.mjs";
 const DAYS = ["d1", "d7", "d30"];
 
@@ -57,14 +57,12 @@ export function checkLiveops({ profile, plan, metrics = null } = {}) {
 
 // 실행 진입점. stdin 으로 { genre, plan, metrics } 을 받아 결과를 JSON 으로 낸다.
 // 검사기를 만들고 부르는 곳이 없으면 그것은 게이트가 아니다.
-function readStdin() {
-  try { return readFileSync(0, "utf8"); } catch { return ""; }
-}
 
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
-  const input = JSON.parse(readStdin() || "{}");
-  // loadProfile 이 알 수 없는 장르에 던진다 — 그때 프로세스는 0 이 아닌 코드로 끝난다.
-  const profile = loadProfile(input.genre);
-  process.stdout.write(JSON.stringify(checkLiveops({ profile, plan: input.plan, metrics: input.metrics ?? null })) + "\n");
-  process.exit(0);
+  runCli(() => {
+    const input = readCliInput();
+    // loadProfile 이 알 수 없는 장르에 던진다 — 그때 프로세스는 0 이 아닌 코드로 끝난다.
+    const profile = loadProfile(input.genre);
+    process.stdout.write(JSON.stringify(checkLiveops({ profile, plan: input.plan, metrics: input.metrics ?? null })) + "\n");
+  });
 }

@@ -32,4 +32,7 @@ describe("장르 프로파일의 새 도메인 기준", () => {
       expect(r.violations.map((v: any) => v.code), g).not.toContain("no-baseline");
     }
   });
+  it("모든 장르가 typography 기준을 갖는다", () => {
+    for (const g of listProfiles()) expect(loadProfile(g).typography, g).toBeTruthy();
+  });
 });

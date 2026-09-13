@@ -44,4 +44,16 @@ describe("새 도메인 배선", () => {
     const md = fs.readFileSync("plugins/nereus-game/skills/gameux/SKILL.md", "utf8");
     expect(md).toContain("nereus-game:impact");
   });
+  it("localization 스킬이 폰트 검사기를 부른다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/localization/SKILL.md", "utf8");
+    expect(md).toContain("font-check.mjs");
+  });
+  it("asset 스킬이 폰트 라이선스를 경유 규칙으로 갖는다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/asset/SKILL.md", "utf8");
+    expect(md).toMatch(/폰트/);
+  });
+  it("gameux 가 폰트를 localization 으로 넘긴다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/gameux/SKILL.md", "utf8");
+    expect(md).toMatch(/폰트/);
+  });
 });

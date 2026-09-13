@@ -41,5 +41,10 @@
     "maxParticles": 300,
     "minInputBufferMs": 120,
     "note": "점프 입력이 애니메이션 중에 들어오므로 버퍼가 가장 길어야 한다"
+  },
+  "typography": {
+    "maxFontKb": 900,
+    "minSizePx": 18,
+    "note": "글자가 플레이 화면 위에 겹쳐 나와 외곽선 없이는 묻힌다"
   }
 }

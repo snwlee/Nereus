@@ -34,4 +34,38 @@ describe("도메인 검사기 실행 진입점", () => {
     const out = runNode("plugins/nereus-game/lib/impact-budget.mjs", JSON.stringify({ genre: "battle-pvp", plan, soundCues: ["swing"] }));
     expect(JSON.parse(out).violations.map((v: any) => v.code)).toContain("sound-missing");
   });
+  it("폰트 검사기를 프로세스로 돌려 라이선스 위반을 받는다", () => {
+    const fonts = [{ name: "WebOnly", embedding: ["web"], scripts: ["latin"], sizeKb: 100, minSizePx: 20 }];
+    const out = runNode("plugins/nereus-game/lib/font-check.mjs", JSON.stringify({ genre: "obby-platformer", fonts, targetLocales: ["en"] }));
+    expect(JSON.parse(out).violations.map((v: any) => v.code)).toContain("license-embedding");
+  });
+  // gemini 리뷰 [HIGH] 후속: 사유 있는 메시지를 만들어도 uncaught 로 던지면 스택트레이스에 묻힌다.
+  // CLI 는 사유만 내고 종료해야 한다.
+  it("깨진 JSON 은 스택트레이스 없이 사유만 내고 종료한다", () => {
+    for (const lib of ["sound-budget", "liveops-plan", "impact-budget", "font-check"]) {
+      let stderr = "";
+      let status = 0;
+      try {
+        runNode(`plugins/nereus-game/lib/${lib}.mjs`, "{bad json");
+      } catch (e: any) {
+        stderr = String(e.stderr ?? "");
+        status = e.status;
+      }
+      expect(status, lib).not.toBe(0);
+      expect(stderr, lib).toContain("stdin 으로 받은 JSON");
+      expect(stderr, lib).not.toContain("at async");
+      expect(stderr, lib).not.toContain("node:internal");
+    }
+  });
+  // gemini 리뷰 [CRITICAL], 측정으로 확정: 진입점의 process.exit(0) 이 파이프 stdout 을
+  // 정확히 64KiB(파이프 버퍼)에서 잘랐다. 조용한 데이터 손실이다 —
+  // 쓰기가 비동기로 끝나기 전에 프로세스가 죽는다. exit(0) 은 애초에 불필요하다.
+  it("큰 출력이 파이프에서 잘리지 않는다", () => {
+    const cues = Array.from({ length: 4000 }, (_, i) => ({ name: `c${i}`, visual: true }));
+    const input = JSON.stringify({ genre: "battle-pvp", plan: { maxParticles: 1, inputBufferMs: 999, cues }, soundCues: [] });
+    const out = runNode("plugins/nereus-game/lib/impact-budget.mjs", input);
+    expect(out.length).toBeGreaterThan(65536);
+    const parsed = JSON.parse(out);
+    expect(parsed.violations.length).toBe(8000);
+  });
 });
