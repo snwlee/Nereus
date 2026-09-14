@@ -84,9 +84,11 @@ export function readRounds(cwd, deps = {}) {
   } catch { return []; }
 }
 
-export function recordRound(cwd, { phase, source, verdict, files = {}, notes = "" }, deps = {}) {
+export function recordRound(cwd, { phase, source, verdict, blocking = null, files = {}, notes = "" }, deps = {}) {
   const writeFile = deps.writeFile ?? ((p, s) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, s); });
   const rec = { phase, source, verdict, files, notes, at: deps.now ?? Date.now() };
+  // 차단 개수는 아는 경우에만 남긴다. 없는 라운드(옛 기록)는 verdict 로 판정한다.
+  if (Number.isFinite(blocking)) rec.blocking = Number(blocking);
   const rounds = [...readRounds(cwd, deps), rec].slice(-MAX_ROUNDS);
   writeFile(roundsFile(cwd), JSON.stringify({ rounds }, null, 2));
   return rec;
@@ -104,7 +106,12 @@ export function designGate({ touched = [], hashes = {}, created = [], rounds = [
       const hash = hashes[t.file] ?? "";
       const covering = [...visual].reverse().find((r) => r.files?.[t.file] === hash);
       if (covering) {
-        if (covering.verdict !== "OK") {
+        // 게이트를 막는 것은 **차단 축의 지적**이다(design-feedback.mjs BLOCKING_AXES).
+        // 배치·표면 취향은 REVISE 로 기록되되 막지 않는다 - 2026-09-13 에 같은 두 파일이
+        // 다섯 라운드를 돌았고 요구가 라운드마다 뒤집혔다. 취향으로는 사람을 못 막는다.
+        // blocking 이 없는 옛 라운드는 예전처럼 verdict 로 판정한다.
+        const blocked = Number.isFinite(covering.blocking) ? covering.blocking > 0 : covering.verdict !== "OK";
+        if (blocked) {
           findings.push({ category: "design_feedback_unaddressed", file: t.file, message: `Gemini 가 REVISE 로 판정했고 그 뒤 이 파일이 바뀌지 않았습니다 — ${String(covering.notes || "").slice(0, 200) || "지적 사항 미반영"}` });
         }
         continue;

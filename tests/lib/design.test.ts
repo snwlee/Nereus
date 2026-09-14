@@ -221,3 +221,34 @@ describe("designGate", () => {
     expect(r.findings).toHaveLength(1);
   });
 });
+
+// ── 축 고정 (2026-09-15) ──────────────────────────────────────────────────────
+// 게이트가 보는 것은 verdict 가 아니라 라운드가 남긴 차단 개수다. 배치·표면 취향은
+// REVISE 로 기록되되 사람을 막지 않는다 - 그 축들이 라운드마다 서로 반대를 요구했다.
+describe("designGate — 차단은 blocking 개수로 판정한다", () => {
+  const touched = [{ file: "src/a.tsx", why: "visual-markup", created: false }];
+  const hashes = { "src/a.tsx": "h1" };
+
+  it("REVISE 여도 차단 항목이 0 이면 통과시킨다", () => {
+    const r = designGate({
+      touched, hashes,
+      rounds: [{ phase: "visual", verdict: "REVISE", blocking: 0, files: { "src/a.tsx": "h1" }, notes: "[CRITICAL][rhythm] 빈 공간" }],
+    });
+    expect(r.pass).toBe(true);
+  });
+
+  it("차단 항목이 있으면 막는다", () => {
+    const r = designGate({
+      touched, hashes,
+      rounds: [{ phase: "visual", verdict: "REVISE", blocking: 1, files: { "src/a.tsx": "h1" }, notes: "[HIGH][a11y] 대비 미달" }],
+    });
+    expect(r.pass).toBe(false);
+    expect(r.findings[0].category).toBe("design_feedback_unaddressed");
+  });
+
+  it("blocking 필드가 없는 옛 라운드는 예전처럼 verdict 로 판정한다", () => {
+    const old = { phase: "visual", verdict: "REVISE", files: { "src/a.tsx": "h1" }, notes: "옛 기록" };
+    expect(designGate({ touched, hashes, rounds: [old] }).pass).toBe(false);
+    expect(designGate({ touched, hashes, rounds: [{ ...old, verdict: "OK" }] }).pass).toBe(true);
+  });
+});

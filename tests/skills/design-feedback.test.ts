@@ -141,3 +141,89 @@ describe("planRecord — MCP 응답을 라운드로", () => {
     expect(() => planRecord({ phase: "nope", critique: "VERDICT: OK", hashOf })).toThrow(/direction|visual/);
   });
 });
+
+// ── 축 고정 (2026-09-15) ──────────────────────────────────────────────────────
+// 2026-09-13 googleplay-control 에서 같은 두 파일에 visual 라운드가 다섯 번 돌았고
+// 전부 REVISE 였다. 라운드마다 요구가 뒤집혔다 - "320px 은 세로 1열로" 다음 라운드가
+// "세로 스택이 너무 크다, 인라인으로", "1440px 은 2열로" 다음이 "2열은 높이가 안 맞으니
+// 세로로". 비평가는 매번 처음 보는 사람이라 직전에 자기가 시킨 것을 모른다.
+//
+// 그래서 두 가지를 고친다.
+//  (1) 뒤집히지 않는 축만 차단한다 - 접근성·계층·상태. 배치와 표면은 취향이라 권고로 남긴다.
+//  (2) 프롬프트에 직전 라운드의 지적을 실어 준다. 되돌리라고 요구하려면 그렇게 말해야 한다.
+import { AXES, BLOCKING_AXES, axisOf } from "../../plugins/nereus/skills/design/scripts/design-feedback.mjs";
+
+describe("축", () => {
+  it("여덟 축에 키가 있고, 차단 축은 그중 뒤집히지 않는 셋이다", () => {
+    expect(Object.keys(AXES)).toEqual(
+      expect.arrayContaining(["hierarchy", "rhythm", "depth", "type", "color", "states", "template", "a11y"]),
+    );
+    expect([...BLOCKING_AXES].sort()).toEqual(["a11y", "hierarchy", "states"]);
+  });
+
+  it("지적 줄에서 축 태그를 읽는다. 없으면 null", () => {
+    expect(axisOf("- [HIGH][a11y] 대비 2:1")).toBe("a11y");
+    expect(axisOf("- [HIGH] 대비 2:1")).toBeNull();
+    expect(axisOf("- [HIGH][없는축] x")).toBeNull();
+  });
+});
+
+describe("parseCritique — 차단은 축으로 가른다", () => {
+  it("차단 축의 HIGH 는 차단한다", () => {
+    const r = parseCritique("- [HIGH][a11y] 대비가 WCAG AA 미달\nVERDICT: REVISE");
+    expect(r.blocking).toHaveLength(1);
+    expect(r.verdict).toBe("REVISE");
+  });
+
+  it("배치·표면 취향 축은 CRITICAL 이어도 권고로만 남는다 - 여기서 진동이 났다", () => {
+    const r = parseCritique(
+      "- [CRITICAL][rhythm] 1440px 우측이 빈 공간이다\n- [HIGH][depth] 표면 규칙이 서로 다르다\nVERDICT: REVISE",
+    );
+    expect(r.blocking).toHaveLength(0);
+    expect(r.advisory).toHaveLength(2);
+    // verdict 는 그대로 REVISE 다 - 기록에는 남는다. 다만 게이트를 막지 않는다.
+    expect(r.verdict).toBe("REVISE");
+  });
+
+  it("축을 안 붙인 CRITICAL 은 그대로 차단한다 - 가장 센 지적까지 흘려보내지 않는다", () => {
+    expect(parseCritique("- [CRITICAL] 읽을 수 없다\nVERDICT: REVISE").blocking).toHaveLength(1);
+  });
+
+  it("축을 안 붙인 HIGH 는 권고다 - 태그를 안 붙인 것으로 사람을 무한히 막지 않는다", () => {
+    const r = parseCritique("- [HIGH] 뭔가 아쉽다\nVERDICT: REVISE");
+    expect(r.blocking).toHaveLength(0);
+    expect(r.untagged).toBe(1);
+  });
+});
+
+describe("planRecord — 라운드에 차단 개수를 남긴다", () => {
+  const hashOf = (files: string[]) => Object.fromEntries(files.map((f) => [f, "h:" + f]));
+  it("게이트가 verdict 가 아니라 이 숫자를 본다", () => {
+    const r = planRecord({
+      phase: "visual",
+      critique: "- [CRITICAL][rhythm] 빈 공간\nVERDICT: REVISE",
+      files: ["a.css"],
+      hashOf,
+    });
+    expect(r.round.blocking).toBe(0);
+    expect(r.round.verdict).toBe("REVISE");
+  });
+});
+
+describe("visualPrompt — 직전 라운드를 기억시킨다", () => {
+  it("직전 지적을 싣고, 되돌리려면 그렇게 말하라고 요구한다", () => {
+    const p = visualPrompt({
+      shots: [{ path: "s.png", width: 320 }],
+      previous: "[CRITICAL][rhythm] 320px 에서 3열은 답답하다 - 세로 1열로 바꿀 것",
+    });
+    expect(p).toContain("320px 에서 3열은 답답하다");
+    expect(p).toMatch(/되돌리|철회|REVERSAL/);
+  });
+  it("직전 라운드가 없으면 그 절을 넣지 않는다", () => {
+    expect(visualPrompt({ shots: [{ path: "s.png", width: 320 }] })).not.toMatch(/직전 라운드/);
+  });
+  it("축 태그를 출력 형식으로 요구한다", () => {
+    const p = visualPrompt({ shots: [{ path: "s.png", width: 320 }] });
+    expect(p).toContain("[a11y]");
+  });
+});

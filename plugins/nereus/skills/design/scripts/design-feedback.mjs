@@ -13,20 +13,42 @@ import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 import { designTouched, fileHashes, recordRound, readRounds, designGate } from "../../../hooks/scripts/lib/design.mjs";
 
-const CHECKLIST = [
-  "1. 계층: 스케일 대비로 시선 순서가 강제되는가, 아니면 전부 같은 무게인가",
-  "2. 리듬: 여백이 의도적으로 다른가, 아니면 모든 곳에 같은 패딩인가",
-  "3. 깊이: 겹침·그림자·표면·모션으로 층이 생기는가",
-  "4. 타이포: 폰트 페어링에 의도가 있는가, 기본 스택을 그냥 쓴 것인가",
-  "5. 색: 의미로 쓰였는가, 장식용 액센트 하나로 때웠는가",
-  "6. 상태: hover/focus/active 가 설계된 느낌인가",
-  "7. 템플릿티: 기본 Tailwind·shadcn 템플릿, 중앙 정렬 히어로+그라데이션 blob, 균일 카드 그리드로 보이는가",
-  "8. 접근성: 대비, 키보드 포커스 가시성, reduced-motion",
-];
+/** 여덟 축. 키는 비평 줄에 태그로 붙는다 — `- [HIGH][a11y] …`. */
+export const AXES = {
+  hierarchy: "계층: 스케일 대비로 시선 순서가 강제되는가, 아니면 전부 같은 무게인가",
+  rhythm: "리듬: 여백·배치가 의도적인가, 모든 곳에 같은 패딩인가 (열 수·폭·빈 공간도 이 축)",
+  depth: "깊이: 겹침·그림자·표면·모션으로 층이 생기는가",
+  type: "타이포: 폰트 페어링에 의도가 있는가, 기본 스택을 그냥 쓴 것인가",
+  color: "색: 의미로 쓰였는가, 장식용 액센트 하나로 때웠는가",
+  states: "상태: hover/focus/active 가 설계된 느낌인가",
+  template: "템플릿티: 기본 Tailwind·shadcn 템플릿, 중앙 정렬 히어로+그라데이션 blob, 균일 카드 그리드로 보이는가",
+  a11y: "접근성: 대비, 키보드 포커스 가시성, reduced-motion",
+};
+
+/**
+ * 게이트를 실제로 막는 축.
+ *
+ * ## 왜 셋뿐인가 (2026-09-13 googleplay-control)
+ *
+ * 같은 두 파일에 visual 라운드가 다섯 번 돌았고 전부 REVISE 였다. 요구가 라운드마다
+ * 뒤집혔다 — "320px 은 세로 1열로" 다음 라운드가 "세로 스택이 너무 크다, 인라인으로",
+ * "1440px 은 2열로" 다음이 "2열은 높이가 안 맞으니 세로 리스트로". 비평가는 매번 처음
+ * 보는 사람이라 직전에 자기가 시킨 것을 모른다. 그래서 고칠수록 다시 걸렸다.
+ *
+ * 뒤집힌 것은 **전부 배치·표면 취향**이었다(rhythm·depth·template). 재면 답이 나오는 축은
+ * 뒤집히지 않는다 — 대비는 숫자고, 포커스 링은 있거나 없고, 계층은 스케일 차이다.
+ * 그 셋만 막고 나머지는 권고로 남긴다. 취향으로 사람을 무한히 막지 않는다.
+ */
+export const BLOCKING_AXES = Object.freeze(["a11y", "hierarchy", "states"]);
+
+const CHECKLIST = Object.entries(AXES).map(([key, text], i) => `${i + 1}. [${key}] ${text}`);
 
 const VERDICT_RULE = [
   "출력 형식(이 형식만, 서론·요약문 없이):",
-  "- [CRITICAL|HIGH|MEDIUM|LOW] 한 줄 지적 — 무엇을 어떻게 바꿔야 하는지 구체적으로",
+  "- [CRITICAL|HIGH|MEDIUM|LOW][축] 한 줄 지적 — 무엇을 어떻게 바꿔야 하는지 구체적으로",
+  `축은 다음 중 하나를 그대로 씁니다: ${Object.keys(AXES).join(" | ")}`,
+  "예) - [HIGH][a11y] 비활성 버튼 텍스트 대비가 2.4:1 로 WCAG AA 미달 — 명도를 올릴 것",
+  "축을 빼지 마세요. 축이 없는 지적은 권고로만 기록되고 반영 여부를 추적할 수 없습니다.",
   "마지막 줄에 정확히: VERDICT: OK   (고칠 게 없을 때)  또는  VERDICT: REVISE",
   "실제 제품 스크린샷으로 통할 수준이 아니면 봐주지 말고 REVISE 를 주세요.",
 ].join("\n");
@@ -49,11 +71,15 @@ export function directionPrompt({ brief = "", target = "web", refs = "" } = {}) 
   ].filter(Boolean).join("\n");
 }
 
-export function visualPrompt({ shots = [], context = "" } = {}) {
+export function visualPrompt({ shots = [], context = "", previous = "" } = {}) {
   const list = shots.map((s) => `- ${s.width}px 폭: ${path.basename(s.path)}`).join("\n");
+  // 비평가는 매번 처음 보는 사람이다. 직전에 자기가 시킨 것을 모르면 그것을 되돌리라고
+  // 요구하고, 화면은 두 요구 사이를 오간다(2026-09-13 다섯 라운드). 기억을 실어 준다.
+  const memory = String(previous || "").trim();
   return [
     "당신은 까다로운 시니어 프로덕트 디자이너입니다. 첨부한 렌더 스크린샷의 **미감과 완성도**를 비평하세요.",
     context ? `\n## 화면 맥락\n${context.trim()}` : "",
+    memory ? `\n## 직전 라운드에서 당신이 요구한 것\n${memory}\n\n지금 화면은 이 요구를 반영한 결과입니다. 반영됐으면 그 항목은 다시 지적하지 마세요.\n그 요구가 틀렸다고 판단해 되돌려야 한다면, 새 지적이 아니라 **철회**입니다 — 줄 맨 앞에 [REVERSAL] 을 붙이고 이전 판단의 무엇이 틀렸는지 적으세요.` : "",
     "",
     "## 첨부 (첨부 순서 = 아래 순서)",
     list || "(없음)",
@@ -67,22 +93,53 @@ export function visualPrompt({ shots = [], context = "" } = {}) {
   ].filter(Boolean).join("\n");
 }
 
-const SEV = /^\s*[-*]?\s*\[(CRITICAL|HIGH|MEDIUM|LOW)\]\s*(.+)$/i;
+const SEV = /^\s*[-*]?\s*\[(CRITICAL|HIGH|MEDIUM|LOW)\]\s*(?:\[([A-Za-z0-9_-]+)\])?\s*(.+)$/i;
 
-export function parseCritique(text) {
+/** 지적 줄의 축. 태그가 없거나 모르는 이름이면 null(권고로만 센다). */
+export function axisOf(line) {
+  const m = String(line ?? "").match(SEV);
+  const key = m && m[2] ? m[2].toLowerCase() : "";
+  return key && key in AXES ? key : null;
+}
+
+/**
+ * 비평 텍스트를 읽는다.
+ *
+ * `verdict` 는 예전 그대로다 — 기록에는 남는다. **게이트가 보는 것은 `blocking`** 이다.
+ * 차단은 (a) 차단 축의 CRITICAL·HIGH, (b) 축을 안 붙인 CRITICAL 뿐이다. 배치·표면 취향은
+ * 아무리 세게 적혀도 권고로 남는다 — 그 축들이 라운드마다 서로 반대를 요구했다.
+ */
+export function parseCritique(text, { blockingAxes = BLOCKING_AXES } = {}) {
   const raw = String(text ?? "");
+  const axes = new Set(blockingAxes);
   const items = [];
   for (const line of raw.split("\n")) {
     const m = line.match(SEV);
-    if (m) items.push({ severity: m[1].toUpperCase(), message: m[2].trim() });
+    if (!m) continue;
+    const severity = m[1].toUpperCase();
+    const tag = m[2] ? m[2].toLowerCase() : "";
+    const axis = tag && tag in AXES ? tag : null;
+    const severe = severity === "CRITICAL" || severity === "HIGH";
+    // 되돌리기 요구는 사람이 판단할 몫이다. 자동으로 막지 않는다.
+    const reversal = /\[REVERSAL\]/i.test(line);
+    items.push({
+      severity,
+      axis,
+      message: m[3].trim(),
+      blocking: severe && !reversal && (axis ? axes.has(axis) : severity === "CRITICAL"),
+    });
   }
   const vm = raw.match(/VERDICT:\s*(OK|REVISE)/i);
-  const blocking = items.filter((i) => i.severity === "CRITICAL" || i.severity === "HIGH");
+  const severe = items.filter((i) => i.severity === "CRITICAL" || i.severity === "HIGH");
+  const blocking = items.filter((i) => i.blocking);
+  const advisory = severe.filter((i) => !i.blocking);
+  const untagged = items.filter((i) => i.axis === null).length;
   // fail-closed: verdict 줄이 없으면 통과로 치지 않는다. HIGH 이상이 하나라도 있으면 OK 주장을 무시한다.
-  const verdict = vm && vm[1].toUpperCase() === "OK" && blocking.length === 0 ? "OK" : "REVISE";
-  const summary = (blocking.length ? blocking : items).map((i) => `[${i.severity}] ${i.message}`).join(" / ").slice(0, 600)
+  const verdict = vm && vm[1].toUpperCase() === "OK" && severe.length === 0 ? "OK" : "REVISE";
+  const label = (i) => `[${i.severity}]${i.axis ? `[${i.axis}]` : ""} ${i.message}`;
+  const summary = (severe.length ? severe : items).map(label).join(" / ").slice(0, 600)
     || raw.trim().slice(0, 300);
-  return { verdict, items, summary, raw };
+  return { verdict, items, blocking, advisory, untagged, summary, raw };
 }
 
 // URL.pathname 은 Windows 에서 "/C:/..." 를 내놓는다 — fileURLToPath 를 거쳐야 한다.
@@ -113,11 +170,17 @@ export const MCP_SOURCE = "gemini-mcp";
 const PHASES = ["direction", "visual"];
 
 /** MCP 로 Gemini 에 넣을 프롬프트. planRunner 를 타지 않는 경로여서 프롬프트만 따로 뽑는다. */
-export function promptFor({ phase, brief = "", target = "web", refs = "", shots = [], context = "" } = {}) {
+export function promptFor({ phase, brief = "", target = "web", refs = "", shots = [], context = "", previous = "" } = {}) {
   if (!PHASES.includes(phase)) throw new Error(`phase 는 direction 또는 visual 이어야 합니다 (받은 값: ${phase})`);
   if (phase === "direction") return directionPrompt({ brief, target, refs });
   if (!shots.length) throw new Error("visual 프롬프트에는 스크린샷이 최소 1장 필요합니다 (--shot 320:path.png)");
-  return visualPrompt({ shots, context });
+  return visualPrompt({ shots, context, previous });
+}
+
+/** 직전 visual 라운드의 지적. 프롬프트에 실어 같은 것을 되풀이하거나 뒤집지 않게 한다. */
+export function previousNotes(rounds = [], { phase = "visual" } = {}) {
+  const last = [...rounds].reverse().find((r) => r.phase === phase && String(r.notes || "").trim());
+  return last ? String(last.notes).trim() : "";
 }
 
 /**
@@ -133,6 +196,8 @@ export function planRecord({ phase, critique = "", files = [], hashOf } = {}) {
     phase,
     source: MCP_SOURCE,
     verdict: parsed.verdict,
+    // 게이트가 보는 숫자. verdict 는 기록용이다 - 취향 축의 REVISE 로는 막지 않는다.
+    blocking: parsed.blocking.length,
     files: list.length ? hashOf(list) : {},
     notes: parsed.summary,
   };
@@ -210,6 +275,7 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
           refs: flag(argv, "--refs", "") ?? "",
           shots: parseShots(argv),
           context: flag(argv, "--context", "") ?? "",
+          previous: previousNotes(readRounds(cwd)),
         }) + "\n");
         process.exit(0);
       }
@@ -221,9 +287,11 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
         hashOf: (list) => fileHashes(cwd, list),
       });
       recordRound(cwd, round);
-      process.stdout.write(`[design] ${phase} 라운드 기록 (${MCP_SOURCE}) — verdict=${round.verdict}, 대상 ${Object.keys(round.files).length}개 파일\n`);
+      process.stdout.write(
+        `[design] ${phase} 라운드 기록 (${MCP_SOURCE}) — verdict=${round.verdict}, 차단 ${round.blocking}건 · 권고 ${parsed.advisory.length}건, 대상 ${Object.keys(round.files).length}개 파일\n`,
+      );
       if (warning) process.stderr.write(`[design] 경고: ${warning}\n`);
-      process.exit(round.verdict === "OK" ? 0 : 1);
+      process.exit(round.blocking === 0 ? 0 : 1);
     } catch (e) {
       process.stderr.write(`${e.message}\n`);
       process.exit(2);
@@ -241,7 +309,7 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
   const context = flag(argv, "--context", "") ?? "";
   const prompt = cmd === "direction"
     ? directionPrompt({ brief, target: flag(argv, "--target", "web"), refs: flag(argv, "--refs", "") ?? "" })
-    : visualPrompt({ shots, context });
+    : visualPrompt({ shots, context, previous: previousNotes(readRounds(cwd)) });
 
   const promptFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "nereus-design-")), "prompt.txt");
   fs.writeFileSync(promptFile, prompt);
@@ -260,12 +328,20 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
   const files = cmd === "visual"
     ? fileHashes(cwd, (flag(argv, "--files", "") ?? "").split(",").map((s) => s.trim()).filter(Boolean))
     : {};
-  recordRound(cwd, { phase: cmd, source: plan.source, verdict: critique.verdict, files, notes: critique.summary });
+  recordRound(cwd, {
+    phase: cmd, source: plan.source, verdict: critique.verdict,
+    blocking: critique.blocking.length, files, notes: critique.summary,
+  });
 
   process.stdout.write(critique.raw.trim() + "\n\n");
-  process.stdout.write(`[design] ${cmd} 라운드 기록 — verdict=${critique.verdict}, 대상 ${Object.keys(files).length}개 파일\n`);
+  process.stdout.write(
+    `[design] ${cmd} 라운드 기록 — verdict=${critique.verdict}, 차단 ${critique.blocking.length}건 · 권고 ${critique.advisory.length}건, 대상 ${Object.keys(files).length}개 파일\n`,
+  );
+  if (critique.untagged) {
+    process.stderr.write(`[design] 축을 안 붙인 지적 ${critique.untagged}건 — CRITICAL 만 차단으로 셉니다.\n`);
+  }
   if (cmd === "visual" && !Object.keys(files).length) {
     process.stderr.write("[design] 경고: --files 를 주지 않아 어떤 파일도 이 비평으로 커버되지 않습니다. 게이트는 계속 차단합니다.\n");
   }
-  process.exit(critique.verdict === "OK" ? 0 : 1);
+  process.exit(critique.blocking.length === 0 ? 0 : 1);
 }
