@@ -145,3 +145,5 @@ node "$D" record visual --critique-file /tmp/critique.txt --files src/hero/Hero.
 
 ## 기록
 라운드는 `.nereus/design-feedback.json` 에 최근 20건까지 남는다. handoff 갱신 시 미이행 라운드를 "열린 질문"에 옮긴다.
+
+웹 이펙트 라이브러리를 참고할 때는 `references/web-effect-repos.md` 를 먼저 본다 — **라이선스부터 확인한다.**

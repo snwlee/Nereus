@@ -77,6 +77,23 @@ const req = buildRequest({ endpoint: model.endpoint, prompt, key, inputs: { aspe
 `aspectRatios`·`durations`·`resolutions` 는 **모델마다 다르다.** 카탈로그 항목에 실려 있으니
 거기 있는 값만 넣는다. 지어낸 값을 보내면 상류가 거부한다.
 
+## 3.5 프롬프트를 어디서 가져오나
+
+**본문을 여기 복사하지 않는다.** 라이선스가 명시된 코퍼스가 아니고, 아래 셋은 계속 채워진다 —
+복사본은 낡았다는 표시 없이 틀린다(three.js 문서를 Context7 으로 조회하고 복사하지 않는 것과 같은 판단).
+**필요할 때 열어 보고, 결과물에는 출처를 남긴다.**
+
+| 자료실 | 무엇이 있나 |
+|---|---|
+| [Cinematique](https://vvsvs.pro) | 촬영기법을 프롬프트로 옮긴 것 150개 — 카메라워크 41 · 조명 30 |
+| [Emotion Direction](https://seedance-emotion-direction.vercel.app) | 감정 25개. **감정 이름 대신 눈·입·턱의 순서**로 적는다 — 모델이 이름보다 동작을 잘 받는다 |
+| [YouMind](https://youmind.com) | 프롬프트 3만+ · 한국어 · 매일 채움 |
+
+Emotion Direction 은 **Seedance 전용**이고, Seedance 계열은 이 스킬의 카탈로그에 실제로 있다
+(`seedance-lite-t2v`·`seedance-pro-t2v` 등). 그래서 t2v/i2v 프롬프트를 쓸 때 바로 맞물린다.
+
+셋 다 2026-09-15 에 접속을 확인했다. 죽어 있으면 **"자료 없음"이 아니라 링크가 낡은 것**이다.
+
 ## 4. 규칙
 
 - **키 값을 출력하지 않는다.** 로그·에러·커밋 어디에도 남기지 않는다.
