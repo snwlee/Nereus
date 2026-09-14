@@ -14,7 +14,15 @@ nereus:common 규칙. 담당: researcher.
 1. `gh search repos "<키워드>" --sort stars --limit 20 --json fullName,stargazersCount,pushedAt,description,license` / `gh search code`. 구현·라이브러리 질문은 여기서 대부분 끝난다.
 2. WebSearch → 상위 결과 WebFetch. 공식 문서·1차 자료 우선. 날짜를 기록.
 3. `last30days` 스킬(설치 시): Reddit/X/YouTube/HN 최근 30일 반응. 사용자 불만·실사용 후기용.
-4. `Agent-Reach`(설치 시): 특정 트윗·영상·스레드 원문이 필요할 때만.
+4. **Agent Reach**: 플랫폼 원문(트윗·영상 자막·스레드·RSS)이 필요할 때. **먼저 무엇이 살아 있는지 묻는다:**
+   ```bash
+   agent-reach doctor          # 채널별 현재 상태와 지금 쓰는 백엔드
+   ```
+   **백엔드를 여기 적지 않는다** — 상류가 주기적으로 갈아치운다(2026-03·2026-06 에 실제로 교체됐다).
+   `doctor` 가 알려주는 경로를 그대로 쓴다. 미설치면 `/nereus:setup` 이 설치법을 낸다.
+   **미설치를 "자료 없음"으로 읽지 않는다** — 채널이 없는 것이지 결과가 0인 게 아니다.
+   무료로 바로 되는 것: 웹페이지 전문(Jina Reader), YouTube 자막, RSS/Atom.
+   Twitter·Reddit·Instagram 등은 사용자의 기존 브라우저 세션이 필요하다 — 사용자가 직접 붙인다.
 
 ## 2.1 차단에 막혔을 때만 — CloakBrowser
 

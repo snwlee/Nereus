@@ -14,7 +14,8 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 nereus:research(순서와 출력 형식), nereus:pdf(최종 산출물).
 
 ## 규칙
-- 순서: `gh search repos/code` → WebSearch/WebFetch → last30days 스킬(커뮤니티 반응) → Agent-Reach(소셜·영상 원문).
+- 순서: `gh search repos/code` → WebSearch/WebFetch → last30days 스킬(커뮤니티 반응) → Agent Reach(소셜·영상 원문).
+- Agent Reach 를 쓰기 전에 **`agent-reach doctor` 로 살아 있는 채널을 먼저 확인한다.** 백엔드는 상류가 갈아치우므로 기억하지 않는다. 미설치는 "자료 없음"이 아니라 **미검사**다.
 - 모든 주장에 출처 URL과 날짜. 출처 없는 문장은 넣지 않는다.
 - 비교표에는 최근 활동(마지막 커밋), 라이선스, 스타 수, 우리 스택 적합성을 반드시 포함.
 - 결론은 추천 하나 + 이유 + 리스크. 나열만 하고 끝내지 않는다.

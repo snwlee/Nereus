@@ -35,6 +35,17 @@ Gemini는 알파 채널을 내지 못한다. 스킬이 두 단계로 만든다.
 - 단독 실행: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/cutout.py" in.png --method chroma --bg white`
 - macOS에서 rembg 종료 시 onnxruntime mutex 오류가 찍힐 수 있다. 파일은 그 전에 저장되며 무해하다.
 
+## 영상·립싱크·오디오는 여기가 아니다 — `nereus:video`
+
+Gemini 웹세션은 **이미지만** 만든다. 텍스트→영상·이미지→영상·립싱크·음악은
+`nereus:video` 가 Muapi 로 한다(**유료 키** `MUAPI_API_KEY`).
+
+**무료 이미지 경로를 유료로 바꾸지 않는다.** 이미지는 계속 웹세션이 기본이다.
+유료 경로는 웹세션이 **못 하는 것**에만 쓴다.
+
+모델 카탈로그(537종)는 `muapi-models.json`, 로더는 `scripts/muapi-catalog.mjs`,
+호출은 `scripts/muapi-client.mjs`. 출처는 [Open-Generative-AI](https://github.com/Anil-matcha/Open-Generative-AI)(MIT).
+
 ## 백엔드 (`--backend auto|web|api`, 설정 `image.backend`)
 - **web**: 로그인된 Gemini 웹 세션. 무료. macOS에서 Chrome 쿠키(`__Secure-1PSID`, `__Secure-1PSIDTS`)를 자동으로 읽고, 세션이 죽으면 스스로 다시 읽는다.
 - **api**: `GEMINI_API_KEY`로 google-genai 호출. 이미지 모델 `gemini-2.5-flash-image`. 소액 과금.
