@@ -24,6 +24,8 @@ tasks 파일에서 첫 미완료 태스크를 고른다. 태스크마다:
    > **Iron Law — NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.**
    > 실패하는 테스트 없이 프로덕션 코드를 쓰지 않는다.
 2. **GREEN**: 테스트를 통과시키는 최소 구현. 처음 쓰는 API는 Context7로 확인.
+   **무엇을 만들지는 `references/laziness-ladder.md` 의 사다리로 정한다** — 버티는 첫 단에서 멈춘다.
+   사다리는 해답을 줄이는 것이지 문제를 읽는 것을 줄이지 않는다. 충돌하면 TDD 게이트가 이긴다.
 3. **REFACTOR**: 중복 제거, 이름 정리. 테스트 다시 실행.
 4. tasks 체크박스를 채우고 handoff.md의 "완료"와 "다음"을 갱신한다.
 
