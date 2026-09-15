@@ -1,7 +1,7 @@
 // 회귀: "export 했는데 밖에서 아무도 안 쓰는 것"이 이 프로젝트에서 반복해 나왔다
 // (미배선 확장점 · dangling route · isUnityProject · 마커 상수 4종).
 // export 는 계약이고, 아무도 쓰지 않는 계약은 유지 비용만 남기며 배선 착각을 만든다.
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -33,9 +33,6 @@ function walk(dir: string): string[] {
 const CODE = /\.(mjs|cjs|js|ts|tsx)$/;
 const corpus = SEARCH.flatMap(walk).filter((f) => CODE.test(f));
 
-type Reader = (file: string) => string;
-const diskReader: Reader = (f) => fs.readFileSync(f, "utf8");
-
 function referencedOutside(name: string, self: string, text: Map<string, string>): boolean {
   for (const [f, src] of text) if (f !== self && src.includes(name)) return true;
   return false;
@@ -51,14 +48,14 @@ function usedInMainBlock(src: string, name: string): boolean {
 
 // 코퍼스를 **한 번만** 읽어 메모리에 둔다. 예전에는 export 이름마다 코퍼스 전체를
 // 디스크에서 다시 읽어 7만 번 넘게 읽었다 — 결과는 같고 벽시계 시간만 부하를 탔다.
-function findOrphans(read: Reader = diskReader): string[] {
+function findOrphans(): string[] {
   const text = new Map<string, string>();
-  for (const f of corpus) text.set(f, read(f));
+  for (const f of corpus) text.set(f, fs.readFileSync(f, "utf8"));
 
   const orphans: string[] = [];
   for (const root of ROOTS) {
     for (const file of walk(root).filter((f) => f.endsWith(".mjs"))) {
-      const src = text.get(file) ?? read(file);
+      const src = text.get(file) ?? fs.readFileSync(file, "utf8");
       for (const m of src.matchAll(/^export (?:function|const|class)\s+([A-Za-z_$][\w$]*)/gm)) {
         if (!referencedOutside(m[1], file, text) && !usedInMainBlock(src, m[1])) orphans.push(`${m[1]} (${file})`);
       }
@@ -76,13 +73,16 @@ describe("unwired export 금지", () => {
   // 벽시계 시간이 머신 부하를 타서 전체 스위트에서 5초 기본 타임아웃을 간헐적으로 넘겼다
   // (2026-09-15, 3회 중 1회 실패). 타임아웃을 올리는 것은 증상 처치라 읽기 횟수를 고정한다.
   // 시간이 아니라 횟수를 재는 이유: 시간 단언은 그 자체가 또 하나의 부하 의존 플레이크다.
+  // **주입한 리더를 세지 않고 fs 자체를 센다.** 주입구만 세면 회귀가 fs 를 직접 부를 때
+  // 카운터를 우회해 게이트가 조용히 통과한다 — 실제로 그 구멍을 돌연변이로 확인했다.
   it("파일을 export 마다 다시 읽지 않는다", () => {
-    let reads = 0;
-    findOrphans((f) => {
-      reads += 1;
-      return fs.readFileSync(f, "utf8");
-    });
-    expect(reads).toBeLessThanOrEqual(corpus.length * 2);
+    const spy = vi.spyOn(fs, "readFileSync");
+    try {
+      findOrphans();
+      expect(spy.mock.calls.length).toBeLessThanOrEqual(corpus.length * 2);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
