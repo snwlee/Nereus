@@ -33,8 +33,12 @@ function walk(dir: string): string[] {
 const CODE = /\.(mjs|cjs|js|ts|tsx)$/;
 const corpus = SEARCH.flatMap(walk).filter((f) => CODE.test(f));
 
-function referencedOutside(name: string, self: string): boolean {
-  return corpus.some((f) => f !== self && fs.readFileSync(f, "utf8").includes(name));
+type Reader = (file: string) => string;
+const diskReader: Reader = (f) => fs.readFileSync(f, "utf8");
+
+function referencedOutside(name: string, self: string, text: Map<string, string>): boolean {
+  for (const [f, src] of text) if (f !== self && src.includes(name)) return true;
+  return false;
 }
 
 // 모듈 자신의 실행 진입점(main 가드 이후)에서 쓰는 것도 정당한 배선이다.
@@ -45,18 +49,40 @@ function usedInMainBlock(src: string, name: string): boolean {
   return m ? src.slice(m.index ?? 0).includes(name) : false;
 }
 
-describe("unwired export 금지", () => {
-  it("모든 export 가 자기 파일 밖에서 참조된다", () => {
-    const orphans: string[] = [];
-    for (const root of ROOTS) {
-      for (const file of walk(root).filter((f) => f.endsWith(".mjs"))) {
-        const src = fs.readFileSync(file, "utf8");
-        for (const m of src.matchAll(/^export (?:function|const|class)\s+([A-Za-z_$][\w$]*)/gm)) {
-          if (!referencedOutside(m[1], file) && !usedInMainBlock(src, m[1])) orphans.push(`${m[1]} (${file})`);
-        }
+// 코퍼스를 **한 번만** 읽어 메모리에 둔다. 예전에는 export 이름마다 코퍼스 전체를
+// 디스크에서 다시 읽어 7만 번 넘게 읽었다 — 결과는 같고 벽시계 시간만 부하를 탔다.
+function findOrphans(read: Reader = diskReader): string[] {
+  const text = new Map<string, string>();
+  for (const f of corpus) text.set(f, read(f));
+
+  const orphans: string[] = [];
+  for (const root of ROOTS) {
+    for (const file of walk(root).filter((f) => f.endsWith(".mjs"))) {
+      const src = text.get(file) ?? read(file);
+      for (const m of src.matchAll(/^export (?:function|const|class)\s+([A-Za-z_$][\w$]*)/gm)) {
+        if (!referencedOutside(m[1], file, text) && !usedInMainBlock(src, m[1])) orphans.push(`${m[1]} (${file})`);
       }
     }
-    expect(orphans).toEqual([]);
+  }
+  return orphans;
+}
+
+describe("unwired export 금지", () => {
+  it("모든 export 가 자기 파일 밖에서 참조된다", () => {
+    expect(findOrphans()).toEqual([]);
+  });
+
+  // 회귀: 이 검사는 export 이름마다 코퍼스 전체를 디스크에서 다시 읽어 7만 번 넘게 읽었고,
+  // 벽시계 시간이 머신 부하를 타서 전체 스위트에서 5초 기본 타임아웃을 간헐적으로 넘겼다
+  // (2026-09-15, 3회 중 1회 실패). 타임아웃을 올리는 것은 증상 처치라 읽기 횟수를 고정한다.
+  // 시간이 아니라 횟수를 재는 이유: 시간 단언은 그 자체가 또 하나의 부하 의존 플레이크다.
+  it("파일을 export 마다 다시 읽지 않는다", () => {
+    let reads = 0;
+    findOrphans((f) => {
+      reads += 1;
+      return fs.readFileSync(f, "utf8");
+    });
+    expect(reads).toBeLessThanOrEqual(corpus.length * 2);
   });
 });
 
