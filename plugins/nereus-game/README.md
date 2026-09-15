@@ -135,6 +135,7 @@ detectFlutterGame(root) → { runner, flame, flavors, layers, notes }
 | `obby-platformer` | 도전 → 실패 → 재시도 → 통과 | 난이도 절벽 |
 | `battle-pvp` | 조우 → 교전 → 정산 → 재장비 | **지배 전략** (선택지 하나가 압도) |
 | `narrative` | 도입 → 선택 → 전개 → 귀결 | 페이싱 (경제가 없을 수 있다) |
+| `casual-puzzle` | 판 진입 → 수 소비 → 클리어/실패 → 수명 회복 대기 | 난이도 절벽 (임계 2 — 가장 좁다) |
 
 알 수 없는 장르는 **던진다.** 기본값으로 떨어지면 수치가 그럴듯한 채로 틀린다.
 

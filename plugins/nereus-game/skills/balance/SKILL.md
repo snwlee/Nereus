@@ -18,10 +18,20 @@ nereus:common 규칙을 따른다. 담당 에이전트: economy-designer.
 
 ```js
 import { loadProfile, listProfiles } from "../../lib/profiles.mjs";
-const profile = loadProfile("sim-tycoon"); // 또는 "obby-platformer"
+const profile = loadProfile("casual-puzzle");
 ```
 
-쓸 수 있는 장르는 `node plugins/nereus-game/lib/profiles.mjs` 로 확인한다.
+쓸 수 있는 장르는 `node plugins/nereus-game/lib/profiles.mjs` 로 확인한다. 지금 다섯이다:
+
+| 프로파일 | 주 실패 양상 | 절벽 임계 |
+|---|---|---|
+| `sim-tycoon` | `bottleneck` | 8 |
+| `narrative` | `pacing` | 6 |
+| `battle-pvp` | `dominant-strategy` | 4 |
+| `obby-platformer` | `cliff` | 3 |
+| `casual-puzzle` | `cliff` | 2 |
+
+임계가 장르마다 다르다는 것이 요점이다. 같은 곡선이 오비에서는 초록이고 퍼즐에서는 벽이다.
 
 알 수 없는 장르는 **던진다**. 기본값으로 떨어지지 않는다 — 다른 장르로 밸런싱하면 수치가
 그럴듯한 채로 틀리고, 그건 수치가 없는 것보다 나쁘다.
@@ -76,6 +86,16 @@ const r = simulate({ profile, economy, turns: 60, seed: 1 });
 
 수치를 낸 것으로 끝내지 않는다. 기준을 태스크의 완료 조건에 적는다 —
 예: "`bottlenecks` 가 비어 있고 `cliffs` 가 2개 이하". 기준 없는 수치는 판정이 아니다.
+
+## 시뮬레이터가 아직 재지 않는 것
+
+시뮬레이터의 실패 축은 셋이다 — 병목·절벽·지배 전략. **캐주얼 퍼즐의 고유 실패인
+"수명(에너지) 고갈로 세션이 강제 종료된다"는 이 셋 어디에도 없다.** `casual-puzzle` 로
+밸런싱하면 곡선의 벽은 잡히지만 수명 게이트는 잡히지 않는다.
+
+그러니 퍼즐을 볼 때는 시뮬레이터 결과를 "곡선은 통과"로만 읽고, 수명·재시도 경제는
+따로 판정한다. 재지 않은 것을 통과로 읽지 않는다 — 그건 기준 없는 초록이다.
+네 번째 축을 넣으려면 `balance-sim.mjs` 에 `economy.lives` 입력과 재시도 벽 계산이 필요하다.
 
 ## 하지 말 것
 

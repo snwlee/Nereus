@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { loadProfile } from "../../plugins/nereus-game/lib/profiles.mjs";
+import fs from "node:fs";
+import { loadProfile, listProfiles } from "../../plugins/nereus-game/lib/profiles.mjs";
 import { checkSound } from "../../plugins/nereus-game/lib/sound-budget.mjs";
 import { checkImpact } from "../../plugins/nereus-game/lib/impact-budget.mjs";
 import { simulate } from "../../plugins/nereus-game/lib/balance-sim.mjs";
@@ -86,5 +87,28 @@ describe("casual-puzzle 곡선 회귀 게이트", () => {
     const a = simulate({ profile, economy: smooth, turns: 40, seed: 7 });
     const b = simulate({ profile, economy: smooth, turns: 40, seed: 7 });
     expect(a.summary).toEqual(b.summary);
+  });
+});
+
+describe("문서가 프로파일 목록과 어긋나지 않는다", () => {
+  it("balance SKILL.md 가 casual-puzzle 을 언급한다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/balance/SKILL.md", "utf8");
+    expect(md).toContain("casual-puzzle");
+  });
+
+  it("수명 게이트가 아직 축이 아니라는 사실이 적혀 있다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/balance/SKILL.md", "utf8");
+    expect(md).toMatch(/수명|에너지/);
+  });
+
+  it("README 가 프로파일 다섯을 전부 적는다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/README.md", "utf8");
+    for (const g of listProfiles()) expect(md).toContain(`\`${g}\``);
+  });
+
+  it("프로파일이 다섯이다", () => {
+    expect(listProfiles().sort()).toEqual(
+      ["battle-pvp", "casual-puzzle", "narrative", "obby-platformer", "sim-tycoon"],
+    );
   });
 });
