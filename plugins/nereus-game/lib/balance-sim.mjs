@@ -25,23 +25,57 @@ export function simulate({ profile, economy, turns, seed = 1 }) {
   const base = Number(economy?.income?.base) || 0;
   const growth = Number(economy?.income?.growth) || 1;
 
+  // 수명(에너지). **없으면 무한이다** — 수명 시스템이 없는 장르가 대부분이고,
+  // 여기서 0 으로 시작하면 기존 경제 정의가 전부 첫 턴부터 막힌다.
+  const livesCap = Number(economy?.lives?.cap);
+  const hasLives = Number.isFinite(livesCap) && livesCap > 0;
+  const regenTurns = Math.max(1, Number(economy?.lives?.regenTurns) || 1);
+
   let resource = 0;
   let stageIndex = 0;
+  let lives = hasLives ? livesCap : null;
+  let tries = 0;
   const log = [];
 
   for (let turn = 0; turn < turns; turn += 1) {
     const income = base * growth ** turn;
     resource += income;
+
+    // 회복이 먼저다. 이번 턴에 돌아온 목숨으로 이번 턴에 시도할 수 있어야
+    // "30분 기다렸다 한 판"이라는 실제 흐름과 맞는다.
+    if (hasLives && turn > 0 && turn % regenTurns === 0) lives = Math.min(livesCap, lives + 1);
+
     let clearedStage = null;
+    let blocked = false;
     const next = stages[stageIndex];
-    if (next && resource >= next.cost) {
-      resource -= next.cost;
-      clearedStage = next.name;
-      stageIndex += 1;
+    if (next) {
+      if (hasLives && lives <= 0) {
+        // 목숨이 없어 시도조차 못 한 턴. 세션이 끊기는 사건이 바로 이것이다.
+        blocked = true;
+      } else {
+        if (hasLives) lives -= 1;
+        tries += 1;
+        const needed = Math.max(1, Number(next.attempts) || 1);
+        if (tries >= needed && resource >= next.cost) {
+          resource -= next.cost;
+          clearedStage = next.name;
+          stageIndex += 1;
+          tries = 0;
+        }
+      }
     }
+
     // rand 를 소비해 시드가 결과에 실제로 반영되게 한다(장래 확률 요소의 자리).
     const jitter = 0;
-    log.push({ turn, income, resource: Math.max(0, resource + jitter * rand()), clearedStage });
+    log.push({
+      turn,
+      income,
+      resource: Math.max(0, resource + jitter * rand()),
+      clearedStage,
+      lives,
+      blocked,
+      stageIndex: clearedStage ? stageIndex - 1 : stageIndex,
+    });
   }
 
   return { turns: log, summary: summarize({ profile, economy, log, stageIndex, stages }) };
