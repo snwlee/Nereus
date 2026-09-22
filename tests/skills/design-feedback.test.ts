@@ -67,6 +67,29 @@ describe("planRunner", () => {
     expect(p.error).toMatch(/agy/);
     expect(p.bin).toBeUndefined();
   });
+  // 2026-09-22 실측: 계정 기본 모델(Pro)은 이미지 첨부 비평의 긴 응답을 생성하다
+  // "connection to Gemini was lost" 로 죽는다 — 7회 연속. 같은 프롬프트가 flash 로는 완주했다.
+  // 그래서 visual 은 flash 를 기본으로 둔다. 짧은 direction 라운드는 계정 기본값을 유지한다.
+  it("pins a visual round to gemini-flash because pro drops the stream on long image critiques", () => {
+    const p = planRunner({ phase: "visual", shots: [{ path: "a.png", width: 320 }], promptFile: "/tmp/p.txt", has: () => true });
+    expect(p.args).toEqual(expect.arrayContaining(["--model", "gemini-flash"]));
+  });
+  it("lets an explicit model override the visual default", () => {
+    const p = planRunner({ phase: "visual", shots: [{ path: "a.png", width: 320 }], promptFile: "/tmp/p.txt", model: "gemini-pro", has: () => true });
+    expect(p.args).toEqual(expect.arrayContaining(["--model", "gemini-pro"]));
+    expect(p.args).not.toContain("gemini-flash");
+  });
+  it("leaves a direction round on the account default until a model is asked for", () => {
+    const p = planRunner({ phase: "direction", promptFile: "/tmp/p.txt", has: () => true });
+    expect(p.args).not.toContain("--model");
+    const q = planRunner({ phase: "direction", promptFile: "/tmp/p.txt", model: "gemini-flash", has: () => true });
+    expect(q.args).toEqual(expect.arrayContaining(["--model", "gemini-flash"]));
+  });
+  it("never puts --model on the agy fallback, which has no such flag", () => {
+    const p = planRunner({ phase: "direction", model: "gemini-flash", has: (b: string) => b === "agy" });
+    expect(p.bin).toBe("agy");
+    expect(p.args).not.toContain("--model");
+  });
   it("refuses a visual round with no screenshots", () => {
     expect(planRunner({ phase: "visual", shots: [], has: () => true }).error).toMatch(/스크린샷/);
   });

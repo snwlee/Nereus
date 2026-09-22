@@ -145,18 +145,27 @@ export function parseCritique(text, { blockingAxes = BLOCKING_AXES } = {}) {
 // URL.pathname 은 Windows 에서 "/C:/..." 를 내놓는다 — fileURLToPath 를 거쳐야 한다.
 const GEMINI_CLI = () => path.resolve(fileURLToPath(new URL("../../image/scripts/gemini_cli.py", import.meta.url)));
 
-export function planRunner({ phase, shots = [], promptFile = "", has = (b) => !!which(b) } = {}) {
+// visual 은 gemini-flash 를 기본으로 둔다. 2026-09-22 실측: 계정 기본 모델(Pro)이
+// 이미지 첨부 비평의 긴 응답을 생성하다 "connection to Gemini was lost" 로 7회 연속 죽었고
+// (크레딧은 미차감 — 생성 전 단계가 아니라 스트림이 끊긴다), 같은 프롬프트가 flash 로는 완주했다.
+const VISUAL_MODEL = "gemini-flash";
+
+export function planRunner({ phase, shots = [], promptFile = "", model = "", has = (b) => !!which(b) } = {}) {
   if (phase === "direction") {
     // 웹세션이 먼저다. 2026-09-12 실측: agy 는 할당량 소진(~2026-09-16 리셋), 웹세션은 살아 있다.
     // agy 는 웹세션이 없을 때의 대체 경로로 남긴다.
-    if (has("python3")) return { bin: "python3", args: [GEMINI_CLI(), "ask", "--prompt-file", promptFile], source: "gemini-web" };
+    if (has("python3")) {
+      const args = [GEMINI_CLI(), "ask", "--prompt-file", promptFile];
+      if (model) args.push("--model", model);
+      return { bin: "python3", args, source: "gemini-web" };
+    }
     if (has("agy")) return { bin: "agy", args: ["-p", "@" + promptFile], source: "gemini-agy", stdinPrompt: true };
     return { error: "Gemini 채널이 없습니다 — agy(Antigravity CLI) 또는 python3 + Gemini 웹세션이 필요합니다. /nereus:setup 을 실행하세요." };
   }
   if (phase === "visual") {
     if (!shots.length) return { error: "visual 라운드에는 스크린샷이 최소 1장 필요합니다 (--shot 320:path.png)" };
     if (!has("python3")) return { error: "스크린샷 첨부 비평에는 python3 + Gemini 웹세션이 필요합니다 (agy 는 이미지 첨부를 받지 않습니다)." };
-    const args = [GEMINI_CLI(), "ask", "--prompt-file", promptFile];
+    const args = [GEMINI_CLI(), "ask", "--prompt-file", promptFile, "--model", model || VISUAL_MODEL];
     for (const s of shots) args.push("--file", s.path);
     return { bin: "python3", args, source: "gemini-web" };
   }
@@ -314,7 +323,7 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
   const promptFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "nereus-design-")), "prompt.txt");
   fs.writeFileSync(promptFile, prompt);
 
-  const plan = planRunner({ phase: cmd, shots, promptFile });
+  const plan = planRunner({ phase: cmd, shots, promptFile, model: flag(argv, "--model", "") ?? "" });
   if (plan.error) { process.stderr.write(plan.error + "\n"); process.exit(2); }
 
   const args = plan.stdinPrompt ? ["-p", prompt] : plan.args;
