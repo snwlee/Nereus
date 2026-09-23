@@ -167,3 +167,14 @@ describe("확장 라우트 병합", () => {
     expect(block).toContain("nereus-game:roblox — 로블록스");
   });
 });
+
+describe("router: montage", () => {
+  it("여러 씬짜리 영상 제작 요청은 nereus:montage 로 보낸다", () => {
+    for (const p of ["엄마 생일 기념 영상 만들어보자", "OpenMontage 로 광고 영상 제작", "결혼식 영상 편집본 만들어줘", "뮤직비디오 만들자"])
+      expect(routePrompt(p).map((h) => h.skill)).toContain("nereus:montage");
+  });
+  it("클립 한 개 생성이나 영상과 무관한 요청은 montage 가 아니다", () => {
+    expect(routePrompt("립싱크 해줘").map((h) => h.skill)).not.toContain("nereus:montage");
+    expect(routePrompt("로그인 화면 만들어").map((h) => h.skill)).not.toContain("nereus:montage");
+  });
+});

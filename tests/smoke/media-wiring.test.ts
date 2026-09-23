@@ -55,3 +55,18 @@ describe("video 라우트", () => {
     }
   });
 });
+
+describe("montage 배선", () => {
+  const MONTAGE = "plugins/nereus/skills/montage/SKILL.md";
+  it("montage 스킬이 OpenMontage 절차와 게이트 해제 규칙을 적는다", () => {
+    const t = fs.readFileSync(MONTAGE, "utf8");
+    for (const k of ["OpenMontage", "video-gate-override", "HIGGSFIELD_KEY", "Muapi", "nereus:image", "HyperFrames"]) expect(t, k).toContain(k);
+  });
+  it("video 스킬이 여러 씬 제작을 montage 로 넘긴다", () => {
+    expect(fs.readFileSync(VIDEO, "utf8")).toContain("nereus:montage");
+  });
+  it("라우터가 montage 를 지목한다", async () => {
+    const m: any = await import("../../plugins/nereus/hooks/scripts/lib/router.mjs");
+    expect(m.ROUTES.map((r: any) => r.skill)).toContain("nereus:montage");
+  });
+});

@@ -111,3 +111,39 @@ describe("pre-tool-guard — TDD 강제", () => {
     expect(handle(bash("npm test"), tddDeps())).toBeNull();
   });
 });
+
+describe("pre-tool-guard: video gate", () => {
+  const vg = (over: any = {}) => ({
+    rules: () => DEFAULT_RULES, staged: () => ({ files: [], diff: "" }),
+    videoGate: {
+      readFile: (p: string) => (p.endsWith("gen_i2v.py") ? "import higgsfield_client" : ""),
+      isOpenMontage: (d: string) => d.startsWith("/om"),
+      readOverride: () => null, dropOverride: () => {},
+      usedToday: () => 0, recordUse: () => {},
+      config: () => ({ enforce: "block", singleCallsPerDay: 2 }),
+      ...over,
+    },
+  });
+  it("OpenMontage 밖 유료 배치 스크립트를 막는다", () => {
+    const r = handle(bash("python3 scripts/gen_i2v.py"), vg())!;
+    expect(r.decision).toBe("block");
+    expect(r.reason).toContain("video-gate");
+  });
+  it("단발 호출을 허용하면 사용 횟수를 기록한다", () => {
+    const used: number[] = [];
+    expect(handle(bash("curl https://api.muapi.ai/api/v1/x"), vg({ recordUse: () => used.push(1) }))).toBeNull();
+    expect(used).toHaveLength(1);
+  });
+  it("오버라이드로 통과하면 오버라이드를 지운다", () => {
+    let dropped = false;
+    expect(handle(bash("python3 scripts/gen_i2v.py"), vg({ readOverride: () => "승인", dropOverride: () => { dropped = true; } }))).toBeNull();
+    expect(dropped).toBe(true);
+  });
+  it("유료 생성 MCP 도구도 단발 한도에 들어간다", () => {
+    const mcp = (name: string) => ({ cwd: "/r", tool_name: name, tool_input: {} });
+    expect(handle(mcp("mcp__higgsfield__generate_video"), vg())).toBeNull();
+    expect(handle(mcp("mcp__higgsfield__generate_video"), vg({ usedToday: () => 2 }))!.decision).toBe("block");
+    expect(handle(mcp("mcp__higgsfield__list_models"), vg({ usedToday: () => 9 }))).toBeNull();
+    expect(handle(mcp("mcp__codegraph__codegraph_explore"), vg({ usedToday: () => 9 }))).toBeNull();
+  });
+});

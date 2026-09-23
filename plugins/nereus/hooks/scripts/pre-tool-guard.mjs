@@ -15,6 +15,7 @@ import { normalizeToolEvent } from "./lib/harness.mjs";
 import { detectTestRunner, stackFileRules } from "./lib/stack.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
 import { loadExtensions } from "./lib/extensions.mjs";
+import { videoGateVerdict, effectiveCwd, VIDEO_GATE_DEFAULTS } from "./lib/video-gate.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_RULES = JSON.parse(fs.readFileSync(path.join(HERE, "..", "rules.default.json"), "utf8"));
@@ -107,7 +108,50 @@ function tddCheck(input, cwd, deps = {}) {
   return { decision: "block", reason: v.reason };
 }
 
+// ── 영상 게이트 기본 의존성. 판정은 lib/video-gate.mjs 가 한다 ─────────────────
+const VG_OVERRIDE = path.join(".nereus", "video-gate-override");
+const vgLedger = () => path.join(userConfigDir(), "video-gate.json");
+const today = () => new Date().toISOString().slice(0, 10);
+function isOpenMontageDir(dir) {
+  for (let d = dir; ; d = path.dirname(d)) {
+    if (fs.existsSync(path.join(d, "AGENT_GUIDE.md")) && fs.existsSync(path.join(d, "pipeline_defs"))) return true;
+    if (path.dirname(d) === d) return false;
+  }
+}
+const defaultVideoGate = (cwd) => ({
+  readFile: (p) => fs.readFileSync(p, "utf8"),
+  isOpenMontage: isOpenMontageDir,
+  readOverride: (dir) => { try { return fs.readFileSync(path.join(dir, VG_OVERRIDE), "utf8").trim() || "사유 없음"; } catch { return null; } },
+  dropOverride: (dir) => { try { fs.unlinkSync(path.join(dir, VG_OVERRIDE)); } catch { /* 이미 없음 */ } },
+  usedToday: () => { try { const j = JSON.parse(fs.readFileSync(vgLedger(), "utf8")); return j.date === today() ? j.count : 0; } catch { return 0; } },
+  recordUse: () => { try { let n = 0; try { const j = JSON.parse(fs.readFileSync(vgLedger(), "utf8")); if (j.date === today()) n = j.count; } catch { /* 새로 */ }
+    fs.mkdirSync(path.dirname(vgLedger()), { recursive: true }); fs.writeFileSync(vgLedger(), JSON.stringify({ date: today(), count: n + 1 })); } catch { /* fail-open */ } },
+  config: () => ({ ...VIDEO_GATE_DEFAULTS, ...(loadConfig({ cwd }).videoGate ?? {}) }),
+});
+
+// 유료 생성 MCP 도구: 공급자 이름 + 생성 동사. 목록·조회 도구는 제외.
+const MCP_PAID_RE = /^mcp__.*(higgsfield|muapi|fal|kling|seedance|replicate|runway|luma).*(generat|creat|submit|video|image|i2v|t2v|render)/i;
+const MCP_READ_RE = /(list|get|status|models|balance|search|describe|info)/i;
+
+function videoGateCheck(input, cwd, deps) {
+  const vg = { ...defaultVideoGate(cwd), ...(deps.videoGate ?? {}) };
+  const tool = input.tool_name ?? "";
+  let command = input.tool_input?.command ?? "";
+  if (tool.startsWith("mcp__")) {
+    if (!MCP_PAID_RE.test(tool) || MCP_READ_RE.test(tool.split("__").pop())) return null;
+    command = "curl https://api.muapi.ai/mcp-single-call"; // 단발 호출로 취급한다
+  } else if (tool !== "Bash") return null;
+  const dir = effectiveCwd(command, cwd);
+  const v = videoGateVerdict({ command, cwd, readFile: vg.readFile, isOpenMontage: tool.startsWith("mcp__") ? () => false : vg.isOpenMontage,
+    override: vg.readOverride(dir), usedToday: vg.usedToday(), config: vg.config() });
+  if (v.consumeOverride) vg.dropOverride(dir);
+  if (v.countsAsSingle) vg.recordUse();
+  if (v.warning) (deps.note ?? note)(v.warning);
+  return v.allow ? null : { decision: "block", reason: v.reason };
+}
+
 export function handle(input, deps = {}) {
+  if (String(input.tool_name ?? "").startsWith("mcp__")) return videoGateCheck(input, input.cwd || process.cwd(), deps);
   const ev = normalizeToolEvent(input); // Claude·Codex·OpenCode(브릿지) 입력을 하나로. 아래는 정규형만 본다.
   const cwd = ev.cwd;
   const tool = ev.tool;
@@ -120,6 +164,10 @@ export function handle(input, deps = {}) {
     let re;
     try { re = new RegExp(r.pattern); } catch { continue; } // 잘못된 규칙은 무시(fail-open)
     if (re.test(target)) return { decision: "block", reason: `[nereus:${r.id}] ${r.message}` };
+  }
+  if (tool === "Bash") {
+    const g = videoGateCheck({ ...input, tool_name: "Bash", tool_input: { command: target } }, cwd, deps);
+    if (g) return g;
   }
   if (["Edit", "Write", "MultiEdit"].includes(tool)) {
     const t = tddCheck(input, cwd, deps);
