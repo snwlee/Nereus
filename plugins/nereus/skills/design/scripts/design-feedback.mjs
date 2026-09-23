@@ -139,8 +139,13 @@ export function parseCritique(text, { blockingAxes = BLOCKING_AXES } = {}) {
   const label = (i) => `[${i.severity}]${i.axis ? `[${i.axis}]` : ""} ${i.message}`;
   const summary = (severe.length ? severe : items).map(label).join(" / ").slice(0, 600)
     || raw.trim().slice(0, 300);
-  return { verdict, items, blocking, advisory, untagged, summary, raw };
+  // 지적이 하나도 없고 OK 판정도 없으면 비평이 아니다 — 거절문("도와드릴 수 없습니다")이 여기로 온다.
+  // 이걸 라운드로 남기면 차단 0 이라 게이트가 통과한다(2026-09-22 SayTheWord 에서 두 라운드가 그랬다).
+  const isCritique = items.length > 0 || verdict === "OK";
+  return { verdict, items, blocking, advisory, untagged, summary, raw, isCritique };
 }
+
+const NOT_CRITIQUE = "비평이 아닙니다 — 형식에 맞는 지적도 VERDICT: OK 도 없습니다(거절문일 수 있음). 기록하지 않습니다. 실존 인물 사진은 화면별로 한 장씩 보내세요";
 
 // URL.pathname 은 Windows 에서 "/C:/..." 를 내놓는다 — fileURLToPath 를 거쳐야 한다.
 const GEMINI_CLI = () => path.resolve(fileURLToPath(new URL("../../image/scripts/gemini_cli.py", import.meta.url)));
@@ -200,6 +205,7 @@ export function planRecord({ phase, critique = "", files = [], hashOf } = {}) {
   if (!PHASES.includes(phase)) throw new Error(`phase 는 direction 또는 visual 이어야 합니다 (받은 값: ${phase})`);
   if (!String(critique).trim()) throw new Error("비평 내용이 비어 있습니다 — 빈 기록은 게이트를 우회합니다");
   const parsed = parseCritique(critique);
+  if (!parsed.isCritique) throw new Error(NOT_CRITIQUE);
   const list = phase === "visual" ? files.map((f) => String(f).trim()).filter(Boolean) : [];
   const round = {
     phase,
@@ -334,6 +340,10 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
   }
 
   const critique = parseCritique(r.stdout);
+  if (!critique.isCritique) {
+    process.stderr.write(`${NOT_CRITIQUE}\n--- 응답 ---\n${critique.raw.trim().slice(0, 1000)}\n`);
+    process.exit(2);
+  }
   const files = cmd === "visual"
     ? fileHashes(cwd, (flag(argv, "--files", "") ?? "").split(",").map((s) => s.trim()).filter(Boolean))
     : {};

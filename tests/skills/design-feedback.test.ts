@@ -38,6 +38,15 @@ VERDICT: OK
     expect(parseCritique("잘 모르겠습니다").verdict).toBe("REVISE");
     expect(parseCritique("").verdict).toBe("REVISE");
   });
+  it("marks a reply with no items and no OK verdict as not a critique", () => {
+    expect(parseCritique("죄송합니다. 이 요청은 도와드릴 수 없습니다.").isCritique).toBe(false);
+    expect(parseCritique("VERDICT: REVISE").isCritique).toBe(false);
+    expect(parseCritique("").isCritique).toBe(false);
+  });
+  it("counts an item or a bare OK verdict as a critique", () => {
+    expect(parseCritique("VERDICT: OK").isCritique).toBe(true);
+    expect(parseCritique("- [LOW] 여백이 좁다\nVERDICT: REVISE").isCritique).toBe(true);
+  });
   it("treats a HIGH or CRITICAL item as REVISE even if the verdict says OK", () => {
     const r = parseCritique("- [CRITICAL] 대비 2:1 로 읽을 수 없다\nVERDICT: OK");
     expect(r.verdict).toBe("REVISE");
@@ -136,7 +145,6 @@ describe("planRecord — MCP 응답을 라운드로", () => {
   it("verdict 를 기존 파서로 읽는다 (fail-closed 유지)", () => {
     expect(planRecord({ phase: "direction", critique: "VERDICT: OK", hashOf }).round.verdict).toBe("OK");
     // VERDICT 줄이 없으면 REVISE — MCP 경로가 게이트를 느슨하게 만들면 안 된다
-    expect(planRecord({ phase: "direction", critique: "좋아 보입니다", hashOf }).round.verdict).toBe("REVISE");
     expect(planRecord({ phase: "direction", critique: "- [HIGH] 대비 부족\nVERDICT: OK", hashOf }).round.verdict).toBe("REVISE");
   });
 
@@ -153,6 +161,12 @@ describe("planRecord — MCP 응답을 라운드로", () => {
   it("visual 에 파일이 없으면 경고를 붙인다 — 게이트가 계속 차단하기 때문", () => {
     const r = planRecord({ phase: "visual", critique: "VERDICT: OK", files: [], hashOf });
     expect(r.warning).toMatch(/files|커버/i);
+  });
+
+  it("지적도 OK 판정도 없는 응답은 거부한다 — 거절문이 차단 0 으로 기록되면 게이트가 통과한다", () => {
+    const refusal = "죄송합니다. 실존 인물의 사진이 포함된 이미지에 대해서는 도와드릴 수 없습니다.";
+    expect(() => planRecord({ phase: "visual", critique: refusal, files: ["src/a.css"], hashOf })).toThrow(/비평이 아닙니다/);
+    expect(() => planRecord({ phase: "direction", critique: "좋아 보입니다", hashOf })).toThrow(/비평이 아닙니다/);
   });
 
   it("빈 비평은 거부한다 — 빈 기록은 게이트 우회다", () => {

@@ -112,6 +112,16 @@ def postprocess(saved: list[str], args) -> None:
         print(json.dumps({"saved": str(out), "type": "AlphaImage", "method": args.transparent}), flush=True)
 
 
+def emit_answer(text: str | None) -> int:
+    """ask 의 출력. 빈 응답은 실패다 — 호출자(review·design)는 exit 0 을 "응답 있음"으로 읽는다.
+    2026-09-22: 75KB diff 에 Gemini 가 빈 응답을 돌려줬고 exit 0 이라 리뷰가 조용히 비었다."""
+    if not (text or "").strip():
+        print("FAILED: Gemini 가 빈 응답을 돌려줬습니다 (입력이 너무 크거나 스트림이 끊겼을 수 있음)", file=sys.stderr)
+        return 1
+    print(text)
+    return 0
+
+
 async def run_api(args) -> int:
     """google-genai API 백엔드. 텍스트는 gemini-2.5-flash, 이미지는 gemini-2.5-flash-image."""
     from google import genai
@@ -129,8 +139,7 @@ async def run_api(args) -> int:
         return 0
     if args.cmd == "ask":
         r = client.models.generate_content(model=args.model or "gemini-2.5-flash", contents=parts)
-        print(r.text)
-        return 0
+        return emit_answer(r.text)
     out = Path(args.out or ".").resolve(); out.mkdir(parents=True, exist_ok=True)
     for attempt in range(1, args.retries + 1):
         r = client.models.generate_content(model=args.model or "gemini-2.5-flash-image", contents=parts,
@@ -204,8 +213,7 @@ async def run(args) -> int:
         r = await client.generate_content(prompt, **kw)
 
         if args.cmd == "ask":
-            print(r.text)
-            return 0
+            return emit_answer(r.text)
 
         if not r.images:
             # The public-figure safety filter fires intermittently on the SAME
