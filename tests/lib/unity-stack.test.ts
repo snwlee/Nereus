@@ -87,3 +87,93 @@ describe("detectUnityAgentPlugin", () => {
     expect(out.advice).toContain("scope-user");
   });
 });
+
+// ── 에디터 실시간 제어(Unity CLI + Pipeline 패키지 + MCP) ─────────────────
+import { detectUnityEditorLink } from "../../plugins/nereus-game/lib/unity-stack.mjs";
+
+const link = (o: {
+  files?: Record<string, unknown>;
+  cli?: string | null;
+}) => {
+  const files = o.files ?? {};
+  return {
+    findCli: () => (o.cli === undefined ? "/u/.unity/bin/unity" : o.cli),
+    readJson: (p: string) => files[p.replace(/\\/g, "/")],
+    exists: (p: string) => p.replace(/\\/g, "/") in files,
+    claudeJson: "/h/.claude.json",
+  };
+};
+const PV = "/p/ProjectSettings/ProjectVersion.txt";
+const MANIFEST = "/p/Packages/manifest.json";
+const withPipeline = { dependencies: { "com.unity.pipeline": "0.7.0-exp.1" } };
+const mcpProject = { mcpServers: { "unity-editor-mcp": { command: "unity", args: ["mcp"] } } };
+
+describe("detectUnityEditorLink", () => {
+  it("Unity 프로젝트가 아니면 null", () => {
+    expect(detectUnityEditorLink("/p", link({}))).toBeNull();
+  });
+
+  it("CLI·pipeline·MCP 가 다 있으면 ready 이고 live", () => {
+    const out = detectUnityEditorLink(
+      "/p",
+      link({ files: { [PV]: "", [MANIFEST]: withPipeline, "/p/.mcp.json": mcpProject } }),
+    );
+    expect(out).toMatchObject({ status: "ready", live: true, missing: [] });
+    expect(out?.cli).toBe("/u/.unity/bin/unity");
+  });
+
+  it("MCP 만 없으면 partial 이지만 CLI 로 live 제어는 된다", () => {
+    const out = detectUnityEditorLink("/p", link({ files: { [PV]: "", [MANIFEST]: withPipeline } }));
+    expect(out).toMatchObject({ status: "partial", live: true, missing: ["mcp"] });
+  });
+
+  it("pipeline 패키지가 없으면 live 가 아니다", () => {
+    const out = detectUnityEditorLink(
+      "/p",
+      link({ files: { [PV]: "", [MANIFEST]: { dependencies: {} }, "/p/.mcp.json": mcpProject } }),
+    );
+    expect(out).toMatchObject({ status: "partial", live: false, missing: ["pipeline"] });
+  });
+
+  it("아무것도 없으면 absent 이고 빠진 것을 다 적는다", () => {
+    const out = detectUnityEditorLink(
+      "/p",
+      link({ cli: null, files: { [PV]: "", [MANIFEST]: { dependencies: {} } } }),
+    );
+    expect(out).toMatchObject({ status: "absent", live: false, missing: ["cli", "pipeline", "mcp"] });
+  });
+
+  it("전역·프로젝트별 ~/.claude.json 등록도 MCP 로 인정한다", () => {
+    const out = detectUnityEditorLink(
+      "/p",
+      link({
+        files: {
+          [PV]: "",
+          [MANIFEST]: withPipeline,
+          "/h/.claude.json": { projects: { "/p": mcpProject } },
+        },
+      }),
+    );
+    expect(out?.missing).toEqual([]);
+  });
+
+  it("unity 가 아닌 MCP 서버는 인정하지 않는다", () => {
+    const out = detectUnityEditorLink(
+      "/p",
+      link({
+        files: {
+          [PV]: "",
+          [MANIFEST]: withPipeline,
+          "/p/.mcp.json": { mcpServers: { other: { command: "npx", args: ["unity-mcp-lookalike"] } } },
+        },
+      }),
+    );
+    expect(out?.missing).toEqual(["mcp"]);
+  });
+
+  it("매니페스트를 못 읽으면 pipeline 을 없다고 단정하지 않고 사유를 남긴다", () => {
+    const out = detectUnityEditorLink("/p", link({ files: { [PV]: "", "/p/.mcp.json": mcpProject } }));
+    expect(out?.live).toBe(false);
+    expect(out?.why).toContain("manifest");
+  });
+});

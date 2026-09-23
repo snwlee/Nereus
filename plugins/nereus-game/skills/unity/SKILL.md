@@ -45,7 +45,8 @@ Unity -runTests -batchmode -nographics -quit
 ## 4. Unity 공식 플러그인에 위임한다
 
 Unity 가 낸 first-party 플러그인이 있다 — `unity@unity-agent-plugin`.
-스킬 29개 + Unity CLI + Unity MCP 서버(에디터 실시간 제어). Unity 팀이 직접 쓰고 보안 검토하며
+스킬 31개(0.1.6-beta 기준)다. **플러그인은 스킬 문서만 싣는다** — Unity CLI 와 MCP 서버는
+따로 설치해야 하고, 그 판정은 4.4 가 한다. Unity 팀이 직접 쓰고 보안 검토하며
 **엔진 업데이트와 함께 갱신한다.** 그래서 엔진 API 절차는 우리가 들고 있지 않는다 —
 들고 있으면 엔진이 바뀔 때마다 낡고, 낡은 절차는 틀린 절차다.
 `policy.json` 을 출처·확인일과 함께 데이터로 둔 것과 같은 이유다:
@@ -77,7 +78,7 @@ node "${CLAUDE_PLUGIN_ROOT}/lib/unity-stack.mjs"
 업데이트 명령을 낸다(마켓 갱신 → plugin update → **재시작**).
 
 `advice` 에 `scope-user` 가 있으면 알린다 — 전역 설치라 Unity 가 아닌 저장소에서도
-스킬 29개가 상시 로딩된다. 토큰 예산 손해다. Unity 저장소에서만 켜는 쪽을 권한다:
+스킬 31개가 상시 로딩된다. 토큰 예산 손해다. Unity 저장소에서만 켜는 쪽을 권한다:
 
 ```
 /plugin marketplace add Unity-Technologies/unity-agent-plugin
@@ -118,6 +119,26 @@ Unity 문서가 스스로 적은 한계다 — 단순 uGUI 작업은 개선 폭�
 Sonnet 5 에서는 주로 **정확성**을 보탤 뿐 기능 대부분은 플러그인 없이도 만든다.
 도입 근거는 "빨라진다"가 아니라 **"API 오답과 버전 드리프트가 줄어든다"** 이다.
 플러그인이 있다고 우리 게이트를 얇게 하지 않는다.
+
+### 4.4 에디터 실시간 제어 — CLI · pipeline · MCP
+
+플러그인이 `ready` 여도 열린 에디터를 조작할 통로가 있다는 뜻은 아니다. 같은 명령의 `editor` 필드가 따로 판정한다
+(Unity 프로젝트 안에서 불렀을 때만 붙는다):
+
+| `missing` 항목 | 뜻 | 채우는 명령 (사용자 승인 뒤) |
+|---|---|---|
+| `cli` | `unity` 명령이 PATH·`~/.unity/bin` 에 없다 | `curl -fsSL https://public-cdn.cloud.unity3d.com/hub/prod/cli/install.sh \| UNITY_CLI_CHANNEL=beta bash` |
+| `pipeline` | 매니페스트에 `com.unity.pipeline` 이 없다 | `unity pipeline install --project-path .` (매니페스트 변경 — 별도 커밋) |
+| `mcp` | `unity mcp` 를 띄우는 MCP 등록이 없다 | `claude mcp add --scope project --transport stdio unity-editor-mcp unity mcp` |
+
+- `live: true`(cli + pipeline) 이고 에디터가 열려 있으면(`unity status` 에 `ready`) **씬·프리팹·에셋 YAML 을 손으로 고치지 않고
+  `unity command` / MCP 로 조작한다.** 손으로 고친 YAML 은 GUID·fileID 가 어긋나도 컴파일이 통과해 에디터를 열어야 드러난다.
+- `mcp` 는 선택이다. 없어도 `unity command` 로 같은 일을 한다. `unity mcp configure claude-code` 의 기본값은
+  user 스코프라 Unity 가 아닌 저장소에도 서버가 뜬다 — 위 표처럼 project 스코프로 건다.
+- `unity status` 가 빈 목록이면 에디터가 꺼졌거나 **Safe Mode**(컴파일 에러)다. `unity pipeline list` 로 먼저 가른다.
+  꺼진 에디터를 가정하고 YAML 편집으로 되돌아가지 않는다.
+- `status: unknown` 은 매니페스트를 못 읽은 것이다. pipeline 이 없다고 단정하지 않는다.
+- **게이트는 그대로다.** 에디터를 직접 만질 수 있어도 로직 변경은 EditMode 테스트가 먼저다(4.2).
 
 ## 5. 하지 말 것
 

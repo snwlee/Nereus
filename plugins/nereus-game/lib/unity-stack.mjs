@@ -41,7 +41,7 @@ export function detectUnityRunner(cwd, fsx = defaultFs) {
 
 // ── Unity 공식 Claude Code 플러그인 판정 ────────────────────────────────
 //
-// Unity 가 낸 first-party 플러그인(스킬 29개 + Unity CLI + Unity MCP).
+// Unity 가 낸 first-party 플러그인(스킬 31개. CLI·MCP 는 싣지 않는다 — detectUnityEditorLink 가 따로 본다).
 // 엔진 API 절차는 엔진과 함께 낡으므로 우리가 들고 있지 않고 **위임**한다.
 // 그러려면 먼저 설치·활성 여부를 알아야 한다.
 //
@@ -91,13 +91,84 @@ export function detectUnityAgentPlugin(opts = {}) {
   const base = { version: entry.version, scope: entry.scope };
   if (enabled === false) return { ...base, status: "disabled", delegate: false };
 
-  // user 스코프는 Unity 가 아닌 저장소에서도 스킬 29개가 상시 로딩된다. 토큰 예산 손해다.
+  // user 스코프는 Unity 가 아닌 저장소에서도 스킬 31개가 상시 로딩된다. 토큰 예산 손해다.
   const advice = entry.scope === "user" ? ["scope-user"] : [];
   return { ...base, status: "ready", delegate: true, advice };
 }
 
+// ── 에디터 실시간 제어 판정 ────────────────────────────────────────────
+//
+// 공식 플러그인은 스킬 문서만 싣는다. 열린 에디터를 직접 조작하려면 세 가지가 따로 필요하다:
+//   cli      — `unity` 명령 (Unity CLI, 플러그인과 별개 설치)
+//   pipeline — 프로젝트 매니페스트의 `com.unity.pipeline` (에디터 쪽 수신부)
+//   mcp      — `unity mcp` 를 띄우는 MCP 서버 등록 (선택 — 없어도 CLI 로 제어된다)
+// 플러그인이 ready 라고 이 셋이 있는 것이 아니다. 섞어 판정하면 없는 통로로 씬을 고치려 든다.
+const PIPELINE_PACKAGE = "com.unity.pipeline";
+
+function findUnityCli() {
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const exe = process.platform === "win32" ? "unity.exe" : "unity";
+  const dirs = [...(process.env.PATH || "").split(path.delimiter), path.join(home, ".unity", "bin")];
+  for (const d of dirs) {
+    if (!d) continue;
+    const p = path.join(d, exe);
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+// command 가 unity 바이너리이고 첫 인자가 mcp 인 서버만 인정한다 — 이름만 비슷한 서버를 걸러낸다.
+function isUnityMcp(server) {
+  const cmd = path.basename(String(server?.command || "")).replace(/\.exe$/i, "");
+  return cmd === "unity" && Array.isArray(server?.args) && server.args[0] === "mcp";
+}
+
+function hasUnityMcp(cwd, readJson, claudeJson) {
+  const user = readJson(claudeJson);
+  const pools = [
+    readJson(path.join(cwd, ".mcp.json"))?.mcpServers,
+    user?.mcpServers,
+    user?.projects?.[cwd]?.mcpServers,
+  ];
+  return pools.some((servers) => servers && Object.values(servers).some(isUnityMcp));
+}
+
+/**
+ * @returns {null | { status: "ready"|"partial"|"absent"|"unknown", live: boolean,
+ *                    missing: string[], cli?: string, why?: string }}
+ *   live — CLI 와 pipeline 이 둘 다 있어 열린 에디터를 조작할 수 있다.
+ */
+export function detectUnityEditorLink(cwd, opts = {}) {
+  const {
+    findCli = findUnityCli,
+    readJson = readJsonFile,
+    exists = (p) => fs.existsSync(p),
+    claudeJson = path.join(process.env.HOME || process.env.USERPROFILE || "", ".claude.json"),
+  } = opts;
+  if (!exists(path.join(cwd, UNITY_MARKER))) return null;
+
+  const cli = findCli();
+  const manifest = readJson(path.join(cwd, UNITY_MANIFEST));
+  const pipeline = Boolean(manifest?.dependencies?.[PIPELINE_PACKAGE]);
+  const mcp = hasUnityMcp(cwd, readJson, claudeJson);
+
+  const missing = [];
+  if (!cli) missing.push("cli");
+  if (!pipeline) missing.push("pipeline");
+  if (!mcp) missing.push("mcp");
+
+  const base = { live: Boolean(cli && pipeline), missing, ...(cli ? { cli } : {}) };
+  // 매니페스트를 못 읽으면 "pipeline 없음"과 구분되지 않는다. 없다고 단정하지 않는다.
+  if (!manifest) return { ...base, status: "unknown", why: `manifest 를 읽을 수 없다: ${UNITY_MANIFEST}` };
+  const status = missing.length === 0 ? "ready" : missing.length === 3 ? "absent" : "partial";
+  return { ...base, status };
+}
+
 // 실행 진입점. 인자 없이 부르면 공식 플러그인 상태를 JSON 으로 낸다.
+// Unity 프로젝트 안에서 부르면 `editor` 에 실시간 제어 판정이 붙는다(기존 필드는 그대로).
 // process.exit(0) 을 부르지 않는다 — 파이프 stdout 이 잘린다.
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
-  process.stdout.write(JSON.stringify(detectUnityAgentPlugin()) + "\n");
+  const editor = detectUnityEditorLink(process.cwd());
+  const out = { ...detectUnityAgentPlugin(), ...(editor ? { editor } : {}) };
+  process.stdout.write(JSON.stringify(out) + "\n");
 }

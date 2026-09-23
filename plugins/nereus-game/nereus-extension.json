@@ -117,7 +117,7 @@
   "companions": [
     {
       "id": "unity@unity-agent-plugin",
-      "label": "Unity 공식 플러그인 (스킬 29개 + Unity CLI + Unity MCP)",
+      "label": "Unity 공식 플러그인 (스킬 31개 — CLI·pipeline·MCP 는 별도, unity 스킬 4.4)",
       "why": "엔진 API 절차를 위임한다 — 우리가 복사해두면 엔진 업데이트마다 낡는다",
       "marketplace": "Unity-Technologies/unity-agent-plugin",
       "scope": "project",
