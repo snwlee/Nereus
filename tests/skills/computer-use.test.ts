@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
 import { judge, HUMAN_ACTIVE_SECONDS } from "../../plugins/nereus/skills/computer-use/scripts/judge.mjs";
+import { parseCuaPermissions, parseOrcaCapabilities, parseHidIdle, parseArgs } from "../../plugins/nereus/skills/computer-use/scripts/probe.mjs";
+
+const fixture = (name: string) => readFileSync(`tests/fixtures/computer-use/${name}`, "utf8");
 
 // 실측 기준 probe: 이 맥(2026-09-24) — cua 0.28.2 설치, orca computer-use 동작.
 const probeAll = (over = {}) => ({
@@ -94,5 +98,40 @@ describe("judge — 안전", () => {
     const r = judge(probeAll(), { ...safeInput, risk: "whatever" });
     expect(r.verdict).toBe("ask");
     expect(r.reasons).toContain("risk-unknown");
+  });
+});
+
+// 픽스처는 전부 이 맥에서 실측 캡처한 출력이다(2026-09-24). 하네스가 만든 형식이 아니다.
+describe("probe 파서 — 실측 출력", () => {
+  it("Cua 데몬 없음은 두 권한 모두 unknown", () => {
+    expect(parseCuaPermissions(fixture("cua-permissions-no-daemon.json"))).toEqual({ accessibility: "unknown", screenRecording: "unknown" });
+  });
+
+  it("깨진 출력도 unknown — granted 로도 denied 로도 단정하지 않는다", () => {
+    expect(parseCuaPermissions("error: socket")).toEqual({ accessibility: "unknown", screenRecording: "unknown" });
+  });
+
+  it("Orca 는 클릭·스크린샷 가능, 대화상자 불가", () => {
+    expect(parseOrcaCapabilities(fixture("orca-capabilities.json"))).toEqual({ installed: true, click: true, screenshot: true, dialogs: false });
+  });
+
+  it("Orca 출력이 ok 가 아니면 설치 안 된 것으로 본다", () => {
+    expect(parseOrcaCapabilities('{"ok": false}').installed).toBe(false);
+  });
+
+  it("ioreg HIDIdleTime(ns)을 초로 바꾼다", () => {
+    expect(parseHidIdle(fixture("ioreg-hid-idle.txt"))).toBeCloseTo(536.19, 1);
+  });
+
+  it("HIDIdleTime 이 없으면 null", () => {
+    expect(parseHidIdle("nothing here")).toBeNull();
+  });
+});
+
+describe("probe 인자", () => {
+  it("기본은 read, 플래그를 켠다", () => {
+    expect(parseArgs([])).toMatchObject({ risk: "read", targetConfirmed: false, remoteControl: false });
+    expect(parseArgs(["--risk", "irreversible", "--target-confirmed", "--remote", "--approved", "--isolation", "--target-kind", "dialog"]))
+      .toEqual({ risk: "irreversible", targetConfirmed: true, remoteControl: true, approved: true, needsIsolation: true, targetKind: "dialog" });
   });
 });

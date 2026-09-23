@@ -1,0 +1,5 @@
+{
+  "daemon_running": false,
+  "reason": "no CuaDriver daemon is running under the driver's own identity (com.trycua.driver), so its real TCC status can't be read from this process. Run `cua-driver permissions grant` to grant + verify.",
+  "status": "unknown"
+}
