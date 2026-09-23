@@ -39,6 +39,10 @@
 - **WHEN** `risk` `input`, `humanIdleSeconds` 가 5
 - **THEN** `verdict` 가 `"block"`, `reasons` 에 `human-active`
 
+#### Scenario: 사람 유휴 시간을 못 잼
+- **WHEN** `risk` `input`, 대상 확인, `humanIdleSeconds` 가 null, 승인 없음
+- **THEN** `verdict` 가 `"ask"`, `reasons` 에 `human-idle-unknown`
+
 #### Scenario: 저장·전송 같은 행동은 승인 필요
 - **WHEN** `risk` `irreversible`, 대상 확인, 원격 아님, 승인 없음
 - **THEN** `verdict` 가 `"ask"`, `reasons` 에 `needs-approval`

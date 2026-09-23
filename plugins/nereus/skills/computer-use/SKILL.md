@@ -35,7 +35,7 @@ node "$S" --risk input --target-confirmed --target-kind dialog --isolation   # �
 | verdict | 행동 |
 |---|---|
 | `go` | 진행 |
-| `ask` | 멈추고 사용자에게 한 줄로 묻는다 (`needs-approval` = 무엇을 저장·전송하는지 적어서) |
+| `ask` | 멈추고 사용자에게 한 줄로 묻는다 (`needs-approval` = 무엇을 저장·전송하는지 적어서, `human-idle-unknown` = 사람 입력 경합을 못 쟀으니 지금 손을 떼고 있는지) |
 | `block` | 입력하지 않는다. `reasons` 를 사용자에게 알린다 |
 
 `--target-confirmed` 는 **직접 확인한 뒤에만** 붙인다: 대상 앱·창을 목록에서 찾았고, 그 창의 스냅샷(또는 캡처)을 봤다.

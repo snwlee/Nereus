@@ -49,8 +49,12 @@ function safetyVerdict(probe, request, risk, reasons) {
     reasons.push(...blocks);
     return "block";
   }
-  if (risk === "irreversible" && !request.approved) {
-    reasons.push("needs-approval");
+  // 유휴 시간을 못 쟀으면(ioreg 실패·비 macOS) 사람 경합 검사가 빠진 것이다 — 조용히 go 하지 않는다.
+  const asks = [];
+  if (typeof probe.humanIdleSeconds !== "number") asks.push("human-idle-unknown");
+  if (risk === "irreversible") asks.push("needs-approval");
+  if (asks.length && !request.approved) {
+    reasons.push(...asks);
     return "ask";
   }
   return "go";

@@ -74,6 +74,16 @@ describe("judge — 안전", () => {
     expect(judge(probeAll({ humanIdleSeconds: HUMAN_ACTIVE_SECONDS }), safeInput).verdict).toBe("go");
   });
 
+  it("유휴 시간을 못 재면 입력을 통과시키지 않고 ask", () => {
+    const r = judge(probeAll({ humanIdleSeconds: null }), safeInput);
+    expect(r.verdict).toBe("ask");
+    expect(r.reasons).toContain("human-idle-unknown");
+  });
+
+  it("유휴 시간을 못 재도 승인된 입력은 go", () => {
+    expect(judge(probeAll({ humanIdleSeconds: null }), { ...safeInput, approved: true }).verdict).toBe("go");
+  });
+
   it("대상 창 미확인 입력은 block", () => {
     const r = judge(probeAll(), { ...safeInput, targetConfirmed: false });
     expect(r.verdict).toBe("block");
