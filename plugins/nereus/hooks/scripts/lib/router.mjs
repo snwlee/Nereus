@@ -24,6 +24,8 @@ export const ROUTES = Object.freeze([
   { skill: "nereus:loop", why: "병렬·자율 반복 실행", re: /(울트라워크|ultrawork|\bulw\b|hyperplan|병렬(\s?(실행|작업|처리)|로)|동시\s?실행|자율\s?(루프|반복)|team\.mode|연속\s?실행)/i },
   { skill: "nereus:learn", why: "규칙으로 학습", re: /(다음부터|앞으로(는)?\s?이렇게|기억해\s?줘|규칙으로|학습\s?후보)/i },
   { skill: "nereus:continue", why: "세션 내 계속 진행", re: /(continue\s?(on|off)|컨티뉴|자동으로\s?계속|멈추지\s?말고)/i },
+  // "화면"은 design 이 가진다. 여기는 누르기·창·대화상자 같은 조작 동사와 도구 이름만 본다.
+  { skill: "nereus:computer-use", why: "네이티브 앱 창·대화상자 조작 (Cua Driver·Orca)", re: /(버튼\s?(을|를)?\s?(너가\s?)?(못\s?)?(눌러|누르|클릭)|대화\s?상자|다이얼로그|앱\s?창|창\s?(을|를)?\s?(조작|닫|띄워)|컴퓨\S*\s?유즈|computer.?use|\bcua\b|단축키\s?(눌러|보내))/i },
 ]);
 
 const MAX_HITS = 2;

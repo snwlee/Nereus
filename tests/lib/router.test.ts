@@ -178,3 +178,14 @@ describe("router: montage", () => {
     expect(routePrompt("로그인 화면 만들어").map((h) => h.skill)).not.toContain("nereus:montage");
   });
 });
+
+describe("router: computer-use", () => {
+  it("네이티브 창 조작 요청은 nereus:computer-use 로 보낸다", () => {
+    for (const p of ["스튜디오 저장 버튼 눌러줘", "근데 저장버튼 너가 못눌러?", "그 대화상자 닫아줘", "컴퓨 유즈 할수 있는 오픈소스", "cua 로 앱 창 조작해"])
+      expect(routePrompt(p).map((h) => h.skill)).toContain("nereus:computer-use");
+  });
+  it("화면 디자인·버튼 스타일은 computer-use 가 아니다", () => {
+    expect(routePrompt("화면 디자인 바꿔줘").map((h) => h.skill)).not.toContain("nereus:computer-use");
+    expect(routePrompt("버튼 스타일 수정").map((h) => h.skill)).not.toContain("nereus:computer-use");
+  });
+});
