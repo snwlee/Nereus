@@ -16,6 +16,7 @@ import { detectTestRunner, stackFileRules } from "./lib/stack.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
 import { loadExtensions } from "./lib/extensions.mjs";
 import { videoGateVerdict, effectiveCwd, VIDEO_GATE_DEFAULTS } from "./lib/video-gate.mjs";
+import { budgetVerdict } from "./lib/budget.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_RULES = JSON.parse(fs.readFileSync(path.join(HERE, "..", "rules.default.json"), "utf8"));
@@ -110,12 +111,18 @@ function tddCheck(input, cwd, deps = {}) {
 
 // ── 영상 게이트 기본 의존성. 판정은 lib/video-gate.mjs 가 한다 ─────────────────
 const VG_OVERRIDE = path.join(".nereus", "video-gate-override");
-const vgLedger = () => path.join(userConfigDir(), "video-gate.json");
-const today = () => new Date().toISOString().slice(0, 10);
+const BUDGET_FILE = path.join(".nereus", "budget.json");
 function isOpenMontageDir(dir) {
   for (let d = dir; ; d = path.dirname(d)) {
     if (fs.existsSync(path.join(d, "AGENT_GUIDE.md")) && fs.existsSync(path.join(d, "pipeline_defs"))) return true;
     if (path.dirname(d) === d) return false;
+  }
+}
+// 예산 파일은 작업 디렉터리에서 위로 올라가며 가장 가까운 것을 쓴다(OpenMontage 하위 폴더에서 돌려도 프로젝트 예산을 본다).
+function findBudget(dir) {
+  for (let d = dir; ; d = path.dirname(d)) {
+    try { return JSON.parse(fs.readFileSync(path.join(d, BUDGET_FILE), "utf8")); } catch { /* 위로 */ }
+    if (path.dirname(d) === d) return null;
   }
 }
 const defaultVideoGate = (cwd) => ({
@@ -123,9 +130,7 @@ const defaultVideoGate = (cwd) => ({
   isOpenMontage: isOpenMontageDir,
   readOverride: (dir) => { try { return fs.readFileSync(path.join(dir, VG_OVERRIDE), "utf8").trim() || "사유 없음"; } catch { return null; } },
   dropOverride: (dir) => { try { fs.unlinkSync(path.join(dir, VG_OVERRIDE)); } catch { /* 이미 없음 */ } },
-  usedToday: () => { try { const j = JSON.parse(fs.readFileSync(vgLedger(), "utf8")); return j.date === today() ? j.count : 0; } catch { return 0; } },
-  recordUse: () => { try { let n = 0; try { const j = JSON.parse(fs.readFileSync(vgLedger(), "utf8")); if (j.date === today()) n = j.count; } catch { /* 새로 */ }
-    fs.mkdirSync(path.dirname(vgLedger()), { recursive: true }); fs.writeFileSync(vgLedger(), JSON.stringify({ date: today(), count: n + 1 })); } catch { /* fail-open */ } },
+  readBudget: findBudget,
   config: () => ({ ...VIDEO_GATE_DEFAULTS, ...(loadConfig({ cwd }).videoGate ?? {}) }),
 });
 
@@ -142,12 +147,18 @@ function videoGateCheck(input, cwd, deps) {
     command = "curl https://api.muapi.ai/mcp-single-call"; // 단발 호출로 취급한다
   } else if (tool !== "Bash") return null;
   const dir = effectiveCwd(command, cwd);
+  const cfg = vg.config();
   const v = videoGateVerdict({ command, cwd, readFile: vg.readFile, isOpenMontage: tool.startsWith("mcp__") ? () => false : vg.isOpenMontage,
-    override: vg.readOverride(dir), usedToday: vg.usedToday(), config: vg.config() });
+    override: vg.readOverride(dir), config: cfg });
   if (v.consumeOverride) vg.dropOverride(dir);
-  if (v.countsAsSingle) vg.recordUse();
   if (v.warning) (deps.note ?? note)(v.warning);
-  return v.allow ? null : { decision: "block", reason: v.reason };
+  if (!v.allow) return { decision: "block", reason: v.reason };
+  if (!v.paid || cfg.enforce === "off") return null;
+  const b = budgetVerdict({ budget: vg.readBudget(dir), batch: v.batch, freshMinutes: cfg.freshMinutes });
+  if (b.allow) return null;
+  const reason = b.reason.replace("${NEREUS}", path.join(HERE, "..", ".."));
+  if (cfg.enforce === "warn") { (deps.note ?? note)(reason); return null; }
+  return { decision: "block", reason };
 }
 
 export function handle(input, deps = {}) {

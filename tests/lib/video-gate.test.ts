@@ -12,8 +12,7 @@ const base = (over: any = {}) => ({
   readFile: (p: string) => { if (p in files) return files[p]; throw new Error("ENOENT"); },
   isOpenMontage: (dir: string) => dir === OM || dir.startsWith(OM + "/"),
   override: null as string | null,
-  usedToday: 0,
-  config: VIDEO_GATE_DEFAULTS,
+    config: VIDEO_GATE_DEFAULTS,
   ...over,
 });
 
@@ -49,14 +48,17 @@ describe("videoGateVerdict", () => {
     expect(videoGateVerdict({ command: "python tools/video/higgsfield_video.py", ...base({ cwd: OM }) }).allow).toBe(true);
     expect(videoGateVerdict({ command: `cd ${OM} && python -c 'import higgsfield_client'`, ...base() }).allow).toBe(true);
   });
-  it("단발 호출(인라인·muapi-cli generate)은 하루 한도까지 허용하고 넘으면 막는다", () => {
+  it("단발 호출은 배치가 아니라고 표시하고, 예산 판정은 호출부에 맡긴다", () => {
     const cmd = "node /n/plugins/nereus/skills/image/scripts/muapi-cli.mjs generate --capability t2v --prompt x";
-    const ok = videoGateVerdict({ command: cmd, ...base({ usedToday: 0 }) });
-    expect(ok.allow).toBe(true);
-    expect(ok.countsAsSingle).toBe(true);
-    const over = videoGateVerdict({ command: cmd, ...base({ usedToday: VIDEO_GATE_DEFAULTS.singleCallsPerDay }) });
-    expect(over.allow).toBe(false);
-    expect(over.reason).toContain("한도");
+    const v = videoGateVerdict({ command: cmd, ...base() });
+    expect(v.allow).toBe(true);
+    expect(v.paid).toBe(true);
+    expect(v.batch).toBe(false);
+  });
+  it("OpenMontage 안의 유료 배치는 통과하되 예산 판정 대상으로 표시한다", () => {
+    const v = videoGateVerdict({ command: `cd ${OM} && python -c 'import higgsfield_client'`, ...base() });
+    expect(v.allow).toBe(true);
+    expect(v.paid).toBe(true);
   });
   it("muapi-cli 의 조회 명령(summary·models)은 유료 호출이 아니다", () => {
     expect(videoGateVerdict({ command: "node /n/plugins/nereus/skills/image/scripts/muapi-cli.mjs models t2v", ...base() }).allow).toBe(true);
