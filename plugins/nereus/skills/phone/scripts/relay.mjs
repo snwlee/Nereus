@@ -16,6 +16,7 @@ import { upgrade } from "./ws.mjs";
 export const NO_SPEECH_KICK_MS = 4000;   // 상대가 4초간 말이 없으면 AI 가 먼저 인사한다
 export const END_CALL_DELAY_MS = 2500;   // 작별 인사 음성이 다 나간 뒤 끊는다
 const MS_PER_PCMU_BYTE = 1 / 8;          // μ-law 8kHz = 8바이트/ms
+export const BIND_WAIT_MS = 3000;         // call.mjs 가 callSid 를 적기 전에 스트림이 먼저 오면 이만큼 기다린다(R2 N5)
 export const MAX_PENDING = 500;          // OpenAI 연결 전 대기열 상한 — 20ms 프레임이면 10초. 넘으면 오디오를 버린다
 
 const JOB_ID = /^[a-z0-9-]+$/;
@@ -54,7 +55,7 @@ function sessionUpdate(job, voice) {
 }
 
 function bridge(twilio, opts) {
-  const { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs, streamed } = opts;
+  const { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs, bindWaitMs, streamed } = opts;
   const state = { streamSid: null, callSid: null, log: null, heardCaller: false, kick: null, lastItem: null, playedMs: 0 };
   const pending = [];
   const timers = new Set();
@@ -120,28 +121,45 @@ function bridge(twilio, opts) {
         break;
     }
   }
-  const reject = (why) => { write({ who: "system", text: why }); twilio.close(); };
+  // 확인 전 거절은 통화 기록이 아니라 서버 stderr 로 — 확인 안 된 callSid 이름으로 파일을 만들지 않는다(R2 N4).
+  const reject = (why) => {
+    if (state.log) write({ who: "system", text: why });
+    else console.error(`[phone relay] 거절: ${why}`);
+    twilio.close();
+  };
 
-  function onStart(start) {
-    if (state.callSid) return;                                   // start 는 한 번만
+  // 잡의 callSid 가 아직 안 적혔으면(발신 응답보다 스트림이 먼저) bindWaitMs 까지 다시 읽는다.
+  async function boundJob(jobId) {
+    const until = Date.now() + bindWaitMs;
+    for (;;) {
+      const job = loadJob(jobsDir, jobId);
+      if (typeof job.callSid === "string" || Date.now() >= until || !twilio.open) return job;
+      await new Promise((r) => later(r, 100));
+    }
+  }
+
+  async function onStart(start) {
+    if (state.starting || state.callSid) return;                  // start 는 한 번만
     if (!/^[A-Za-z0-9]+$/.test(start?.callSid || "")) return twilio.close();
+    state.starting = true;
     state.streamSid = start.streamSid;
-    state.log = path.join(logsDir, `${start.callSid}.jsonl`);
     const jobId = start.customParameters?.job;
-    write({ who: "system", text: `start job=${jobId}` });
     let job;
-    try { job = loadJob(jobsDir, jobId); } catch (e) { return reject(`job 로드 실패 ${e.message}`); }
-    if (typeof job.callSid !== "string" || !sameText(job.callSid, start.callSid)) return reject("callSid 불일치 — 이 잡으로 건 통화가 아니다");
+    try { job = await boundJob(jobId); } catch (e) { return reject(`job 로드 실패 ${e.message}`); }
+    if (typeof job.callSid !== "string" || !sameText(job.callSid, start.callSid)) return reject(`callSid 불일치 — ${jobId} 로 건 통화가 아니다`);
     if (streamed.has(start.callSid)) return reject("이미 연결된 통화의 두 번째 스트림");
+    if (!twilio.open) return;
     streamed.add(start.callSid);
     state.callSid = start.callSid;
+    state.log = path.join(logsDir, `${start.callSid}.jsonl`);
+    write({ who: "system", text: `start job=${jobId}` });
     connectAi();
     sendAi(sessionUpdate(job, voice));
     state.kick = setTimeout(() => { if (!state.heardCaller) sendAi({ type: "response.create" }); }, kickMs);
   }
 
   function onTwilio(msg) {
-    if (msg.event === "start") onStart(msg.start);
+    if (msg.event === "start") onStart(msg.start).catch((e) => reject(`start 처리 실패 ${e.message}`));
     else if (msg.event === "media") {
       if (!state.callSid) return;
       if (typeof msg.media?.payload !== "string") throw new Error("media.payload 없음");
@@ -161,7 +179,7 @@ function bridge(twilio, opts) {
 export async function startRelay({
   port, secret, prefix, openaiUrl = "wss://api.openai.com/v1/realtime", openaiKey,
   model = "gpt-realtime-2.1", voice = "marin", jobsDir, logsDir, hangup,
-  kickMs = NO_SPEECH_KICK_MS, endCallDelayMs = END_CALL_DELAY_MS,
+  kickMs = NO_SPEECH_KICK_MS, endCallDelayMs = END_CALL_DELAY_MS, bindWaitMs = BIND_WAIT_MS,
 }) {
   fs.mkdirSync(logsDir, { recursive: true, mode: 0o700 });
   fs.chmodSync(logsDir, 0o700);
@@ -172,7 +190,7 @@ export async function startRelay({
   server.on("upgrade", (req, socket, head) => {
     if (!sameText(String(req.url), streamPath)) return socket.destroy();
     const conn = upgrade(req, socket, head);
-    const dispose = bridge(conn, { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs, streamed });
+    const dispose = bridge(conn, { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs, bindWaitMs, streamed });
     disposers.add(dispose);
     conn.on("close", () => disposers.delete(dispose));
   });

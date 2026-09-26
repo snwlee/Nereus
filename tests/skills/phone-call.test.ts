@@ -55,10 +55,11 @@ describe("phone.call binding (보안 리뷰 M3·M4)", () => {
     dir = mkdtempSync(join(os.tmpdir(), "phone-call-"));
     saveJob(dir, "w", { to: "+81" });
     saveJob(dir, "w", { to: "+82" });   // 발신 전에는 다시 쓸 수 있다
-    bindCall(dir, "w", "CA123");
+    fs.writeFileSync(join(dir, "w.json"), JSON.stringify({ to: "+99-tampered" }));   // 발신 중에 누가 파일을 바꿔도
+    bindCall(dir, "w", { to: "+82" }, "CA123");                                        // 판정한 잡(메모리)에 callSid 를 붙인다
     expect(JSON.parse(readFileSync(join(dir, "w.json"), "utf8"))).toEqual({ to: "+82", callSid: "CA123" });
     expect(() => saveJob(dir, "w", { to: "+83" })).toThrow(/이미 발신/);
-    expect(() => bindCall(dir, "w", "../x")).toThrow();
+    expect(() => bindCall(dir, "w", { to: "+82" }, "../x")).toThrow();
     expect(fs.statSync(dir).mode & 0o777).toBe(0o700);
   });
 });

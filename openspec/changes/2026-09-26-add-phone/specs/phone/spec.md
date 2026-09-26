@@ -124,14 +124,19 @@ The system MUST satisfy the following. `parseLog(text)` 는 jsonl 을 `{turns:[{
 ### Requirement: 발신은 사람이 권한 창에서 허용해야 한다 (보안 리뷰 2026-09-26)
 <!-- id: phone.approvalGate -->
 <!-- entities: PhoneGate -->
-<!-- enforced: tests/lib/phone-gate.test.ts -->
+<!-- enforced: tests/lib/phone-gate.test.ts, tests/skills/phone-approval.test.ts -->
 
-The system MUST satisfy the following. `call.mjs` 를 `--approved` 로 실행하는 Bash 명령은 PreToolUse 훅이 `permissionDecision: "ask"` 로 사람에게 묻고,
-사유에 번호·상대·질문·확정 허용 여부를 한 줄로 보여야 한다. 브리프를 못 읽어도 `ask` 는 유지한다.
+The system MUST satisfy the following. 발신은 사람이 `!` 로 직접 실행한 `approve.mjs` 가 만든 승인 토큰(잡 지문 · `APPROVAL_TTL_MS` · 1회용)이 있을 때만 한다.
+토큰의 지문이 지금 잡과 다르면 `approval-mismatch`, 오래되면 `approval-expired`, 없으면 `approval-missing` 이다.
+에이전트의 Bash 가 `approve.mjs` 를 부르거나 승인 폴더를 쓰면 pre-tool-guard 기본 규칙이 막는다. 이 게이트는 규칙을 따르는 에이전트용 안전장치이지 보안 경계가 아니다.
 
-#### Scenario: 에이전트가 스스로 --approved 를 붙임
-- **WHEN** `node call.mjs --brief b.json --id w --approved`
-- **THEN** 훅 결과가 `ask` 이고 사유에 브리프의 번호와 질문이 있다
+#### Scenario: 에이전트가 스스로 승인하려 함
+- **WHEN** 에이전트 Bash 가 `node approve.mjs w`
+- **THEN** pre-tool-guard 가 `block` 한다
+
+#### Scenario: 승인 뒤 브리프가 바뀜
+- **WHEN** 승인한 뒤 지시문이 달라진 잡으로 확인
+- **THEN** `checkApproval` 이 `approval-mismatch`
 
 ### Requirement: 중계는 우리가 건 통화의 스트림만 받아야 한다
 <!-- id: phone.binding -->

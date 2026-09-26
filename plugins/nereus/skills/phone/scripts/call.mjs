@@ -1,7 +1,7 @@
 // 발신 CLI. 브리프 → 잡 → 실측 → judge → go 일 때만 Twilio 발신.
 // 사용: node call.mjs --brief FILE --id JOB_ID [--to E164] [--approved]
-//   --to    리허설용: 브리프 번호 대신 이 번호로 건다(예: 본인 휴대폰)
-//   --approved  사용자가 이번 대화에서 이 통화(번호·상대·질문)를 승인했을 때만 붙인다
+//   --to        리허설용: 브리프 번호 대신 이 번호로 건다(예: 본인 휴대폰)
+//   --approved  발신 시도. 실제 승인은 사람이 `!` 로 실행한 approve.mjs 의 토큰(잡 지문 · 30분)이다 — 없으면 걸지 않는다
 // ask·block 이면 발신하지 않고 판정 JSON 을 출력한 뒤 exit 2.
 
 import fs from "node:fs";
@@ -10,6 +10,7 @@ import { pathToFileURL } from "node:url";
 import { judge, countryOf } from "./judge.mjs";
 import { buildJob } from "./brief.mjs";
 import { localHourIn, collect } from "./probe.mjs";
+import { checkApproval, consumeApproval } from "./approval.mjs";
 
 const JOB_ID = /^[a-z0-9-]+$/;
 const XML_UNSAFE = /[<>&"']/;
@@ -37,12 +38,10 @@ export function saveJob(dir, id, job) {
 }
 
 // 발신 직후 callSid 를 잡에 적는다. 중계는 이 callSid 와 같은 스트림만 받는다(보안 리뷰 M3).
-export function bindCall(dir, id, callSid) {
+// 파일을 다시 읽지 않고 판정한 잡(메모리)을 쓴다 — 그 사이 파일이 바뀌어도 승인된 지시문이 나간다(R2 N3).
+export function bindCall(dir, id, job, callSid) {
   if (!/^[A-Za-z0-9]+$/.test(callSid || "")) throw new Error(`잘못된 callSid: ${callSid}`);
-  const file = jobFile(dir, id);
-  const job = readJob(file);
-  if (!job) throw new Error(`잡 없음: ${id}`);
-  fs.writeFileSync(file, JSON.stringify({ ...job, callSid }, null, 1), { mode: 0o600 });
+  fs.writeFileSync(jobFile(dir, id), JSON.stringify({ ...job, callSid }, null, 1), { mode: 0o600 });
 }
 
 export function parseCallArgs(argv) {
@@ -73,19 +72,25 @@ async function main() {
 
   const brief = JSON.parse(fs.readFileSync(args.brief, "utf8"));
   const draft = buildJob(args.to ? { ...brief, to: args.to } : brief);
+  const { jobs, home } = paths();
+  const approvals = path.join(home, "approvals");
+  const approval = args.approved ? checkApproval(approvals, args.id, draft) : { ok: false, reason: "approval-missing" };
   const probe = await collect({ job: draft });
-  const d = decide({ probe, brief, to: args.to, approved: args.approved });
-  const file = saveJob(paths().jobs, args.id, d.job);
+  const d = decide({ probe, brief, to: args.to, approved: approval.ok });
+  const file = saveJob(jobs, args.id, d.job);
   if (d.verdict !== "go") {
-    console.log(JSON.stringify({ verdict: d.verdict, reasons: d.reasons, to: d.job.to, localHour: d.localHour, job: file }, null, 2));
+    const reasons = d.verdict === "ask" ? [approval.reason] : d.reasons;
+    const askUser = `! node ${path.join(path.dirname(new URL(import.meta.url).pathname), "approve.mjs")} ${args.id}`;
+    console.log(JSON.stringify({ verdict: d.verdict, reasons, to: d.job.to, localHour: d.localHour, job: file, ...(d.verdict === "ask" ? { askUser } : {}) }, null, 2));
     process.exit(2);
   }
+  consumeApproval(approvals, args.id);
   const env = loadEnv();
   const { wss } = endpoints(env);
   const call = await twilio(env, "POST", "/Calls.json", {
     To: d.job.to, From: env.TWILIO_FROM, Twiml: buildTwiml({ wss, jobId: args.id }), TimeLimit: String(d.job.timeLimitSec),
   });
-  bindCall(paths().jobs, args.id, call.sid);
+  bindCall(jobs, args.id, d.job, call.sid);
   console.log(JSON.stringify({ verdict: "go", call: call.sid, status: call.status, to: d.job.to, job: file }, null, 2));
 }
 

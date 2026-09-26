@@ -62,18 +62,25 @@ node "$P/probe.mjs" --risk call --job <id>              # 저장된 잡으로 �
 
 ## 3. 승인 — 발신은 외부로 나가는 행동이다
 
-`call.mjs` 는 `--approved` 없이는 절대 걸지 않는다(exit 2 + 판정 JSON). 승인은 **이번 대화에서, 이 통화 하나에 대해** 받는다.
-`--approved` 를 붙인 실행은 Nereus PreToolUse 게이트가 **Claude Code 권한 창**으로 한 번 더 묻는다(번호·상대·질문이 창에 뜬다) —
-에이전트가 플래그를 스스로 붙여도 사람이 누르지 않으면 나가지 않는다.
-대화에서 먼저 묻는 형식(한 번에):
+**승인은 사람이 직접 친다.** `call.mjs` 는 승인 토큰이 없으면 걸지 않고 `askUser` 에 명령을 내준다:
+
+```
+! node <플러그인>/skills/phone/scripts/approve.mjs wasaku-1104
+```
+
+사용자가 프롬프트에 `!` 를 붙여 치면 토큰(잡 지문 · 30분 · 1회용)이 생긴다. `!` 명령은 에이전트 도구 훅을 거치지 않고,
+에이전트가 `approve.mjs` 를 부르거나 승인 폴더를 쓰면 pre-tool-guard 가 막는다(`phone-approve-by-human`).
+승인 뒤 브리프가 바뀌면 지문이 달라져 다시 승인해야 한다. 이 게이트는 규칙을 따르는 에이전트를 위한 안전장치이지
+보안 경계가 아니다 — env 파일을 읽을 수 있는 프로세스는 Twilio 를 직접 부를 수 있다.
+대화에서 먼저 묻는 형식(한 번에, 승인 명령을 같이 준다):
 
 > 📞 **七厘焼き和作 (+81 977-85-2848)** 에 일본어로 전화합니다 — 질문: ① 11/4 영업 ② 19시 4명 예약 가능 · 확정은 안 함 · 최대 10분 · 예상 비용 약 $1~2. 걸까요?
 
 리허설: 처음 쓰는 언어·상대 유형이면 먼저 본인 휴대폰으로 `--to +8210...` 리허설을 제안한다(상대 역할은 사용자).
 
 ```bash
-node "$P/call.mjs" --brief brief.json --id wasaku-1104                  # 판정만 → ask
-node "$P/call.mjs" --brief brief.json --id wasaku-1104 --approved       # 승인 뒤 발신
+node "$P/call.mjs" --brief brief.json --id wasaku-1104                  # 판정·잡 저장 → ask (askUser 에 승인 명령)
+node "$P/call.mjs" --brief brief.json --id wasaku-1104 --approved       # 사용자가 ! approve.mjs 를 친 뒤 발신
 node "$P/call.mjs" --brief brief.json --id wasaku-1104 --to +8210XXXXXXXX --approved   # 리허설
 ```
 

@@ -17,7 +17,6 @@ import { evidenceStatus } from "./lib/evidence.mjs";
 import { loadExtensions } from "./lib/extensions.mjs";
 import { videoGateVerdict, effectiveCwd, VIDEO_GATE_DEFAULTS } from "./lib/video-gate.mjs";
 import { budgetVerdict } from "./lib/budget.mjs";
-import { phoneGateVerdict } from "./lib/phone-gate.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_RULES = JSON.parse(fs.readFileSync(path.join(HERE, "..", "rules.default.json"), "utf8"));
@@ -180,8 +179,6 @@ export function handle(input, deps = {}) {
   if (tool === "Bash") {
     const g = videoGateCheck({ ...input, tool_name: "Bash", tool_input: { command: target } }, cwd, deps);
     if (g) return g;
-    const p = phoneGateVerdict({ command: target, cwd, readFile: deps.readFile ?? ((f) => fs.readFileSync(f, "utf8")) });
-    if (p) return p;
   }
   if (["Edit", "Write", "MultiEdit"].includes(tool)) {
     const t = tddCheck(input, cwd, deps);
@@ -199,13 +196,7 @@ export function handle(input, deps = {}) {
   return null;
 }
 
-/** PreToolUse 훅이 사람에게 묻게 하는 stdout JSON. */
-export const askOutput = (reason) => JSON.stringify({
-  hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "ask", permissionDecisionReason: reason },
-});
-
 if (process.argv[1] && /pre-tool-guard\.mjs$/.test(process.argv[1])) {
   const r = handle(readStdinJson());
-  if (r?.decision === "ask") { process.stdout.write(askOutput(r.reason) + "\n"); process.exit(0); }
   if (r) { process.stderr.write(r.reason + "\n"); process.exit(2); }
 }

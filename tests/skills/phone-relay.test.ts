@@ -3,7 +3,7 @@ import http from "node:http";
 import fs, { readFileSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import { join } from "node:path";
-import { startRelay, NO_SPEECH_KICK_MS, END_CALL_DELAY_MS, MAX_PENDING } from "../../plugins/nereus/skills/phone/scripts/relay.mjs";
+import { startRelay, NO_SPEECH_KICK_MS, END_CALL_DELAY_MS, MAX_PENDING, BIND_WAIT_MS } from "../../plugins/nereus/skills/phone/scripts/relay.mjs";
 import { upgrade } from "../../plugins/nereus/skills/phone/scripts/ws.mjs";
 
 const waitFor = async (cond: () => boolean, ms = 3000) => {
@@ -103,6 +103,7 @@ describe("phone.relay", () => {
   it("기준선 상수(aicall server.mjs 2026-09-25)", () => {
     expect(NO_SPEECH_KICK_MS).toBe(4000);
     expect(END_CALL_DELAY_MS).toBe(2500);
+    expect(BIND_WAIT_MS).toBe(3000);
   });
 
   it("health 는 200, 다른 경로는 404", async () => {
@@ -121,7 +122,7 @@ describe("phone.relay", () => {
     const closed = new Promise<void>((r) => { tw.onclose = () => r(); });
     tw.send(JSON.stringify({ event: "start", start: { streamSid: "MZ2", callSid: "CAbad", customParameters: { job: "../etc" } } }));
     await closed;
-    expect(readFileSync(join(logsDir, "CAbad.jsonl"), "utf8")).toContain("job 로드 실패");
+    expect(fs.existsSync(join(logsDir, "CAbad.jsonl"))).toBe(false);
     expect(hungUp).toEqual([]);
     await relay.close(); await fake.close();
   });
@@ -157,7 +158,7 @@ describe("phone.relay hardening (보안 리뷰 H2·M3·M9)", () => {
     await a.closed;
     expect(fake.received.some((m) => m.type === "session.update")).toBe(false);
     expect(hungUp).toEqual([]);   // 남의 통화를 끊지 않는다
-    expect(readFileSync(join(logsDir, "CAother.jsonl"), "utf8")).toContain("callSid 불일치");
+    expect(fs.existsSync(join(logsDir, "CAother.jsonl"))).toBe(false);   // 확인 안 된 callSid 이름으로 기록을 만들지 않는다(R2 N4)
     await relay.close(); await fake.close();
   });
 
@@ -185,6 +186,18 @@ describe("phone.relay hardening (보안 리뷰 H2·M3·M9)", () => {
     a.tw.send(JSON.stringify({ event: "start", start: { streamSid: "MZ1", callSid: "CAtest", customParameters: { job: "t1" } } }));
     await waitFor(() => fs.existsSync(join(logsDir, "CAtest.jsonl")));
     expect(fs.statSync(join(logsDir, "CAtest.jsonl")).mode & 0o777).toBe(0o600);
+    a.tw.close();
+    await relay.close(); await fake.close();
+  });
+
+  it("callSid 가 아직 안 적힌 잡은 잠깐 기다렸다 받는다 (R2 N5)", async () => {
+    writeFileSync(join(jobsDir, "t2.json"), JSON.stringify({ to: "+81977852848", language: "ja", instructions: "[AI-DISCLOSURE] t2", timeLimitSec: 600 }));
+    const fake = await startFakeRealtime();
+    const relay = await startRelay({ port: 0, secret: "s", prefix: "/japancall", openaiUrl: fake.url, openaiKey: "k", jobsDir, logsDir, hangup: async () => {}, kickMs: 10_000, bindWaitMs: 1000 });
+    const a = await open(relay.port);
+    a.tw.send(JSON.stringify({ event: "start", start: { streamSid: "MZ3", callSid: "CAlate", customParameters: { job: "t2" } } }));
+    setTimeout(() => writeFileSync(join(jobsDir, "t2.json"), JSON.stringify({ to: "+81977852848", language: "ja", instructions: "[AI-DISCLOSURE] t2", timeLimitSec: 600, callSid: "CAlate" })), 150);
+    await waitFor(() => fake.received.some((m) => m.type === "session.update"));
     a.tw.close();
     await relay.close(); await fake.close();
   });
