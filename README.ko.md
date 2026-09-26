@@ -33,7 +33,7 @@ Node 20 이상과 Git이 필요하다. `setup`이 외부 도구를 감지하고,
 
 | 플러그인 | 버전 | 더하는 것 |
 |---|---|---|
-| `nereus` | 0.22.0 | 워크플로 본체: 스킬 26종, 전문가 에이전트 10종, Node 훅, Baton 핸드오프, setup·doctor |
+| `nereus` | 0.23.0 | 워크플로 본체: 스킬 27종, 전문가 에이전트 10종, Node 훅, Baton 핸드오프, setup·doctor |
 | `nereus-game` | 0.3.0 | 게임 개발: 로블록스·Unity(폰)·Switch·Flutter/Flame 어댑터와 레벨·밸런스·내러티브·사운드·라이브옵스·규정 준수 스킬 |
 | `nereus-ads` | 0.1.0 | AdMob 운영: 계정을 살려두는 정책 게이트, 배치 설계, 수익 레버 |
 | `nereus-l10n` | 0.1.0 | 현지화: 소스 문자열·스토어 등재·ASO, 그리고 로케일 하나를 통째로 깨뜨리는 진짜 제약인 폰트 커버리지 |
@@ -80,7 +80,7 @@ Baton 은 Claude Code 자체 자동 압축(손실 요약)보다 먼저 작동한
 | `/nereus:learn` | 훅이 모은 학습 후보를 검토·승인. 승인된 규칙만 다음 세션에 주입 |
 | `/nereus:hud` | 한 줄 상태: 태스크 진행률, 검증 상태, 컨텍스트 % |
 | `/nereus:doctor` | 다른 하네스 플러그인과의 충돌 보고 — 가려진 MCP 서버, 중복된 에이전트·스킬 이름, 공유 훅 지점. 보고만 하고 절대 지우지 않는다 |
-| `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo` | 단독 스킬 |
+| `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo`, `/nereus:phone` | 단독 스킬 |
 
 ## 스킬 자동 호출
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readinessFrom, localHourIn, parseArgs } from "../../plugins/nereus/skills/phone/scripts/probe.mjs";
-import { loadEnv, readEnv, missingKeys, paths, REQUIRED_KEYS } from "../../plugins/nereus/skills/phone/scripts/config.mjs";
+import { readinessFrom, localHourIn, parseArgs, requestFor } from "../../plugins/nereus/skills/phone/scripts/probe.mjs";
+import { loadEnv, readEnv, missingKeys, paths, envFiles, REQUIRED_KEYS } from "../../plugins/nereus/skills/phone/scripts/config.mjs";
 
 // 응답 모양은 2026-09-26 이 계정 실측(Trust Hub CustomerProfiles · Balance · DialingPermissions/Countries).
 describe("probe.readinessFrom", () => {
@@ -57,5 +57,17 @@ describe("config", () => {
     expect(p.jobs).toBe("/tmp/np/jobs");
     expect(p.logs).toBe("/tmp/np/logs");
     expect(REQUIRED_KEYS).toContain("TWILIO_FROM");
+  });
+});
+
+describe("probe.requestFor / config.envFiles", () => {
+  it("call 이면 잡 번호의 현지 시각을 싣는다", () => {
+    const job = { to: "+81977852848", instructions: "x", timeLimitSec: 60 };
+    expect(requestFor({ risk: "call", approved: true }, job, new Date("2026-11-01T05:30:00Z"))).toEqual({ risk: "call", to: job.to, job, localHour: 14, approved: true });
+    expect(requestFor({ risk: "read" }, null)).toEqual({ risk: "read" });
+  });
+
+  it("nereus 위치가 japancall 보다 먼저다", () => {
+    expect(envFiles("/h")).toEqual(["/h/.config/nereus/phone/env", "/h/.config/japancall/env"]);
   });
 });

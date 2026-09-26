@@ -3,7 +3,7 @@ import http from "node:http";
 import fs, { readFileSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import { join } from "node:path";
-import { startRelay } from "../../plugins/nereus/skills/phone/scripts/relay.mjs";
+import { startRelay, NO_SPEECH_KICK_MS, END_CALL_DELAY_MS } from "../../plugins/nereus/skills/phone/scripts/relay.mjs";
 import { upgrade } from "../../plugins/nereus/skills/phone/scripts/ws.mjs";
 
 const waitFor = async (cond: () => boolean, ms = 3000) => {
@@ -98,6 +98,11 @@ describe("phone.relay", () => {
     const opened = await new Promise<boolean>((r) => { tw.onopen = () => r(true); tw.onerror = () => r(false); });
     expect(opened).toBe(false);
     await relay.close();
+  });
+
+  it("기준선 상수(aicall server.mjs 2026-09-25)", () => {
+    expect(NO_SPEECH_KICK_MS).toBe(4000);
+    expect(END_CALL_DELAY_MS).toBe(2500);
   });
 
   it("health 는 200, 다른 경로는 404", async () => {
