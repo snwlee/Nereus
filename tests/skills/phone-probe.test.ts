@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readinessFrom, localHourIn, parseArgs, requestFor } from "../../plugins/nereus/skills/phone/scripts/probe.mjs";
-import { loadEnv, readEnv, missingKeys, paths, envFiles, REQUIRED_KEYS } from "../../plugins/nereus/skills/phone/scripts/config.mjs";
+import { readinessFrom, localHourIn, parseArgs, requestFor, collect } from "../../plugins/nereus/skills/phone/scripts/probe.mjs";
+import { loadEnv, readEnv, missingKeys, paths, envFiles, endpoints, REQUIRED_KEYS } from "../../plugins/nereus/skills/phone/scripts/config.mjs";
 
 // 응답 모양은 2026-09-26 이 계정 실측(Trust Hub CustomerProfiles · Balance · DialingPermissions/Countries).
 describe("probe.readinessFrom", () => {
@@ -69,5 +69,26 @@ describe("probe.requestFor / config.envFiles", () => {
 
   it("nereus 위치가 japancall 보다 먼저다", () => {
     expect(envFiles("/h")).toEqual(["/h/.config/nereus/phone/env", "/h/.config/japancall/env"]);
+  });
+});
+
+describe("config.endpoints secret (보안 리뷰 M7)", () => {
+  it("CALL_SECRET 은 32자 이상 URL 안전 문자만", () => {
+    expect(() => endpoints({ CALL_SECRET: "short" })).toThrow(/CALL_SECRET/);
+    expect(() => endpoints({ CALL_SECRET: "a/b?c#".padEnd(40, "x") })).toThrow(/CALL_SECRET/);
+    expect(endpoints({ CALL_SECRET: "A".repeat(32) }).streamPath).toBe(`/japancall/${"A".repeat(32)}/stream`);
+  });
+});
+
+describe("probe.collect errors (조용한 실패 금지)", () => {
+  it("Twilio 조회가 실패하면 kyc unknown 과 함께 사유를 싣는다", async () => {
+    const boom = async () => { throw new Error("Twilio 401 20003 Authenticate"); };
+    const p = await collect({ job: null, deps: {
+      readEnv: () => ({ env: { TWILIO_ACCOUNT_SID: "AC1", TWILIO_AUTH_TOKEN: "t", CALL_SECRET: "A".repeat(32) }, file: "/x/env" }),
+      fetchProfiles: boom, fetchBalance: boom, fetchGeo: boom, ok: async () => true,
+    } });
+    expect(p.kyc).toBe("unknown");
+    expect(p.errors).toEqual(expect.arrayContaining([expect.stringContaining("profiles"), expect.stringContaining("balance")]));
+    expect(JSON.stringify(p)).not.toContain('"t"');
   });
 });

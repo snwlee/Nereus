@@ -91,3 +91,13 @@ describe("countryOf", () => {
     expect(DEFAULT_HOURS).toEqual({ start: 9, end: 20 });
   });
 });
+
+describe("phone.request secrets (보안 리뷰 L14)", () => {
+  it("비밀번호·인증번호·여권 값은 secret-in-job", () => {
+    for (const t of ["password: hunter2", "인증번호 482913", "パスワードはabc123", "passport M12345678", "PIN 1234"])
+      expect(judge(probeOk(), req({ job: { ...job, instructions: `${job.instructions} ${t}` } })).reasons).toContain("secret-in-job");
+  });
+  it("평범한 문장은 걸리지 않는다", () => {
+    expect(judge(probeOk(), req({ job: { ...job, instructions: `${job.instructions} 予約番号は06NQL0AXです` } })).reasons).toEqual([]);
+  });
+});

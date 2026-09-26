@@ -30,6 +30,8 @@ const COUNTRIES = Object.freeze([
 
 const E164 = /^\+\d{8,15}$/;
 const CARD_LIKE = /(?:\d[ -]?){13,19}/;   // 카드번호처럼 보이는 13~19자리
+// 비밀번호·PIN·인증번호·여권 뒤에 값이 붙은 것(보안 리뷰 L14). 규칙 문장의 "card or payment details" 는 값이 없어 안 걸린다.
+const SECRET_LIKE = /(\b(password|passwd|pin|passport|otp)\b|パスワード|暗証番号|認証コード|비밀번호|인증번호|여권\s?번호)\s*(?:[:：=]|は|는|은)?\s*[A-Za-z0-9]{3,}/i;
 
 export function countryOf(e164) {
   const digits = String(e164 || "").replace(/^\+/, "");
@@ -58,7 +60,7 @@ function jobReasons(job) {
   const reasons = [];
   const text = String(job?.instructions || "");
   if (!text.includes(DISCLOSURE_TAG)) reasons.push("disclosure-missing");
-  if (CARD_LIKE.test(text)) reasons.push("secret-in-job");
+  if (CARD_LIKE.test(text) || SECRET_LIKE.test(text)) reasons.push("secret-in-job");
   if (!(job?.timeLimitSec > 0) || job.timeLimitSec > MAX_CALL_SEC) reasons.push("time-limit-too-long");
   return reasons;
 }

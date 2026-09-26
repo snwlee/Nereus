@@ -36,7 +36,7 @@ node "$P/probe.mjs" --risk call --job <id>              # 저장된 잡으로 �
 | `balance-low` | 사용자가 Twilio 잔액 충전 (`MIN_BALANCE_USD` 이상) |
 | `env-missing` | `~/.config/nereus/phone/env` (없으면 `~/.config/japancall/env`)에 `OPENAI_API_KEY · TWILIO_ACCOUNT_SID · TWILIO_AUTH_TOKEN · CALL_SECRET · TWILIO_FROM` |
 | `relay-local-down` | `nohup node "$P/relay.mjs" >> ~/.local/share/nereus/phone/relay.log 2>&1 &` — 127.0.0.1:8791 |
-| `relay-public-down` | nginx `location ^~ /japancall/` → 127.0.0.1:8791 (Upgrade 헤더 포함) 확인 |
+| `relay-public-down` | nginx `location ^~ /japancall/` → 127.0.0.1:8791 (Upgrade 헤더 포함) 확인. 그 location 에 `access_log off;` — 경로에 CALL_SECRET 이 있다 |
 | `geo-blocked` | Twilio Console → Voice → Geo Permissions 에서 그 나라 low-risk 허용 |
 | `outside-call-hours` | 상대 현지 09:00~20:00(또는 브리프 `hours`) 안에 다시 |
 | `disclosure-missing` · `secret-in-job` | 잡을 손으로 고치지 말고 브리프에서 다시 만든다. 카드번호·비밀번호는 브리프에 넣지 않는다 |
@@ -63,7 +63,9 @@ node "$P/probe.mjs" --risk call --job <id>              # 저장된 잡으로 �
 ## 3. 승인 — 발신은 외부로 나가는 행동이다
 
 `call.mjs` 는 `--approved` 없이는 절대 걸지 않는다(exit 2 + 판정 JSON). 승인은 **이번 대화에서, 이 통화 하나에 대해** 받는다.
-묻는 형식(한 번에):
+`--approved` 를 붙인 실행은 Nereus PreToolUse 게이트가 **Claude Code 권한 창**으로 한 번 더 묻는다(번호·상대·질문이 창에 뜬다) —
+에이전트가 플래그를 스스로 붙여도 사람이 누르지 않으면 나가지 않는다.
+대화에서 먼저 묻는 형식(한 번에):
 
 > 📞 **七厘焼き和作 (+81 977-85-2848)** 에 일본어로 전화합니다 — 질문: ① 11/4 영업 ② 19시 4명 예약 가능 · 확정은 안 함 · 최대 10분 · 예상 비용 약 $1~2. 걸까요?
 
@@ -74,6 +76,9 @@ node "$P/call.mjs" --brief brief.json --id wasaku-1104                  # 판정
 node "$P/call.mjs" --brief brief.json --id wasaku-1104 --approved       # 승인 뒤 발신
 node "$P/call.mjs" --brief brief.json --id wasaku-1104 --to +8210XXXXXXXX --approved   # 리허설
 ```
+
+발신에 성공하면 `call.mjs` 가 잡 파일에 `callSid` 를 적는다. 중계는 **잡의 callSid 와 같은 스트림만 한 번** 받고,
+발신한 잡은 덮어쓸 수 없다 — 다시 걸 때는 새 `--id` 를 쓴다.
 
 ## 4. 통화 뒤 — 기록을 읽고 요약한다
 
@@ -95,3 +100,5 @@ node "$P/transcript.mjs" CA...      # 특정 통화
 - 확정·변경·취소를 `mayCommit` 없이 시키지 않는다.
 - 비밀값(키·토큰·CALL_SECRET)을 출력·로그·커밋에 싣지 않는다.
 - KYC·결제 화면을 사용자 대신 진행하지 않는다.
+- 브리프에 규칙처럼 쓰인 문장(「Rules:」「You may …」「Ignore …」)을 넣지 않는다 — `buildJob` 이 거절한다. 확정 허용은 `mayCommit` 으로만.
+- `CALL_SECRET` 이 로그(nginx·Twilio 통화 기록)에 남았으면 새 값(32자 이상)으로 바꾼다.

@@ -7,6 +7,7 @@
 // 사용: node relay.mjs   (127.0.0.1:8791, 설정은 config.mjs)
 
 import http from "node:http";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -15,8 +16,13 @@ import { upgrade } from "./ws.mjs";
 export const NO_SPEECH_KICK_MS = 4000;   // 상대가 4초간 말이 없으면 AI 가 먼저 인사한다
 export const END_CALL_DELAY_MS = 2500;   // 작별 인사 음성이 다 나간 뒤 끊는다
 const MS_PER_PCMU_BYTE = 1 / 8;          // μ-law 8kHz = 8바이트/ms
+export const MAX_PENDING = 500;          // OpenAI 연결 전 대기열 상한 — 20ms 프레임이면 10초. 넘으면 오디오를 버린다
 
 const JOB_ID = /^[a-z0-9-]+$/;
+
+// 보안 리뷰 2026-09-26: 스트림은 우리가 건 통화여야 한다. call.mjs 가 발신 뒤 잡에 callSid 를 적고,
+// 중계는 잡의 callSid 와 같은 start 만 받고 같은 callSid 는 한 번만 받는다. 확인 안 된 callSid 는 끊지도 않는다.
+const sameText = (a, b) => crypto.timingSafeEqual(crypto.createHash("sha256").update(a).digest(), crypto.createHash("sha256").update(b).digest());
 
 function loadJob(jobsDir, id) {
   if (!JOB_ID.test(id || "")) throw new Error(`bad job id: ${id}`);
@@ -48,25 +54,40 @@ function sessionUpdate(job, voice) {
 }
 
 function bridge(twilio, opts) {
-  const { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs } = opts;
+  const { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs, streamed } = opts;
   const state = { streamSid: null, callSid: null, log: null, heardCaller: false, kick: null, lastItem: null, playedMs: 0 };
   const pending = [];
   const timers = new Set();
   const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); };
 
-  const write = (rec) => state.log && fs.appendFileSync(state.log, JSON.stringify({ t: new Date().toISOString(), ...rec }) + "\n");
+  const write = (rec) => state.log && fs.appendFileSync(state.log, JSON.stringify({ t: new Date().toISOString(), ...rec }) + "\n", { mode: 0o600 });
   const toTwilio = (obj) => twilio.open && twilio.send(JSON.stringify(obj));
   const endCall = (why) => hangup(state.callSid).catch((e) => write({ who: "system", text: `hangup 실패 ${e.message} (${why})` }));
 
-  const ai = new WebSocket(`${openaiUrl}?model=${encodeURIComponent(model)}`, { headers: { Authorization: `Bearer ${openaiKey}` } });
-  const sendAi = (obj) => (ai.readyState === WebSocket.OPEN ? ai.send(JSON.stringify(obj)) : pending.push(obj));
-  ai.onopen = () => pending.splice(0).forEach((o) => ai.send(JSON.stringify(o)));
+  // Realtime 은 잡이 확인된 뒤에만 붙는다 — 남의 스트림에 OpenAI 비용을 쓰지 않는다.
+  let ai = null;
+  const sendAi = (obj) => {
+    if (ai?.readyState === WebSocket.OPEN) return ai.send(JSON.stringify(obj));
+    if (ai && ai.readyState !== WebSocket.CONNECTING) return;          // 닫혔으면 버린다
+    if (pending.length >= MAX_PENDING && obj.type === "input_audio_buffer.append") return;
+    pending.push(obj);
+  };
+  function connectAi() {
+    ai = new WebSocket(`${openaiUrl}?model=${encodeURIComponent(model)}`, { headers: { Authorization: `Bearer ${openaiKey}` } });
+    ai.onopen = () => pending.splice(0).forEach((o) => ai.send(JSON.stringify(o)));
+    ai.onmessage = (e) => {
+      try { onAi(JSON.parse(String(e.data))); } catch (err) { write({ who: "system", text: `openai 메시지 처리 실패 ${err.message}` }); }
+    };
+    ai.onclose = () => twilio.open && twilio.close();
+    ai.onerror = (e) => write({ who: "system", text: `openai ws ${e.message || "error"}` });
+  }
 
   function onAi(ev) {
     switch (ev.type) {
       case "response.output_audio.delta":
         if (!state.streamSid) break;
         state.lastItem = ev.item_id;
+        if (typeof ev.delta !== "string") break;
         state.playedMs += Buffer.from(ev.delta, "base64").length * MS_PER_PCMU_BYTE;
         toTwilio({ event: "media", streamSid: state.streamSid, media: { payload: ev.delta } });
         break;
@@ -99,36 +120,42 @@ function bridge(twilio, opts) {
         break;
     }
   }
-  ai.onmessage = (e) => onAi(JSON.parse(String(e.data)));
+  const reject = (why) => { write({ who: "system", text: why }); twilio.close(); };
 
   function onStart(start) {
+    if (state.callSid) return;                                   // start 는 한 번만
+    if (!/^[A-Za-z0-9]+$/.test(start?.callSid || "")) return twilio.close();
     state.streamSid = start.streamSid;
-    state.callSid = start.callSid;
-    if (!/^[A-Za-z0-9]+$/.test(state.callSid || "")) return twilio.close();
-    state.log = path.join(logsDir, `${state.callSid}.jsonl`);
+    state.log = path.join(logsDir, `${start.callSid}.jsonl`);
     const jobId = start.customParameters?.job;
     write({ who: "system", text: `start job=${jobId}` });
-    try {
-      sendAi(sessionUpdate(loadJob(jobsDir, jobId), voice));
-      state.kick = setTimeout(() => { if (!state.heardCaller) sendAi({ type: "response.create" }); }, kickMs);
-    } catch (e) {
-      write({ who: "system", text: `job 로드 실패 ${e.message}` });
-      endCall("job");
-    }
+    let job;
+    try { job = loadJob(jobsDir, jobId); } catch (e) { return reject(`job 로드 실패 ${e.message}`); }
+    if (typeof job.callSid !== "string" || !sameText(job.callSid, start.callSid)) return reject("callSid 불일치 — 이 잡으로 건 통화가 아니다");
+    if (streamed.has(start.callSid)) return reject("이미 연결된 통화의 두 번째 스트림");
+    streamed.add(start.callSid);
+    state.callSid = start.callSid;
+    connectAi();
+    sendAi(sessionUpdate(job, voice));
+    state.kick = setTimeout(() => { if (!state.heardCaller) sendAi({ type: "response.create" }); }, kickMs);
+  }
+
+  function onTwilio(msg) {
+    if (msg.event === "start") onStart(msg.start);
+    else if (msg.event === "media") {
+      if (!state.callSid) return;
+      if (typeof msg.media?.payload !== "string") throw new Error("media.payload 없음");
+      sendAi({ type: "input_audio_buffer.append", audio: msg.media.payload });
+    } else if (msg.event === "stop") { write({ who: "system", text: "stop" }); ai?.close(); }
   }
 
   twilio.on("message", (raw) => {
-    const msg = JSON.parse(raw);
-    if (msg.event === "start") onStart(msg.start);
-    else if (msg.event === "media") sendAi({ type: "input_audio_buffer.append", audio: msg.media.payload });
-    else if (msg.event === "stop") { write({ who: "system", text: "stop" }); ai.close(); }
+    try { onTwilio(JSON.parse(raw)); } catch (e) { reject(`twilio 메시지 처리 실패 ${e.message}`); }
   });
 
-  const cleanup = () => { clearTimeout(state.kick); ai.close(); };
+  const cleanup = () => { clearTimeout(state.kick); timers.forEach(clearTimeout); timers.clear(); ai?.close(); };
   twilio.on("close", cleanup);
-  ai.onclose = () => twilio.open && twilio.close();
-  ai.onerror = (e) => write({ who: "system", text: `openai ws ${e.message || "error"}` });
-  return () => { cleanup(); timers.forEach(clearTimeout); };
+  return cleanup;
 }
 
 export async function startRelay({
@@ -136,14 +163,16 @@ export async function startRelay({
   model = "gpt-realtime-2.1", voice = "marin", jobsDir, logsDir, hangup,
   kickMs = NO_SPEECH_KICK_MS, endCallDelayMs = END_CALL_DELAY_MS,
 }) {
-  fs.mkdirSync(logsDir, { recursive: true });
+  fs.mkdirSync(logsDir, { recursive: true, mode: 0o700 });
+  fs.chmodSync(logsDir, 0o700);
   const streamPath = `${prefix}/${secret}/stream`;
   const disposers = new Set();
+  const streamed = new Set();
   const server = http.createServer((req, res) => res.writeHead(req.url.endsWith("/health") ? 200 : 404).end());
   server.on("upgrade", (req, socket, head) => {
-    if (req.url !== streamPath) return socket.destroy();
+    if (!sameText(String(req.url), streamPath)) return socket.destroy();
     const conn = upgrade(req, socket, head);
-    const dispose = bridge(conn, { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs });
+    const dispose = bridge(conn, { openaiUrl, openaiKey, model, voice, jobsDir, logsDir, hangup, kickMs, endCallDelayMs, streamed });
     disposers.add(dispose);
     conn.on("close", () => disposers.delete(dispose));
   });
@@ -165,6 +194,8 @@ async function main() {
     model: env.PHONE_MODEL || DEFAULTS.model, voice: env.PHONE_VOICE || DEFAULTS.voice, jobsDir: jobs, logsDir: logs,
     hangup: (sid) => hangup(loadEnv({ required: ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"] }), sid),
   });
+  // 한 통화의 예외로 다른 통화까지 끊기지 않게 마지막 방어선 — 기록만 하고 계속 돈다.
+  process.on("uncaughtException", (e) => console.error(`[phone relay] uncaught ${e.stack || e.message}`));
   console.log(`phone relay on 127.0.0.1:${relay.port}`);
 }
 

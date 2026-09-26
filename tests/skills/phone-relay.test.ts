@@ -3,7 +3,7 @@ import http from "node:http";
 import fs, { readFileSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import { join } from "node:path";
-import { startRelay, NO_SPEECH_KICK_MS, END_CALL_DELAY_MS } from "../../plugins/nereus/skills/phone/scripts/relay.mjs";
+import { startRelay, NO_SPEECH_KICK_MS, END_CALL_DELAY_MS, MAX_PENDING } from "../../plugins/nereus/skills/phone/scripts/relay.mjs";
 import { upgrade } from "../../plugins/nereus/skills/phone/scripts/ws.mjs";
 
 const waitFor = async (cond: () => boolean, ms = 3000) => {
@@ -50,7 +50,7 @@ beforeEach(() => {
   dir = mkdtempSync(join(os.tmpdir(), "phone-relay-"));
   jobsDir = join(dir, "jobs"); logsDir = join(dir, "logs");
   mkdirSync(jobsDir); mkdirSync(logsDir);
-  writeFileSync(join(jobsDir, "t1.json"), JSON.stringify({ to: "+81977852848", language: "ja", instructions: "[AI-DISCLOSURE] test", timeLimitSec: 600 }));
+  writeFileSync(join(jobsDir, "t1.json"), JSON.stringify({ to: "+81977852848", language: "ja", instructions: "[AI-DISCLOSURE] test", timeLimitSec: 600, callSid: "CAtest" }));
 });
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -112,16 +112,85 @@ describe("phone.relay", () => {
     await relay.close();
   });
 
-  it("잘못된 잡 id 면 기록하고 끊는다", async () => {
+  it("잘못된 잡 id 면 기록하고 스트림만 닫는다 — 확인 안 된 callSid 는 끊지 않는다", async () => {
     const fake = await startFakeRealtime();
     const hungUp: string[] = [];
     const relay = await startRelay({ port: 0, secret: "s", prefix: "/japancall", openaiUrl: fake.url, openaiKey: "k", jobsDir, logsDir, hangup: async (sid: string) => { hungUp.push(sid); }, kickMs: 10_000 });
     const tw = new WebSocket(`ws://127.0.0.1:${relay.port}/japancall/s/stream`);
     await new Promise<void>((r) => { tw.onopen = () => r(); });
+    const closed = new Promise<void>((r) => { tw.onclose = () => r(); });
     tw.send(JSON.stringify({ event: "start", start: { streamSid: "MZ2", callSid: "CAbad", customParameters: { job: "../etc" } } }));
-    await waitFor(() => hungUp.length > 0);
+    await closed;
     expect(readFileSync(join(logsDir, "CAbad.jsonl"), "utf8")).toContain("job 로드 실패");
-    tw.close();
+    expect(hungUp).toEqual([]);
     await relay.close(); await fake.close();
+  });
+});
+
+describe("phone.relay hardening (보안 리뷰 H2·M3·M9)", () => {
+  const open = async (port: number) => {
+    const tw = new WebSocket(`ws://127.0.0.1:${port}/japancall/s/stream`);
+    await new Promise<void>((r) => { tw.onopen = () => r(); });
+    const closed = new Promise<void>((r) => { tw.onclose = () => r(); });
+    return { tw, closed };
+  };
+
+  it("깨진 메시지는 그 연결만 닫고 서버는 산다", async () => {
+    const relay = await startRelay({ port: 0, secret: "s", prefix: "/japancall", openaiUrl: "ws://127.0.0.1:1", openaiKey: "k", jobsDir, logsDir, hangup: async () => {} });
+    const a = await open(relay.port);
+    a.tw.send("{not json");
+    await a.closed;
+    const b = await open(relay.port);
+    b.tw.send(JSON.stringify({ event: "media" }));   // media 없음
+    b.tw.send(JSON.stringify({ event: "start" }));   // start 없음
+    await b.closed;
+    expect((await fetch(`http://127.0.0.1:${relay.port}/japancall/health`)).status).toBe(200);
+    await relay.close();
+  });
+
+  it("잡의 callSid 와 다른 스트림은 거절하고 Realtime 에 붙지 않는다", async () => {
+    const fake = await startFakeRealtime();
+    const hungUp: string[] = [];
+    const relay = await startRelay({ port: 0, secret: "s", prefix: "/japancall", openaiUrl: fake.url, openaiKey: "k", jobsDir, logsDir, hangup: async (sid: string) => { hungUp.push(sid); }, kickMs: 10_000 });
+    const a = await open(relay.port);
+    a.tw.send(JSON.stringify({ event: "start", start: { streamSid: "MZ9", callSid: "CAother", customParameters: { job: "t1" } } }));
+    await a.closed;
+    expect(fake.received.some((m) => m.type === "session.update")).toBe(false);
+    expect(hungUp).toEqual([]);   // 남의 통화를 끊지 않는다
+    expect(readFileSync(join(logsDir, "CAother.jsonl"), "utf8")).toContain("callSid 불일치");
+    await relay.close(); await fake.close();
+  });
+
+  it("같은 callSid 로 두 번째 스트림은 거절", async () => {
+    const fake = await startFakeRealtime();
+    const relay = await startRelay({ port: 0, secret: "s", prefix: "/japancall", openaiUrl: fake.url, openaiKey: "k", jobsDir, logsDir, hangup: async () => {}, kickMs: 10_000 });
+    const start = JSON.stringify({ event: "start", start: { streamSid: "MZ1", callSid: "CAtest", customParameters: { job: "t1" } } });
+    const a = await open(relay.port);
+    a.tw.send(start);
+    await waitFor(() => fake.received.some((m) => m.type === "session.update"));
+    const b = await open(relay.port);
+    b.tw.send(start);
+    await b.closed;
+    expect(fake.received.filter((m) => m.type === "session.update")).toHaveLength(1);
+    a.tw.close();
+    await relay.close(); await fake.close();
+  });
+
+  it("기록 디렉터리 0700 · 기록 파일 0600", async () => {
+    fs.rmSync(logsDir, { recursive: true });
+    const fake = await startFakeRealtime();
+    const relay = await startRelay({ port: 0, secret: "s", prefix: "/japancall", openaiUrl: fake.url, openaiKey: "k", jobsDir, logsDir, hangup: async () => {}, kickMs: 10_000 });
+    expect(fs.statSync(logsDir).mode & 0o777).toBe(0o700);
+    const a = await open(relay.port);
+    a.tw.send(JSON.stringify({ event: "start", start: { streamSid: "MZ1", callSid: "CAtest", customParameters: { job: "t1" } } }));
+    await waitFor(() => fs.existsSync(join(logsDir, "CAtest.jsonl")));
+    expect(fs.statSync(join(logsDir, "CAtest.jsonl")).mode & 0o777).toBe(0o600);
+    a.tw.close();
+    await relay.close(); await fake.close();
+  });
+
+  it("OpenAI 연결 전 대기열은 MAX_PENDING 을 넘지 않는다", () => {
+    expect(MAX_PENDING).toBeGreaterThan(50);
+    expect(MAX_PENDING).toBeLessThanOrEqual(1000);
   });
 });

@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import fs, { mkdtempSync, readFileSync } from "node:fs";
 import os from "node:os";
 import { join } from "node:path";
-import { buildTwiml, saveJob, parseCallArgs, decide } from "../../plugins/nereus/skills/phone/scripts/call.mjs";
+import { buildTwiml, saveJob, bindCall, parseCallArgs, decide } from "../../plugins/nereus/skills/phone/scripts/call.mjs";
 
 const probeOk = { envMissing: [], kyc: "twilio-approved", balanceUsd: 20, relayLocal: true, relayPublic: true, geo: ["JP"] };
 const brief = { to: "+81977852848", language: "ja", target: "七厘焼き和作", onBehalfOf: "イ・ソヌ", facts: ["大人4名"], questions: ["11月4日は営業されますか"] };
@@ -47,5 +47,18 @@ describe("phone.call", () => {
 
   it("KYC 미승인은 block", () => {
     expect(decide({ probe: { ...probeOk, kyc: "draft" }, brief, approved: true, now: tokyo14 }).reasons).toContain("kyc-not-approved");
+  });
+});
+
+describe("phone.call binding (보안 리뷰 M3·M4)", () => {
+  it("발신한 잡은 덮어쓰지 못하고 callSid 가 기록된다", () => {
+    dir = mkdtempSync(join(os.tmpdir(), "phone-call-"));
+    saveJob(dir, "w", { to: "+81" });
+    saveJob(dir, "w", { to: "+82" });   // 발신 전에는 다시 쓸 수 있다
+    bindCall(dir, "w", "CA123");
+    expect(JSON.parse(readFileSync(join(dir, "w.json"), "utf8"))).toEqual({ to: "+82", callSid: "CA123" });
+    expect(() => saveJob(dir, "w", { to: "+83" })).toThrow(/이미 발신/);
+    expect(() => bindCall(dir, "w", "../x")).toThrow();
+    expect(fs.statSync(dir).mode & 0o777).toBe(0o700);
   });
 });

@@ -120,3 +120,28 @@ The system MUST satisfy the following. `parseLog(text)` 는 jsonl 을 `{turns:[{
 #### Scenario: AI 가 끊은 통화
 - **WHEN** 로그에 `상대`·`AI` 줄과 `end_call`, `stop`
 - **THEN** `endedBy` 가 `"ai"`, `turns` 에 system 줄이 없다
+
+### Requirement: 발신은 사람이 권한 창에서 허용해야 한다 (보안 리뷰 2026-09-26)
+<!-- id: phone.approvalGate -->
+<!-- entities: PhoneGate -->
+<!-- enforced: tests/lib/phone-gate.test.ts -->
+
+The system MUST satisfy the following. `call.mjs` 를 `--approved` 로 실행하는 Bash 명령은 PreToolUse 훅이 `permissionDecision: "ask"` 로 사람에게 묻고,
+사유에 번호·상대·질문·확정 허용 여부를 한 줄로 보여야 한다. 브리프를 못 읽어도 `ask` 는 유지한다.
+
+#### Scenario: 에이전트가 스스로 --approved 를 붙임
+- **WHEN** `node call.mjs --brief b.json --id w --approved`
+- **THEN** 훅 결과가 `ask` 이고 사유에 브리프의 번호와 질문이 있다
+
+### Requirement: 중계는 우리가 건 통화의 스트림만 받아야 한다
+<!-- id: phone.binding -->
+<!-- entities: Relay, Call -->
+<!-- enforced: tests/skills/phone-relay.test.ts -->
+
+The system MUST satisfy the following. 발신 뒤 `bindCall` 이 잡에 `callSid` 를 적는다. 중계는 잡의 `callSid` 와 다른 `start` 를 거절하고 Realtime 에 붙지 않으며, 그 callSid 를 끊지도 않는다.
+같은 callSid 의 두 번째 스트림은 거절한다. 발신한 잡은 `saveJob` 이 덮어쓰지 않는다. 깨진 메시지는 그 연결만 닫고 서버는 계속 돈다.
+기록 디렉터리는 0700, 기록·잡 파일은 0600 이다. WebSocket 프레임은 `MAX_FRAME`, 메시지는 `MAX_MESSAGE` 를 넘으면 연결을 끊는다.
+
+#### Scenario: 남의 callSid
+- **WHEN** 잡 `callSid` 가 `CAtest` 인데 `start.callSid` 가 `CAother`
+- **THEN** `session.update` 가 가지 않고, hangup 도 부르지 않는다

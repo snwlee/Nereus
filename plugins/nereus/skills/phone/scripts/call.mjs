@@ -20,12 +20,29 @@ export function buildTwiml({ wss, jobId }) {
   return `<Response><Connect><Stream url="${wss}"><Parameter name="job" value="${jobId}"/></Stream></Connect></Response>`;
 }
 
-export function saveJob(dir, id, job) {
+const jobFile = (dir, id) => {
   if (!JOB_ID.test(id || "")) throw new Error(`잘못된 잡 id: ${id}`);
-  fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, `${id}.json`);
+  return path.join(dir, `${id}.json`);
+};
+const readJob = (file) => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : null);
+
+// 보안 리뷰 M4: 발신한 잡(callSid 가 적힌 잡)은 덮어쓰지 않는다 — 중계가 통화 중에 다시 읽기 때문이다.
+export function saveJob(dir, id, job) {
+  const file = jobFile(dir, id);
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  fs.chmodSync(dir, 0o700);
+  if (readJob(file)?.callSid) throw new Error(`이미 발신한 잡이다: ${id} — 새 id 를 쓴다`);
   fs.writeFileSync(file, JSON.stringify(job, null, 1), { mode: 0o600 });
   return file;
+}
+
+// 발신 직후 callSid 를 잡에 적는다. 중계는 이 callSid 와 같은 스트림만 받는다(보안 리뷰 M3).
+export function bindCall(dir, id, callSid) {
+  if (!/^[A-Za-z0-9]+$/.test(callSid || "")) throw new Error(`잘못된 callSid: ${callSid}`);
+  const file = jobFile(dir, id);
+  const job = readJob(file);
+  if (!job) throw new Error(`잡 없음: ${id}`);
+  fs.writeFileSync(file, JSON.stringify({ ...job, callSid }, null, 1), { mode: 0o600 });
 }
 
 export function parseCallArgs(argv) {
@@ -68,6 +85,7 @@ async function main() {
   const call = await twilio(env, "POST", "/Calls.json", {
     To: d.job.to, From: env.TWILIO_FROM, Twiml: buildTwiml({ wss, jobId: args.id }), TimeLimit: String(d.job.timeLimitSec),
   });
+  bindCall(paths().jobs, args.id, call.sid);
   console.log(JSON.stringify({ verdict: "go", call: call.sid, status: call.status, to: d.job.to, job: file }, null, 2));
 }
 

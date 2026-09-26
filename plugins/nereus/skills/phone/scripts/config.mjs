@@ -47,7 +47,11 @@ export function paths(proc = process.env) {
 }
 
 // 공개 wss 스트림 주소와 health 주소. env 의 PHONE_PUBLIC_HOST·PHONE_PREFIX 가 기본값을 이긴다.
+// CALL_SECRET 이 공개 스트림의 유일한 방어선이다(보안 리뷰 M7) — 짧거나 URL 을 깨는 문자면 쓰지 않는다.
+const SECRET_FORMAT = /^[A-Za-z0-9_-]{32,}$/;
+
 export function endpoints(env) {
+  if (!SECRET_FORMAT.test(env.CALL_SECRET || "")) throw new Error("CALL_SECRET 은 32자 이상 [A-Za-z0-9_-] 여야 한다");
   const host = env.PHONE_PUBLIC_HOST || DEFAULTS.publicHost;
   const prefix = env.PHONE_PREFIX || DEFAULTS.prefix;
   const port = Number(env.PHONE_PORT || DEFAULTS.port);

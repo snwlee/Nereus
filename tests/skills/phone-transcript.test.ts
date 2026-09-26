@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseLog, formatTurns } from "../../plugins/nereus/skills/phone/scripts/transcript.mjs";
+import { parseLog, formatTurns, validSid } from "../../plugins/nereus/skills/phone/scripts/transcript.mjs";
 
 const line = (who: string, text: string, t = "2026-11-01T01:00:00.000Z") => JSON.stringify({ t, who, text });
 
@@ -27,5 +27,17 @@ describe("phone.transcript", () => {
   it("사람이 읽을 줄로 바꾼다", () => {
     const r = parseLog(line("상대", "はい", "2026-11-01T01:02:03.000Z"));
     expect(formatTurns(r.turns)).toBe("01:02:03 상대: はい");
+  });
+});
+
+describe("phone.transcript robustness", () => {
+  it("쓰다 만 마지막 줄은 건너뛰고 세어 둔다", () => {
+    const r = parseLog([line("AI", "もしもし"), '{"t":"2026'].join("\n"));
+    expect(r.turns).toHaveLength(1);
+    expect(r.badLines).toBe(1);
+  });
+  it("callSid 는 영숫자만 (보안 리뷰 L11)", () => {
+    expect(validSid("CA0123abc")).toBe(true);
+    expect(validSid("../../x")).toBe(false);
   });
 });

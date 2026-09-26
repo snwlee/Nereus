@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import http from "node:http";
-import { acceptKey, encodeFrame, FrameDecoder, upgrade } from "../../plugins/nereus/skills/phone/scripts/ws.mjs";
+import { acceptKey, encodeFrame, FrameDecoder, upgrade, MAX_FRAME, MAX_MESSAGE, WsError } from "../../plugins/nereus/skills/phone/scripts/ws.mjs";
 
 const MASK = Buffer.from([1, 2, 3, 4]);
 const maskedFrame = (payload: Buffer, opcode = 1, fin = true) => {
@@ -86,6 +86,60 @@ describe("phone.ws server", () => {
       ws.onclose = () => resolve();
     });
     expect(serverClosed).toBe(true);
+    server.close();
+  });
+});
+
+describe("phone.ws limits (보안 리뷰 M5·M6)", () => {
+  const header = (b0: number, lenByte: number, ext: Buffer = Buffer.alloc(0)) => Buffer.concat([Buffer.from([b0, 0x80 | lenByte]), ext, MASK]);
+  it("64비트 거대 길이는 거절", () => {
+    const ext = Buffer.alloc(8); ext.writeBigUInt64BE(2n ** 40n);
+    expect(() => new FrameDecoder().push(header(0x81, 127, ext))).toThrow(/too-big/);
+  });
+  it("오류는 WsError 로 코드를 싣는다", () => {
+    try { new FrameDecoder().push(Buffer.from([0x81, 0x01, 0x61])); } catch (e) {
+      expect(e).toBeInstanceOf(WsError);
+      expect((e as WsError).code).toBe("unmasked");
+    }
+  });
+  it("MAX_FRAME 초과 16비트 길이도 거절", () => {
+    expect(MAX_FRAME).toBeLessThan(65535);
+    const ext = Buffer.alloc(2); ext.writeUInt16BE(MAX_FRAME + 1);
+    expect(() => new FrameDecoder().push(header(0x81, 126, ext))).toThrow(/too-big/);
+  });
+  it("마스크 없는 클라이언트 프레임·RSV 비트·예약 opcode 는 거절", () => {
+    expect(() => new FrameDecoder().push(Buffer.from([0x81, 0x01, 0x61]))).toThrow(/unmasked/);
+    expect(() => new FrameDecoder().push(maskedFrame(Buffer.from("a"), 0x41))).toThrow(/protocol/);
+    expect(() => new FrameDecoder().push(maskedFrame(Buffer.from("a"), 3))).toThrow(/protocol/);
+  });
+  it("제어 프레임 125 초과·조각난 제어 프레임은 거절", () => {
+    expect(() => new FrameDecoder().push(maskedFrame(Buffer.alloc(126), 9))).toThrow(/protocol/);
+    expect(() => new FrameDecoder().push(maskedFrame(Buffer.from("p"), 9, false))).toThrow(/protocol/);
+  });
+  it("시작 없는 continuation·열린 조각 중 새 데이터 프레임은 거절", () => {
+    expect(() => new FrameDecoder().push(maskedFrame(Buffer.from("x"), 0, true))).toThrow(/protocol/);
+    const d = new FrameDecoder();
+    d.push(maskedFrame(Buffer.from("a"), 1, false));
+    expect(() => d.push(maskedFrame(Buffer.from("b"), 1, true))).toThrow(/protocol/);
+  });
+  it("조각 합계가 MAX_MESSAGE 를 넘으면 거절", () => {
+    const d = new FrameDecoder();
+    const chunk = Buffer.alloc(MAX_FRAME, 0x61);
+    expect(() => { for (let i = 0; i <= MAX_MESSAGE / MAX_FRAME + 1; i++) d.push(maskedFrame(chunk, i ? 0 : 1, false)); }).toThrow(/too-big/);
+  });
+  it("프로토콜 위반이면 서버가 소켓을 닫는다", async () => {
+    const server = http.createServer();
+    server.on("upgrade", (req, socket, head) => { upgrade(req, socket, head); });
+    await new Promise<void>((r) => server.listen(0, "127.0.0.1", () => r()));
+    const { port } = server.address() as { port: number };
+    const net = await import("node:net");
+    const s = net.connect(port, "127.0.0.1");
+    s.resume();   // 읽지 않으면 소켓이 멈춰 FIN 을 못 본다
+    await new Promise<void>((r) => s.on("connect", () => r()));
+    s.write("GET /x HTTP/1.1\r\nHost: a\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n");
+    await new Promise((r) => setTimeout(r, 50));
+    s.write(Buffer.from([0x81, 0x01, 0x61]));   // 마스크 없음
+    await new Promise<void>((r) => s.on("close", () => r()));
     server.close();
   });
 });

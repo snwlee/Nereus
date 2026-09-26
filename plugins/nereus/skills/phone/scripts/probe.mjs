@@ -35,9 +35,13 @@ export function parseArgs(argv) {
 }
 
 const ok = async (url) => {
-  try { return (await fetch(url, { signal: AbortSignal.timeout(5000) })).ok; } catch { return false; }
+  try { return (await fetch(url, { signal: AbortSignal.timeout(5000) })).ok; } catch { return false; }   // 닫혀 있으면 down — 사유 코드가 relay-*-down 이다
 };
-const safe = async (fn) => { try { return await fn(); } catch { return undefined; } };
+
+// 조회 실패를 kyc unknown 으로만 뭉개지 않는다 — 어느 조회가 왜 실패했는지 errors 에 싣는다.
+async function attempt(name, fn, errors) {
+  try { return await fn(); } catch (e) { errors.push(`${name}: ${e.message}`); return undefined; }
+}
 
 export const loadJob = (id, dir = paths().jobs) => {
   if (!/^[a-z0-9-]+$/.test(id || "")) throw new Error(`잘못된 잡 id: ${id}`);
@@ -45,17 +49,26 @@ export const loadJob = (id, dir = paths().jobs) => {
 };
 
 // 실측. 네트워크를 부른다.
-export async function collect({ job } = {}) {
-  const { env, file } = readEnv();
+const DEFAULT_DEPS = { readEnv, fetchProfiles, fetchBalance, fetchGeo, ok };
+
+export async function collect({ job, deps = {} } = {}) {
+  const d = { ...DEFAULT_DEPS, ...deps };
+  const errors = [];
+  const { env, file } = d.readEnv();
   const envMissing = missingKeys(env);
   const iso = job?.to ? countryOf(job.to)?.iso : null;
   const hasTwilio = env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN;
   const [profiles, balance, geo] = hasTwilio
-    ? await Promise.all([safe(() => fetchProfiles(env)), safe(() => fetchBalance(env)), iso ? safe(() => fetchGeo(env, iso)) : undefined])
+    ? await Promise.all([
+      attempt("profiles", () => d.fetchProfiles(env), errors),
+      attempt("balance", () => d.fetchBalance(env), errors),
+      iso ? attempt("geo", () => d.fetchGeo(env, iso), errors) : undefined,
+    ])
     : [];
-  const ep = endpoints(env);
-  const [relayLocal, relayPublic] = await Promise.all([ok(ep.localHealth), ok(ep.publicHealth)]);
-  return { envFile: file, envMissing, ...readinessFrom({ profiles, balance, geo }), relayLocal, relayPublic };
+  let ep = null;
+  try { ep = endpoints(env); } catch (e) { errors.push(`endpoints: ${e.message}`); }
+  const [relayLocal, relayPublic] = ep ? await Promise.all([d.ok(ep.localHealth), d.ok(ep.publicHealth)]) : [false, false];
+  return { envFile: file, envMissing, ...readinessFrom({ profiles, balance, geo }), relayLocal, relayPublic, errors };
 }
 
 export function requestFor(args, job, now = new Date()) {
