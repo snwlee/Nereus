@@ -189,3 +189,14 @@ describe("router: computer-use", () => {
     expect(routePrompt("버튼 스타일 수정").map((h) => h.skill)).not.toContain("nereus:computer-use");
   });
 });
+
+describe("router: phone", () => {
+  it("전화 걸어서 물어보는 요청은 nereus:phone 으로 보낸다", () => {
+    for (const p of ["식당에 전화해서 영업하는지 물어봐줘", "AI 전화로 예약 문의해", "호텔에 전화 걸어서 확인해", "통화로 확인해줘", "call the restaurant and ask"])
+      expect(routePrompt(p).map((h) => h.skill)).toContain("nereus:phone");
+  });
+  it("전화번호·전화 인증은 phone 이 아니다", () => {
+    expect(routePrompt("전화번호 형식 검사 추가").map((h) => h.skill)).not.toContain("nereus:phone");
+    expect(routePrompt("전화 인증 SMS 코드").map((h) => h.skill)).not.toContain("nereus:phone");
+  });
+});

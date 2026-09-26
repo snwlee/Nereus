@@ -26,6 +26,8 @@ export const ROUTES = Object.freeze([
   { skill: "nereus:continue", why: "세션 내 계속 진행", re: /(continue\s?(on|off)|컨티뉴|자동으로\s?계속|멈추지\s?말고)/i },
   // "화면"은 design 이 가진다. 여기는 누르기·창·대화상자 같은 조작 동사와 도구 이름만 본다.
   { skill: "nereus:computer-use", why: "네이티브 앱 창·대화상자 조작 (Cua Driver·Orca)", re: /(버튼\s?(을|를)?\s?(너가\s?)?(못\s?)?(눌러|누르|클릭)|대화\s?상자|다이얼로그|앱\s?창|창\s?(을|를)?\s?(조작|닫|띄워)|컴퓨\S*\s?유즈|computer.?use|\bcua\b|단축키\s?(눌러|보내))/i },
+  // 걸기 동사만 본다. "전화번호"·"전화 인증"은 요청이 아니다.
+  { skill: "nereus:phone", why: "AI 가 대신 전화로 묻기 (Twilio·Realtime)", re: /(전화\s?(해서|걸어|해\s?줘|돌려)|통화(로|해서)\s?(물어|확인|문의)|ai\s?전화|음성\s?전화\s?(걸|대신)|phone\s?call|\bcall\s(them|the\s(shop|store|hotel|restaurant|clinic|office))\b)/i },
 ]);
 
 const MAX_HITS = 2;
