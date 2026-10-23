@@ -16,7 +16,7 @@ description: Long-running autonomous reset loop — each iteration is a fresh se
 node "${CLAUDE_PLUGIN_ROOT}/skills/baton/scripts/loop-runner.mjs" --goal "<목표 한 줄>" --tasks <tasks 경로> [--spec <스펙 경로>] [--max 30] [--gate "<검증 명령>"] [--timeout <초>]
 ```
 
-러너는 반복마다 `claude -p`를 새로 띄운다(컨텍스트 리셋). 각 반복은 handoff.md → 첫 미완료 태스크 → TDD → 체크 → handoff 재작성 → 커밋. 반복 끝에 미커밋 변경이 있으면 러너가 체크포인트 커밋을 만든다.
+러너는 반복마다 `claude -p`를 새로 띄운다(컨텍스트 리셋). 각 반복은 handoff 파일(형식은 `nereus:baton`) → 첫 미완료 태스크 → TDD → 체크 → handoff 재작성 → 커밋. 반복 끝에 미커밋 변경이 있으면 러너가 체크포인트 커밋을 만든다.
 
 ## wave 병렬 (`[wave:N]` 태그)
 

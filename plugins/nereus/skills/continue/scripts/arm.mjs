@@ -35,7 +35,7 @@ if (process.argv[1] && /arm\.mjs$/.test(process.argv[1])) {
     if (p.complete) { console.error("남은 태스크가 없습니다."); process.exit(2); }
     const s = arm(cwd, { max: arg("--max", DEFAULT_MAX), goal: arg("--goal", "") });
     console.log(`자동 계속 ON — 최대 ${s.remaining}회. 남은 태스크 ${p.total - p.done}개, 다음: ${p.next}`);
-    console.log("끄려면: /nereus:continue off (컨텍스트가 경고선을 넘으면 자동으로 꺼집니다)");
+    console.log("끄려면: /nereus:continue off (컨텍스트는 자동 압축이 맡습니다. 횟수를 다 쓰거나 태스크가 끝나면 꺼집니다)");
   } else if (cmd === "off") {
     disarm(cwd); console.log("자동 계속 OFF");
   } else {

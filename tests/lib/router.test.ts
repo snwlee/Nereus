@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { ROUTES, routePrompt, routerNotice, skillMapBlock } from "../../plugins/nereus/hooks/scripts/lib/router.mjs";
-import { DEFAULT_RESUME_PROMPT } from "../../plugins/nereus/skills/handoff/scripts/auto-clear.mjs";
 
 describe("ROUTES", () => {
   it("has a unique skill per route and a reason for each", () => {
@@ -95,21 +94,12 @@ describe("routePrompt — 오탐 방지", () => {
   });
 });
 
-describe("resume 라우트", () => {
-  it("재개 표현을 nereus:resume 으로 잡는다", () => {
-    for (const t of ["이어서", "이어서 진행해", "이어서 해줘", "재개", "resume", "이어서 하자"]) {
-      expect(routePrompt(t).map((r: any) => r.skill)).toContain("nereus:resume");
-    }
-  });
-
-  it("auto-clear 가 보내는 기본 재개 프롬프트가 실제로 resume 으로 라우팅된다", () => {
-    // 프롬프트 문자열과 라우터가 어긋나면 자동 재개가 조용히 스킬 없이 돌아간다.
-    expect(routePrompt(DEFAULT_RESUME_PROMPT).map((r: any) => r.skill)).toContain("nereus:resume");
-  });
-
-  it("재개와 무관한 요청에는 뜨지 않는다", () => {
-    for (const t of ["로그인 버그 고쳐줘", "이 태스크 구현해", "SEO 점검해"]) {
-      expect(routePrompt(t).map((r: any) => r.skill)).not.toContain("nereus:resume");
+describe("handoff·resume 라우트 폐지", () => {
+  it("인계·재개 표현에 더 이상 없는 스킬을 띄우지 않는다", () => {
+    for (const t of ["핸드오프", "handoff 해줘", "여기까지 저장", "이어서", "재개", "resume"]) {
+      const skills = routePrompt(t).map((r: any) => r.skill);
+      expect(skills).not.toContain("nereus:handoff");
+      expect(skills).not.toContain("nereus:resume");
     }
   });
 });

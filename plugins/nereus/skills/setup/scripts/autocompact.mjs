@@ -1,7 +1,7 @@
 // Claude Code 자동 압축 임계값(CLAUDE_AUTOCOMPACT_PCT_OVERRIDE)을 읽고 설정한다.
-// Baton 하드 스톱보다 뒤에 있어야 안전망 역할을 한다. Claude Code 내부 상한은 약 83%.
+// Nereus 는 컨텍스트 관리를 자동 압축에 맡긴다 — 권장 50%. Claude Code 내부 상한은 약 83%.
 // 사용: node autocompact.mjs            현재 값 출력
-//       node autocompact.mjs --set 80   설정(변경 전 백업)
+//       node autocompact.mjs --set 50   설정(변경 전 백업)
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";

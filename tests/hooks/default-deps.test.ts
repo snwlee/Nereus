@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { handle as batonMeter } from "../../plugins/nereus/hooks/scripts/baton-meter.mjs";
 import { handle as tddGuard } from "../../plugins/nereus/hooks/scripts/tdd-guard.mjs";
 import { handle as finishCheck } from "../../plugins/nereus/hooks/scripts/finish-check.mjs";
 import { handle as preCompact } from "../../plugins/nereus/hooks/scripts/pre-compact.mjs";
@@ -31,32 +30,17 @@ afterAll(() => {
 });
 
 describe("default (file-backed) dependencies", () => {
-  it("baton-meter uses file marks: hard stop repeats, warn once", () => {
-    const input = { session_id: "d1", cwd: dir, transcript_path: path.join(dir, "t.jsonl") };
-    expect(batonMeter(input)!.hookSpecificOutput.additionalContext).toContain("하드 스톱");
-    expect(batonMeter(input)).not.toBeNull();
-    const warnLine = JSON.stringify({ message: { role: "assistant", model: "claude-opus-5", usage: { input_tokens: 110000 } } });
-    fs.writeFileSync(path.join(dir, "w.jsonl"), warnLine + "\n");
-    const w = { session_id: "d2", cwd: dir, transcript_path: path.join(dir, "w.jsonl") };
-    expect(batonMeter(w)).not.toBeNull();
-    expect(batonMeter(w)).toBeNull();
-    expect(fs.existsSync(path.join(dir, ".nereus", ".baton-warn-d2"))).toBe(true);
-  });
   it("tdd-guard persists history per session in .nereus", () => {
     const edit = (f: string) => ({ session_id: "d3", cwd: dir, tool_name: "Edit", tool_input: { file_path: path.join(dir, f) } });
     expect(tddGuard(edit("src/a.ts"))).not.toBeNull();
     expect(tddGuard(edit("src/a.ts"))).toBeNull();
     expect(JSON.parse(fs.readFileSync(path.join(dir, ".nereus", ".tdd-d3.json"), "utf8"))).toEqual(["src/a.ts", "src/a.ts"]);
   });
-  it("finish-check default deps work outside a git repo and track handoff freshness", () => {
+  it("finish-check default deps work outside a git repo", () => {
     const first = finishCheck({ cwd: dir, session_id: "d4" });
     expect(first === null || typeof first.systemMessage === "string").toBe(true);
-    fs.mkdirSync(path.join(dir, ".nereus"), { recursive: true });
-    fs.writeFileSync(path.join(dir, ".nereus", "handoff.md"), "# H");
-    expect(finishCheck({ cwd: dir, session_id: "d4" })).toBeNull();
   });
-  it("pre-compact reads real mtime", () => {
-    expect(preCompact({ cwd: dir })).toBeNull();
+  it("pre-compact needs no file state", () => {
     expect(preCompact({ cwd: path.join(dir, "nowhere") })).not.toBeNull();
   });
   it("session-end default detection does not throw", () => {

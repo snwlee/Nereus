@@ -39,11 +39,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node plugins/nereus/hooks/scripts/baton-meter.mjs",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "node plugins/nereus/hooks/scripts/observe.mjs",
             "timeout": 5
           }

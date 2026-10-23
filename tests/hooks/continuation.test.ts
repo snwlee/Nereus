@@ -5,10 +5,7 @@ import { hudLine, badge } from "../../plugins/nereus/skills/hud/scripts/hud.mjs"
 
 const base = {
   gitStatus: () => "",
-  handoffUpdatedThisSession: () => true,
   evidence: () => ({ status: "FRESH", passing: true }),
-  config: () => ({ baton: { warn: 0.5, hard: 0.7 } }),
-  ctxRatio: () => 0.2,
   progress: () => ({ total: 3, done: 1, next: "B", complete: false }),
 };
 const armed = (remaining = 3) => { let state: any = { remaining, goal: "g" }; return { continuation: () => state, disarm: () => { state = null; }, decrement: () => { state = { ...state, remaining: state.remaining - 1 }; }, peek: () => state }; };
@@ -39,12 +36,11 @@ describe("Stop 재진입", () => {
     expect(finishCheck({ cwd: "/r" }, { ...base, ...c2, progress: () => ({ total: 2, done: 2, next: null, complete: true }) })).toBeNull();
     expect(c2.peek()).toBeNull();
   });
-  it("컨텍스트가 경고선을 넘으면 재진입 대신 핸드오프를 요구한다", () => {
+  it("컨텍스트 사용률과 무관하게 재진입한다 — 컨텍스트는 자동 압축이 맡는다", () => {
     const c = armed(3);
-    const out = finishCheck({ cwd: "/r" }, { ...base, ...c, ctxRatio: () => 0.6 })!;
-    expect(out.decision).toBeUndefined();
-    expect(out.systemMessage).toContain("handoff");
-    expect(c.peek()).toBeNull();
+    const out = finishCheck({ cwd: "/r" }, { ...base, ...c, ctxRatio: () => 0.9 })!;
+    expect(out.decision).toBe("block");
+    expect(c.peek().remaining).toBe(2);
   });
   it("태스크 파일이 없으면 재진입하지 않는다", () => {
     const c = armed(3);

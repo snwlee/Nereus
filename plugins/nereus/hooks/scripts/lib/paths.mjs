@@ -60,13 +60,6 @@ export function latestHandoff({ cwd, entries = [], legacyExists = false } = {}) 
   return legacyExists ? handoffPath(cwd) : null;
 }
 
-export function recentOtherSessions({ entries = [], sessionId, now = Date.now(), windowMs = 30 * 60 * 1000 } = {}) {
-  const mine = `-${sid8(sessionId)}.md`;
-  return entries
-    .filter((e) => !e.name.endsWith(mine) && now - e.mtimeMs <= windowMs)
-    .sort(byNewest);
-}
-
 /** 삭제할 파일명만 돌려준다. 지우는 것은 호출자 몫이다(순수 유지). */
 export function planHandoffPrune({ entries = [], now = Date.now(), keep = 10, maxAgeMs = 30 * 24 * 60 * 60 * 1000, protect = [] } = {}) {
   const safe = new Set(protect);

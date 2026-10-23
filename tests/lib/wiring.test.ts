@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isEntryScript, findOrphans, checkReleaseHandoff, checkWiring } from "../../plugins/nereus/hooks/scripts/lib/wiring.mjs";
+import { isEntryScript, findOrphans, checkWiring } from "../../plugins/nereus/hooks/scripts/lib/wiring.mjs";
 
 describe("isEntryScript", () => {
   it("treats skill and hook scripts as entry points", () => {
@@ -51,55 +51,23 @@ describe("findOrphans", () => {
   });
 });
 
-describe("checkReleaseHandoff", () => {
-  const bump = (file: string) => ({ file, added: ['  "version": "0.13.0",'], removed: ['  "version": "0.12.0",'] });
-  const manifest = "plugins/nereus/.claude-plugin/plugin.json";
-
-  it("flags a version bump when handoff.md still describes the old version", () => {
-    const r = checkReleaseHandoff([bump(manifest)], () => "# Handoff — Nereus (v0.12.0)");
-    expect(r).toHaveLength(1);
-    expect(r[0]).toMatchObject({ category: "handoff_stale" });
-  });
-
-  it("passes when handoff.md mentions the new version — handoff.md is gitignored, so diff membership cannot be the signal", () => {
-    expect(checkReleaseHandoff([bump(manifest)], () => "# Handoff — Nereus (v0.13.0)")).toEqual([]);
-  });
-
-  it("passes when handoff.md is itself part of the change", () => {
-    expect(checkReleaseHandoff([bump(manifest), { file: ".nereus/handoff.md", added: ["## 완료"], removed: [] }], () => "낡음")).toEqual([]);
-  });
-
-  it("stays quiet in projects that keep no handoff at all", () => {
-    expect(checkReleaseHandoff([bump(manifest)], () => null)).toEqual([]);
-  });
-
-  it("stays quiet when no version changed", () => {
-    expect(checkReleaseHandoff([{ file: "src/a.ts", added: ["const a = 1;"], removed: [] }], () => "낡음")).toEqual([]);
-  });
-
-  it("ignores dependency version lines in a lockfile", () => {
-    expect(checkReleaseHandoff([{ file: "package-lock.json", added: ['      "version": "1.2.3",'], removed: [] }], () => "낡음")).toEqual([]);
-  });
-});
-
 describe("checkWiring", () => {
-  it("merges both checks over a parsed diff and a repo reader", () => {
+  it("flags orphans over a parsed diff and a repo reader, and no longer checks handoff", () => {
     const files = [
       { file: "plugins/nereus/skills/handoff/scripts/orphan.mjs", added: ["export const x = 1;"], removed: [] },
       { file: "plugins/nereus/.claude-plugin/plugin.json", added: ['  "version": "0.13.0",'], removed: [] },
     ];
-    const r = checkWiring({ files, listRefs: () => [{ file: "plugins/nereus/skills/handoff/SKILL.md", text: "무관한 내용" }], readHandoff: () => "v0.12.0" });
+    const r = checkWiring({ files, listRefs: () => [{ file: "plugins/nereus/skills/handoff/SKILL.md", text: "무관한 내용" }] });
     expect(r.pass).toBe(false);
-    expect(r.findings.map((f: any) => f.category).sort()).toEqual(["handoff_stale", "unwired"]);
+    expect(r.findings.map((f: any) => f.category)).toEqual(["unwired"]);
   });
 
   it("passes a fully wired release", () => {
     const files = [
       { file: "plugins/nereus/skills/handoff/scripts/wired.mjs", added: ["export const x = 1;"], removed: [] },
       { file: "plugins/nereus/.claude-plugin/plugin.json", added: ['  "version": "0.13.0",'], removed: [] },
-      { file: ".nereus/handoff.md", added: ["## 완료"], removed: [] },
     ];
-    const r = checkWiring({ files, listRefs: () => [{ file: "plugins/nereus/skills/handoff/SKILL.md", text: "node scripts/wired.mjs" }], readHandoff: () => "v0.13.0" });
+    const r = checkWiring({ files, listRefs: () => [{ file: "plugins/nereus/skills/handoff/SKILL.md", text: "node scripts/wired.mjs" }] });
     expect(r).toEqual({ pass: true, findings: [] });
   });
 });

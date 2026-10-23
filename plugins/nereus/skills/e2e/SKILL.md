@@ -23,7 +23,7 @@ tasks 파일에서 `[flow]` 태그가 있고 이번 작업 단위에 포함된 �
 ## 3. 규칙
 - 대기는 결정적으로(요소 상태, 응답 완료). `sleep`·고정 타임아웃 금지.
 - 실패 시 2회 재시도. 3회 모두 실패 → 게이트 차단, build로 돌려보낸다(테스트 통과를 위해 제품 코드를 여기서 고치지 않는다).
-- 간헐 실패(성공·실패 혼재)는 `.nereus/e2e-quarantine.json`에 `{test, reason, since}`로 격리하고 handoff.md 테스트 상태에 적는다. 삭제하지 않는다.
+- 간헐 실패(성공·실패 혼재)는 `.nereus/e2e-quarantine.json`에 `{test, reason, since}`로 격리하고 사용자에게 알린다. 삭제하지 않는다.
 - 스크린샷·트레이스는 `.nereus/e2e-artifacts/`에.
 
 ## 4. 출력

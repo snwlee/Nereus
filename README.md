@@ -33,7 +33,7 @@ The core harness is the workflow. Domain packs add skills and one expert agent e
 
 | Plugin | Version | What it adds |
 |---|---|---|
-| `nereus` | 0.23.0 | The workflow itself: 27 skills, 10 expert agents, Node hooks, Baton handoff, setup and doctor |
+| `nereus` | 0.24.0 | The workflow itself: 25 skills, 10 expert agents, Node hooks, auto-compaction at 50%, setup and doctor |
 | `nereus-game` | 0.3.0 | Game development: Roblox, Unity (mobile), Switch, Flutter/Flame adapters plus level, balance, narrative, sound, liveops and compliance skills |
 | `nereus-ads` | 0.1.0 | AdMob operations: the policy gate that keeps an account alive, placement design, and revenue levers |
 | `nereus-l10n` | 0.1.0 | Localization: source strings, store listings and ASO, plus typeface coverage — the constraint that silently breaks a whole locale |
@@ -51,13 +51,13 @@ Each pack routes narrowly on its own vocabulary. `/nereus:doctor` reports collis
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/nereus-flow-dark.png">
-    <img src="docs/assets/nereus-flow-light.png" alt="Nereus workflow: intake → spec → build → e2e → review → finish, with the Baton context handoff" width="900">
+    <img src="docs/assets/nereus-flow-light.png" alt="Nereus workflow: intake → spec → build → e2e → review → finish, with auto-compaction at 50%" width="900">
   </picture>
 </p>
 
 Each stage calls the next only when its own gate passes. Day to day you only type `/nereus:intake`.
 
-Baton runs ahead of Claude Code's own auto-compaction (a lossy summary). At 50% of the context window it tells you to finish the current task; at 70% it stops and demands a handoff. `/nereus:setup` offers to set `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` so the order is 50% warn → 70% hard stop → 80% compaction as a last resort.
+Context is managed by Claude Code's own auto-compaction, set to 50% of the context window (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50`, applied by `/nereus:setup`). Right before compaction the PreCompact hook tells the summary to keep five sections — original request, final goal, completed work, remaining work, MUST NOT — so failed approaches survive the summary. There is no handoff file or `/clear` cycle for interactive sessions; only `/nereus:loop` iterations pass state through handoff files.
 
 <sub>Built with <a href="https://github.com/tt-a1i/archify">archify</a> (MIT) from a checked-in JSON IR, not hand-drawn: <a href="docs/diagrams/nereus-flow.workflow.json"><code>docs/diagrams/nereus-flow.workflow.json</code></a>. Regenerate with <code>archify deliver workflow docs/diagrams/nereus-flow.workflow.json out.html --quality showcase</code>.</sub>
 
@@ -73,10 +73,9 @@ Baton runs ahead of Claude Code's own auto-compaction (a lossy summary). At 50% 
 | `/nereus:debug` | Four-phase root-cause investigation before any fix |
 | `/nereus:design` | Three stages for any design/UI/UX work — generate direction candidates (ui-ux-pro-max), critique the direction, critique the render; hard gate at finish |
 | `/nereus:review` | Parallel review, severity gate |
-| `/nereus:finish` | Completion gate (test evidence + integrity scan + design feedback), then commit, archive, update handoff |
-| `/nereus:handoff` | Save state for the next session. After `/clear` the SessionStart hook re-injects it and resumes automatically — `/nereus:resume` is only for resuming by hand (e.g. a different tasks file). |
+| `/nereus:finish` | Completion gate (test evidence + integrity scan + design feedback), then commit, archive |
 | `/nereus:loop "goal" --max N` | Autonomous loop with a fresh session per iteration |
-| `/nereus:continue on\|off` | Continue remaining tasks inside the current session (off by default, auto-disarms at the context warning) |
+| `/nereus:continue on\|off` | Continue remaining tasks inside the current session (off by default; auto-compaction handles context) |
 | `/nereus:learn` | Review and approve what the hooks observed; approved rules are injected next session |
 | `/nereus:hud` | One-line status: task progress, verification state, context % |
 | `/nereus:doctor` | Report conflicts with other harness plugins — shadowed MCP servers, duplicate agent or skill names, shared hook points. Reports only, never uninstalls |
@@ -104,10 +103,10 @@ Each agent is a persona, an allow-list of tools, and an output contract. Agents 
 |---|---|
 | UserPromptSubmit | `learn-watch`: records the correction and nudges once per session |
 | PreToolUse | `pre-tool-guard`: blocks commands/edits matching rules (`--no-verify`, force push, secret files). On `git commit`, blocks staged secrets and `.env`; debug logs are warnings only |
-| SessionStart | Injects `handoff.md` and high-confidence learnings, reports missing tools |
-| PostToolUse | `tdd-guard`: warns when source is edited before its test. `baton-meter`: 50% warn, 70% hard stop. `observe`: appends raw observations, no judgment |
-| PreCompact | Demands a handoff before auto-compaction |
-| Stop | Continues the next task when `/nereus:continue` is armed; otherwise flags uncommitted changes, a stale handoff, or missing/stale test evidence |
+| SessionStart | Injects high-confidence learnings and the skill map, reports missing tools. Inside `/nereus:loop` iterations it also injects the latest handoff |
+| PostToolUse | `tdd-guard`: warns when source is edited before its test. `observe`: appends raw observations, no judgment |
+| PreCompact | Tells the compaction summary to keep five sections (request, goal, done, remaining, MUST NOT) |
+| Stop | Continues the next task when `/nereus:continue` is armed; otherwise flags uncommitted changes or missing/stale test evidence |
 
 All hooks are Node scripts. No bash, zero runtime dependencies, identical on macOS and Windows.
 
@@ -118,7 +117,6 @@ All hooks are Node scripts. No bash, zero runtime dependencies, identical on mac
 ```json
 {
   "secondOpinion": "both",
-  "baton": { "warn": 0.5, "hard": 0.7 },
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/generated/**"] },
   "design": { "enforce": "block", "widths": [320, 768, 1440] },
   "commitQuality": { "block": ["secret", "env_file"], "warn": ["debug_log"] },

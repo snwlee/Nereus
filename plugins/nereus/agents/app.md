@@ -24,4 +24,4 @@ nereus:build. UI·테마·위젯 스타일을 만지면 **nereus:design 필수**
 코드 + 테스트 + `flutter test`와 `flutter analyze` 출력 인용.
 
 ## 완료 조건
-테스트 통과, analyze 클린, 디자인 표면을 만졌으면 `design-feedback.mjs status` 통과, tasks 체크, handoff.md 갱신.
+테스트 통과, analyze 클린, 디자인 표면을 만졌으면 `design-feedback.mjs status` 통과, tasks 체크.

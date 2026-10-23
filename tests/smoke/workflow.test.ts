@@ -38,10 +38,10 @@ describe("smoke: three stacks", () => {
       expect(tddGuard({ session_id: sid + "b", cwd: dir, tool_name: "Edit", tool_input: { file_path: path.join(dir, src) } })).toBeNull();
     }
   });
-  it("session-start injects handoff written into a fixture", () => {
+  it("session-start injects handoff written into a fixture for a loop iteration", () => {
     fs.mkdirSync(path.join(node, ".nereus"), { recursive: true });
     fs.writeFileSync(path.join(node, ".nereus", "handoff.md"), "# Handoff\n목표: 스모크");
-    const out = sessionStart({ cwd: node, source: "compact" }, { toolStatus: () => ({ missing: [] }) })!;
+    const out = sessionStart({ cwd: node, source: "startup" }, { toolStatus: () => ({ missing: [] }), env: { NEREUS_LOOP: "1" } })!;
     expect(out.hookSpecificOutput.additionalContext).toContain("목표: 스모크");
   });
 });

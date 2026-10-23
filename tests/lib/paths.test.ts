@@ -47,7 +47,7 @@ describe("session handoff path", () => {
   });
 });
 
-import { latestHandoff, recentOtherSessions, planHandoffPrune } from "../../plugins/nereus/hooks/scripts/lib/paths.mjs";
+import { latestHandoff, planHandoffPrune } from "../../plugins/nereus/hooks/scripts/lib/paths.mjs";
 
 const MIN = 60_000;
 describe("handoff selection", () => {
@@ -71,15 +71,6 @@ describe("handoff selection", () => {
   });
   it("returns null when there is nothing to read", () => {
     expect(latestHandoff({ cwd: "/repo", entries: [], legacyExists: false })).toBeNull();
-  });
-  it("reports other sessions that wrote within the window, newest first", () => {
-    const entries = [
-      { name: "20260912-1400-aaaaaaaa.md", mtimeMs: now - 1 * MIN },
-      { name: "20260912-1300-bbbbbbbb.md", mtimeMs: now - 5 * MIN },
-      { name: "20260912-0100-cccccccc.md", mtimeMs: now - 90 * MIN },
-    ];
-    const out = recentOtherSessions({ entries, sessionId: "aaaaaaaa", now, windowMs: 30 * MIN });
-    expect(out.map((e) => e.name)).toEqual(["20260912-1300-bbbbbbbb.md"]);
   });
   it("keeps the 10 newest and drops what is older than the max age", () => {
     const many = Array.from({ length: 12 }, (_, i) => ({ name: `2026091${i % 10}-0900-s${i}0000000`.slice(0, 22) + ".md", mtimeMs: now - i * MIN }));

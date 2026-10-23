@@ -144,6 +144,6 @@ node "$D" record visual --critique-file /tmp/critique.txt --files src/hero/Hero.
 `enforce: "warn"` 으로 낮추면 findings 는 보고하되 차단하지 않는다. 기본은 `block`.
 
 ## 기록
-라운드는 `.nereus/design-feedback.json` 에 최근 20건까지 남는다. handoff 갱신 시 미이행 라운드를 "열린 질문"에 옮긴다.
+라운드는 `.nereus/design-feedback.json` 에 최근 20건까지 남는다. 미이행 라운드는 finish 게이트와 Stop 훅이 알린다.
 
 웹 이펙트 라이브러리를 참고할 때는 `references/web-effect-repos.md` 를 먼저 본다 — **라이선스부터 확인한다.**

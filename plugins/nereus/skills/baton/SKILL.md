@@ -1,11 +1,11 @@
 ---
 name: baton
-description: Context handoff rules and the handoff.md format. Referenced on a Baton warning and when resuming; call handoff/resume/loop for the actual action. 트리거: Baton 경고 시, 재개 시 참조. 직접 호출용 아님.
+description: Baton loop only — the handoff file format that carries state between nereus:loop iterations (each a fresh session). Interactive sessions rely on auto-compaction instead. 트리거: 루프 반복 안에서 참조. 직접 호출용 아님.
 ---
 
 # Baton
 
-진실은 디스크에만 있다: `.nereus/handoff/` 아래 이 세션의 handoff 파일, tasks 파일, git 커밋. 대화 기억은 믿지 않는다.
+루프 반복의 진실은 디스크에만 있다: `.nereus/handoff/` 아래 이 반복의 handoff 파일, tasks 파일, git 커밋. 대화 기억은 믿지 않는다.
 
 **쓰기는 자기 세션 파일, 읽기는 최신 파일.** 파일명은 `시각-세션id8.md` 이고, 그 경로는 세션 시작
 안내가 알려준다. 다른 세션의 파일은 열지도 쓰지도 않는다 — 같은 프로젝트에서 세션이 여럿
@@ -50,15 +50,12 @@ intake | spec | build | e2e | review | finish 중 하나 + 진행 중인 태스�
 - 러너, 마지막 실행 결과(통과/실패 수), 격리된 E2E.
 ```
 
-## 임계값 동작
+## 반복 사이 인계
 
-- **50%**(설정 `baton.warn`): 새 태스크 시작 금지. 현재 태스크만 마무리 → handoff 재작성 → 커밋 → 멈춤. 사용자에게 "/clear 만 치면 자동으로 이어집니다" 안내.
-- **70%**(`baton.hard`): 즉시 handoff 재작성과 커밋만. 다른 도구 호출 금지.
-- **80%**: Claude Code 자동 압축(`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`). Baton을 놓쳤을 때의 안전망일 뿐, 여기까지 오면 이미 늦은 것이다.
-- 자동 압축이 먼저 오면 PreCompact 훅이 handoff 작성을 요구한다. 압축 뒤에도 handoff가 진실이다.
+- 대화형 세션에는 Baton 이 없다(2026-10-23 폐지). 컨텍스트는 Claude Code 자동 압축(50%)과 PreCompact 요약 지시가 맡는다.
+- 루프 반복은 매번 새 `claude -p` 세션이라 압축이 아니라 이 파일로 상태를 넘긴다. 반복을 끝낼 때 전체 재작성하고 커밋한다.
 
 ## 재개
 
-SessionStart 훅이 **가장 최근 handoff**(mtime 기준)를 주입하고, 이 세션이 쓸 파일 경로를 함께 알린다.
-최근 30분 안에 다른 세션이 handoff 를 갱신했으면 경고가 따라온다 — 같은 파일을 건드리는 중인지 확인한다.
+루프 서브세션(`NEREUS_LOOP`)에서만 SessionStart 훅이 **가장 최근 handoff**(mtime 기준)를 주입하고, 이 반복이 쓸 파일 경로를 함께 알린다.
 재개 시 "진행 중"의 테스트 상태를 먼저 실제로 실행해 확인한 뒤 이어간다. 완료 항목은 반복하지 않는다.

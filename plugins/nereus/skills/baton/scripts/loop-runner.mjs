@@ -150,8 +150,11 @@ export async function runWave(group, opts, deps = {}) {
 
 export function wavesDir(root) { return path.join(root, ".nereus", "waves"); }
 
-/** 자식에게 루프 서브세션임을 알린다. SessionStart 훅이 이 값으로 동시 세션 경고를 끈다. */
-export function claudeEnv(base = process.env) { return { ...base, NEREUS_LOOP: "1" }; }
+// 루프 프로세스가 뜬 시각. 첫 반복이 루프 이전에 남은 무관한 handoff 를 이어받지 않게 자식에게 넘긴다.
+const LOOP_SINCE = Date.now();
+
+/** 자식에게 루프 서브세션임과 루프 시작 시각을 알린다. SessionStart 훅이 이 값으로만 handoff 를 주입한다. */
+export function claudeEnv(base = process.env, since = LOOP_SINCE) { return { ...base, NEREUS_LOOP: "1", NEREUS_LOOP_SINCE: String(since) }; }
 
 /**
  * handoff 파일 경로를 프롬프트에 박지 않는다 — 세션마다 파일이 다르고, 그 경로는

@@ -10,7 +10,7 @@ description: Shared rules for every Nereus agent and skill. Referenced from agen
 3. **검증 전 완료 선언 금지**: 테스트를 실행하지 않았으면 "됩니다"라고 말하지 않는다. 실행 결과를 인용한다. 실패했으면 실패했다고 쓴다.
 4. **시크릿**: 값을 읽거나 출력하지 않는다. 자격 증명이 필요한 명령은 `creds_run`(credstore MCP)으로 실행한다. 없으면 사용자에게 직접 실행을 요청한다.
 5. **문서 확인**: 처음 쓰는 라이브러리, 메이저 버전이 바뀐 API를 만지기 전에 Context7 MCP로 해당 버전 문서를 확인한다. 기억으로 API를 쓰지 않는다.
-6. **실패 기록**: 시도했다가 안 된 접근은 이유와 함께 이 세션의 handoff 파일(`.nereus/handoff/` 아래)의 "실패한 접근과 이유"에 남긴다. 다음 세션이 반복하지 않게.
+6. **실패 기록**: 시도했다가 안 된 접근은 이유와 함께 대화에 명시적으로 남긴다. 자동 압축 요약의 MUST NOT 섹션이 이어받아 압축 뒤에도 반복하지 않게 된다. Baton 루프 안에서는 그 반복의 handoff 파일 "실패한 접근과 이유"에 적는다.
 7. **에이전트 간 직접 호출 금지**: 에이전트는 다른 에이전트를 부르지 않는다. 오케스트레이션은 워크플로 스킬(intake/spec/build/review/finish)이 한다.
 8. **범위**: 요청된 범위만 한다. 넓히거나 줄일 때는 먼저 말한다. 관련 없는 리팩터링은 하지 않는다.
 9. **작은 파일**: 파일 800줄, 함수 50줄을 넘기면 나눈다.
@@ -24,6 +24,6 @@ description: Shared rules for every Nereus agent and skill. Referenced from agen
 
 Ruling: <결정> — <이유> (<YYYY-MM-DD>)
 
-- compaction 이후에는 ledger가 기억보다 우선한다. 기억으로 절차·판정을 재현하지 않는다.
+- ledger 는 `.nereus/review.md` 또는 커밋 메시지 본문이다. compaction 이후에는 ledger가 기억보다 우선한다. 기억으로 절차·판정을 재현하지 않는다.
 - findings·이견을 조용히 버리지 않는다. contestable하면 park + Ruling, deferred면 park + Ruling + 다음 build 입력으로 연결한다.
 - 예: `Ruling: MEDIUM 이하 3건 finish 진행 — fix loop 미진입 (defer-ledger) (2026-09-09)`

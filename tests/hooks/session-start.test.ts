@@ -12,27 +12,26 @@ const deps = (over: any = {}) => ({
   ...over,
 });
 
+const LOOP = { NEREUS_LOOP: "1" };
+
 describe("session-start hook", () => {
-  it("injects handoff.md when present and marks Baton resume", () => {
-    const out = handle({ session_id: "s1", cwd: "/r", source: "startup" }, deps({ files: { "/r/.nereus/handoff.md": "# Handoff\n목표: X" } }));
+  it("never injects a handoff into an interactive session — context is left to auto-compact", () => {
+    for (const source of ["startup", "clear", "resume", "compact"]) {
+      const out = handle({ session_id: "s1", cwd: "/r", source }, deps({
+        files: { "/r/.nereus/handoff.md": "# Handoff\n목표: X", "/r/.nereus/handoff/20260912-0900-99999999.md": "# Handoff\n목표: Y" },
+        entries: () => [{ name: "20260912-0900-99999999.md", mtimeMs: Date.now() }],
+      }));
+      const ctx = out?.hookSpecificOutput?.additionalContext ?? "";
+      expect(ctx).not.toContain("목표: X");
+      expect(ctx).not.toContain("목표: Y");
+      expect(ctx).not.toContain("handoff");
+    }
+  });
+  it("injects the previous iteration's handoff inside a loop subsession", () => {
+    const out = handle({ session_id: "s1", cwd: "/r", source: "startup" }, deps({ files: { "/r/.nereus/handoff.md": "# Handoff\n목표: X" }, env: LOOP }));
     const ctx = out!.hookSpecificOutput.additionalContext;
     expect(out!.hookSpecificOutput.hookEventName).toBe("SessionStart");
-    expect(ctx).toContain("Baton 재개");
     expect(ctx).toContain("목표: X");
-  });
-  it("carries the resume checklist so /nereus:resume never has to be typed", () => {
-    const out = handle({ session_id: "s1", cwd: "/r", source: "clear" }, deps({ files: { "/r/.nereus/handoff.md": "# Handoff\n목표: X" } }));
-    const ctx = out!.hookSpecificOutput.additionalContext;
-    // resume 스킬이 하던 검증 단계가 주입에 들어 있어야 사용자가 /clear 한 번만 쳐도 된다.
-    expect(ctx).toContain("테스트 상태");   // 러너 재실행 대조
-    expect(ctx).toContain("git status");    // 미커밋 변경 확인
-    expect(ctx).toContain("열린 질문");     // 작업 전 질문
-    expect(ctx).toContain("MUST NOT");      // 실패한 접근 회피
-    expect(ctx).toMatch(/따로 칠 필요 없|칠 필요 없/);
-  });
-  it("skips the resume checklist after a compact, where the conversation already continues", () => {
-    const out = handle({ cwd: "/r", source: "compact" }, deps({ files: { "/r/.nereus/handoff.md": "H" } }));
-    expect(out!.hookSpecificOutput.additionalContext).not.toContain("git status");
   });
   it("reports missing codegraph index and missing tools", () => {
     const out = handle({ cwd: "/r", source: "startup" }, deps({ files: {}, tools: { missing: ["ooo", "ocr"] } }));
@@ -41,10 +40,21 @@ describe("session-start hook", () => {
     expect(ctx).toContain("ooo");
     expect(ctx).toContain("/nereus:setup");
   });
-  it("stays quiet on compact source except handoff", () => {
-    const out = handle({ cwd: "/r", source: "compact" }, deps({ files: { "/r/.nereus/handoff.md": "H" } }));
-    expect(out!.hookSpecificOutput.additionalContext).toContain("H");
-    expect(out!.hookSpecificOutput.additionalContext).not.toContain("/nereus:setup");
+  it("flags an unset or late auto-compact threshold — it is the only context guard now", () => {
+    const ctxOf = (env: any, input: any = {}) => handle({ cwd: "/r", source: "startup", ...input }, deps({ files: {}, env }))!.hookSpecificOutput.additionalContext;
+    expect(ctxOf({})).toContain("자동 압축");
+    expect(ctxOf({ CLAUDE_AUTOCOMPACT_PCT_OVERRIDE: "80" })).toContain("80%");
+    expect(ctxOf({ CLAUDE_AUTOCOMPACT_PCT_OVERRIDE: "50" })).not.toContain("자동 압축");
+    // 일부러 더 일찍 압축하게 정한 값은 존중한다.
+    expect(ctxOf({ CLAUDE_AUTOCOMPACT_PCT_OVERRIDE: "40" })).not.toContain("자동 압축");
+    // Codex·OpenCode 는 ~/.claude/settings.json 을 읽지 않아 끌 방법이 없다 — 알리지 않는다.
+    expect(ctxOf({}, { turn_id: "t1" })).not.toContain("자동 압축");
+    expect(ctxOf({}, { harness: "opencode" })).not.toContain("자동 압축");
+    // 무인 루프 반복에는 소음이다.
+    expect(ctxOf({ NEREUS_LOOP: "1" })).not.toContain("자동 압축");
+  });
+  it("stays silent on compact", () => {
+    expect(handle({ cwd: "/r", source: "compact" }, deps({ files: {} }))).toBeNull();
   });
 });
 
@@ -57,61 +67,56 @@ describe("session-start hook — 스킬 맵", () => {
     }
   });
   it("compact 에는 넣지 않는다 — 대화가 이어지므로 이미 알고 있다", () => {
-    const out = handle({ cwd: "/r", source: "compact" }, deps({ files: { "/r/.nereus/handoff.md": "H" } }));
-    expect(out!.hookSpecificOutput.additionalContext).not.toContain("스킬을 먼저 부른다");
+    const out = handle({ cwd: "/r", source: "compact" }, deps({ files: {} }));
+    expect(out?.hookSpecificOutput?.additionalContext ?? "").not.toContain("스킬을 먼저 부른다");
   });
 });
 
 const MIN = 60_000;
-describe("session-start handoff ownership", () => {
-  it("tells this session which handoff file it owns", () => {
-    const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({ entries: () => [], now: () => new Date("2026-09-12T14:30:00").getTime() }));
+describe("session-start handoff ownership (loop subsessions only)", () => {
+  it("tells this loop iteration which handoff file it owns", () => {
+    const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({ entries: () => [], now: () => new Date("2026-09-12T14:30:00").getTime(), env: LOOP }));
     const ctx = out!.hookSpecificOutput.additionalContext;
     expect(ctx).toContain(".nereus/handoff/20260912-1430-a1b2c3d4.md");
     expect(ctx).toContain("여기에만");
   });
   it("injects the newest handoff from the session directory", () => {
-    const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "clear" }, deps({
-      files: { "/r/.nereus/handoff/20260912-0900-99999999.md": "# Handoff\n목표: 이전 세션" },
+    const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({
+      files: { "/r/.nereus/handoff/20260912-0900-99999999.md": "# Handoff\n목표: 이전 반복" },
       entries: () => [{ name: "20260912-0900-99999999.md", mtimeMs: Date.now() - 90 * MIN }],
+      env: LOOP,
     }));
-    expect(out!.hookSpecificOutput.additionalContext).toContain("목표: 이전 세션");
+    expect(out!.hookSpecificOutput.additionalContext).toContain("목표: 이전 반복");
   });
   it("still reads the legacy single file when the directory is empty", () => {
-    const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "clear" }, deps({
+    const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({
       files: { "/r/.nereus/handoff.md": "# Handoff\n목표: 레거시" },
       entries: () => [],
+      env: LOOP,
     }));
     expect(out!.hookSpecificOutput.additionalContext).toContain("목표: 레거시");
   });
-  it("warns when another session touched its handoff within 30 minutes", () => {
+  it("ignores handoffs older than the loop start so the first iteration never inherits unrelated state", () => {
     const now = Date.now();
     const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({
-      files: { "/r/.nereus/handoff/20260912-1400-bbbbbbbb.md": "# Handoff\n\n## 목표\nSEO 스킬 정리" },
-      entries: () => [{ name: "20260912-1400-bbbbbbbb.md", mtimeMs: now - 5 * MIN }],
+      files: {
+        "/r/.nereus/handoff.md": "# Handoff\n목표: 레거시",
+        "/r/.nereus/handoff/20260912-0900-99999999.md": "# Handoff\n목표: 폐지 전 대화형",
+      },
+      entries: () => [{ name: "20260912-0900-99999999.md", mtimeMs: now - 90 * MIN }],
       now: () => now,
+      env: { ...LOOP, NEREUS_LOOP_SINCE: String(now - MIN) },
     }));
     const ctx = out!.hookSpecificOutput.additionalContext;
-    expect(ctx).toContain("최근 30분");   // 경고 블록의 표식
-    expect(ctx).toContain("20260912-1400-bbbbbbbb.md");
-    expect(ctx).toContain("SEO 스킬 정리"); // 그 문서의 목표 한 줄
-  });
-  it("stays quiet about other sessions inside a loop subsession", () => {
-    const now = Date.now();
-    const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({
-      files: { "/r/.nereus/handoff/20260912-1400-bbbbbbbb.md": "# Handoff\n목표: x" },
-      entries: () => [{ name: "20260912-1400-bbbbbbbb.md", mtimeMs: now - 5 * MIN }],
-      now: () => now,
-      env: { NEREUS_LOOP: "1" },
-    }));
-    // "다른 세션"은 경로 안내문에도 들어간다. 경고 블록의 표식으로 가린다.
-    expect(out!.hookSpecificOutput.additionalContext).not.toContain("최근 30분");
+    expect(ctx).not.toContain("폐지 전 대화형");
+    expect(ctx).not.toContain("레거시");
+    expect(ctx).toContain("새로 시작");
   });
   it("prunes stale handoffs without touching the injected or owned file", () => {
     const now = Date.now();
     const removed: string[] = [];
     const entries = Array.from({ length: 12 }, (_, i) => ({ name: `20260901-09${String(i).padStart(2, "0")}-s${i}aaaaaa`.slice(0, 22) + ".md", mtimeMs: now - i * MIN }));
-    handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({ entries: () => entries, now: () => now, removeFile: (p: string) => removed.push(p) }));
+    handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({ entries: () => entries, now: () => now, removeFile: (p: string) => removed.push(p), env: LOOP }));
     expect(removed).toHaveLength(2);
     expect(removed.every((p) => p.replace(/\\/g, "/").includes("/r/.nereus/handoff/"))).toBe(true);
   });

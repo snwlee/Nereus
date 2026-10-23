@@ -90,7 +90,6 @@ node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/lib/delegates.mjs"
 ```json
 {
   "secondOpinion": "both",
-  "baton": { "warn": 0.5, "hard": 0.7 },
   "tdd": { "enforce": "block", "allowRefactor": true, "exclude": ["**/migrations/**", "**/*.config.*", "**/*.d.ts", "**/generated/**", "**/*.g.dart", "**/*.freezed.dart"] },
   "pdf": { "engine": "typst", "font": "Noto Sans KR" },
   "image": { "backend": "auto" },
@@ -102,14 +101,14 @@ node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/lib/delegates.mjs"
 
 도구 호출 차단 규칙은 별도 파일이다. 기본 규칙(`--no-verify`, 루트 재귀 삭제, force push, 작업 폐기 git 명령, 시크릿 파일 편집)은 플러그인에 내장되어 있고, 사용자 규칙은 같은 디렉터리의 `rules.json`, 프로젝트 규칙은 `.nereus/rules.json`에 둔다. 형식은 `[{ "id", "tools": ["Bash"], "pattern": "<regex>", "message": "<되돌릴 문구>", "enabled": true }]`. 커밋 검사를 통째로 끄려면 `{"id": "commit-quality", "enabled": false}` 를 넣는다. 같은 id를 다시 쓰면 기본 규칙을 덮어쓰거나 `"enabled": false`로 끌 수 있다. 잘못된 regex는 무시된다(fail-open). 프로젝트별로 다르게 하려면 `.nereus/config.json`에 같은 형식으로 둔다.
 
-## 5. statusline 연동 (Baton 기준 일치)
+## 5. statusline 연동 (HUD 컨텍스트 %)
 
-Claude Code가 statusline에 넘기는 공식 `context_window.used_percentage`를 Baton이 그대로 쓰게 한다. 사용자의 statusline 스크립트(`~/.claude/settings.json`의 `statusLine.command`)에 아래 한 줄을 추가한다. 없으면 이 줄만 실행하는 스크립트를 만들어 등록한다.
+Claude Code가 statusline에 넘기는 공식 `context_window.used_percentage`를 세션 파일로 남겨 HUD(`hud.mjs`)가 statusline 과 같은 숫자를 보여주게 한다. 사용자가 원할 때만. 사용자의 statusline 스크립트(`~/.claude/settings.json`의 `statusLine.command`)에 아래 한 줄을 추가한다. 없으면 이 줄만 실행하는 스크립트를 만들어 등록한다.
 
 ```bash
 printf '%s' "$input" | node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/ctx-sink.mjs" >/dev/null 2>&1 &
 ```
-(`$input`은 statusline이 stdin으로 받은 JSON을 담은 변수명에 맞춘다. Windows PowerShell은 `$input | node ... ctx-sink.mjs`.) 연동이 없으면 Baton은 transcript 기반 추정치로 동작한다.
+(`$input`은 statusline이 stdin으로 받은 JSON을 담은 변수명에 맞춘다. Windows PowerShell은 `$input | node ... ctx-sink.mjs`.) 연동이 없으면 HUD는 컨텍스트 %를 비워 둔다.
 
 같은 statusline에 Nereus 상태 한 줄(`⚓ 3/7 · 미검증 · 54%`)을 붙이려면 아래도 추가한다. 사용자가 원할 때만.
 
@@ -120,14 +119,14 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/hud/scripts/hud.mjs" --session "$sid"
 
 ## 6. 자동 압축 임계값
 
-Baton(50% 경고 / 70% 하드 스톱)이 Claude Code 자동 압축보다 먼저 작동해야 한다. 자동 압축은 손실 요약이라 마지막 안전망으로만 둔다.
+자동 압축 50% 를 기본으로 설정한다. Baton(handoff 경고·하드 스톱)은 2026-10-23 에 없어졌으므로 Claude Code 자동 압축이 유일한 컨텍스트 관리다. 압축 직전 PreCompact 훅이 요약에 다섯 섹션(원문 요청·최종 목표·완료한 작업·남은 작업·MUST NOT)을 넣으라고 지시해 손실을 줄인다.
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/autocompact.mjs"            # 현재 값
-node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/autocompact.mjs" --set 80   # 권장값
+node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/autocompact.mjs" --set 50   # 권장값
 ```
 
-현재 값을 보여주고 80으로 설정할지 묻는다. 승인하면 실행한다. `~/.claude/settings.json`의 `env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`에 쓰고 변경 전 파일을 백업한다. Claude Code 내부 상한이 약 83%라 그 위 값은 자동으로 조정된다. 새 세션부터 적용된다.
+현재 값이 50이 아니면 50으로 설정한다(사용자가 다른 값을 원하면 그 값). `~/.claude/settings.json`의 `env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`에 쓰고 변경 전 파일을 백업한다. Claude Code 내부 상한이 약 83%라 그 위 값은 자동으로 조정된다. 새 세션부터 적용된다.
 
 ## 7. MCP 서버 개별로 끄기
 
@@ -167,6 +166,6 @@ nereus 는 MCP 서버 두 개를 제공한다 — `browser`(chrome-devtools-mcp)
 
 1. **훅**: `.opencode/hooks.json`(Claude 스키마)이 oh-my-opencode 내장 브릿지나 opencode-hooks류 플러그인을 통해 실행된다. **자사 브릿지 플러그인은 두지 않는다** — 중복 실행되면 pre-tool-guard 차단 메시지가 겹치고 tdd 히스토리가 두 번 기록된다.
 2. **스킬**: `.opencode/opencode.json`의 `skills.paths`가 `plugins/nereus/skills`를 가리킨다. `opencode debug skill`로 목록을 확인한다. 스킬 이름이 전역(`intake`, `build`…)이라 기존 스킬과 충돌하면 프로젝트 설정이 이긴다.
-3. **명령**: `.opencode/commands/`의 8개 (`/intake`, `/spec`, `/build`, `/e2e`, `/review`, `/finish`, `/resume`, `/setup`). 본문은 SKILL.md를 읽으라는 지시라 스킬 수정이 그대로 반영된다.
+3. **명령**: `.opencode/commands/`의 명령 (`/intake`, `/spec`, `/build`, `/e2e`, `/review`, `/finish`, `/setup` 과 opsx 명령들). 본문은 SKILL.md를 읽으라는 지시라 스킬 수정이 그대로 반영된다.
 4. **MCP**: 같은 파일의 `mcp`에 browser·context7이 `.mcp.json`과 같은 핀으로 들어 있다.
-5. 한계: OpenCode에 PreCompact 개념이 없어 Baton 자동 계승이 없다. handoff는 수동으로 쓰고 `/resume`으로 잇는다. `permission.ask`는 건드리지 않는다(사용자 승인 흐름 유지). oh-my-opencode 자체 자동화와 Nereus 게이트가 겹치면 Nereus 게이트(review·finish·TDD 강제)를 주인으로 둔다.
+5. 한계: OpenCode에 PreCompact 개념이 없어 압축 요약 지시(다섯 섹션)가 적용되지 않는다. `permission.ask`는 건드리지 않는다(사용자 승인 흐름 유지). oh-my-opencode 자체 자동화와 Nereus 게이트가 겹치면 Nereus 게이트(review·finish·TDD 강제)를 주인으로 둔다.

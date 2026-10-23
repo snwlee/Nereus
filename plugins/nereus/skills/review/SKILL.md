@@ -74,7 +74,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 정규화된 findings를 심각도순으로 병합해 사용자에게 보인다(`mergeFindings` 형식). 같은 위치를 두 리뷰어가 지적하면 신뢰도가 높다고 표시한다.
 
 - **CRITICAL/HIGH 0개** → 통과. `nereus:finish`로.
-- **MEDIUM 이하만** → 루프에 넣지 않는다. 이 세션의 handoff 에 한 줄씩 기록하고 `nereus:finish`로 (최종 리뷰가 merge 전 triage한다).
+- **MEDIUM 이하만** → 루프에 넣지 않는다. `.nereus/review.md` 에 한 줄씩 기록하고 `nereus:finish`로 (최종 리뷰가 merge 전 triage한다).
 
 심각도별 액션 (`review.mjs`의 `severityAction`):
 
@@ -97,4 +97,4 @@ CRITICAL/HIGH가 남으면 fix 1회 + 스코프 재리뷰(고친 diff만, untouc
 
 ## 4. 기록
 
-`.nereus/review.md`에 findings와 처리 결과를 남긴다. handoff.md 현재 단계를 갱신한다. 판정·연기는 common의 Ruling 형식으로 기록한다.
+`.nereus/review.md`에 findings와 처리 결과를 남긴다. 판정·연기도 common의 Ruling 형식으로 같은 파일에 기록한다.

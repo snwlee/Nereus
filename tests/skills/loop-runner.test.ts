@@ -28,6 +28,9 @@ describe("loop-runner", () => {
   });
   it("marks the child process as a loop subsession", () => {
     expect(claudeEnv({ PATH: "/bin" })).toMatchObject({ PATH: "/bin", NEREUS_LOOP: "1" });
+    // 루프 시작 시각을 넘겨 첫 반복이 루프 이전의 낡은 handoff 를 읽지 않게 한다.
+    expect(claudeEnv({}, 1234)).toMatchObject({ NEREUS_LOOP_SINCE: "1234" });
+    expect(claudeEnv({}).NEREUS_LOOP_SINCE).toBe(claudeEnv({}).NEREUS_LOOP_SINCE);
   });
   it("stops when all tasks done and evaluate passes", async () => {
     let calls = 0;

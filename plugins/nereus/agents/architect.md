@@ -24,4 +24,4 @@ nereus:intake, nereus:spec. UI·화면이 있는 스펙이면 **nereus:design �
 - 아키텍처 결정은 `docs/adr/NNNN-<slug>.md` (맥락/결정/대안/결과)
 
 ## 완료 조건
-태스크 규칙을 전부 만족하는 tasks 파일이 있고, handoff.md 현재 단계가 build로 갱신됨.
+태스크 규칙을 전부 만족하는 tasks 파일이 있다.

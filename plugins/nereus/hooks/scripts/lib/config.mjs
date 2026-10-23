@@ -5,7 +5,6 @@ import { userConfigDir, projectStateDir } from "./paths.mjs";
 
 export const DEFAULTS = Object.freeze({
   secondOpinion: "both", // "both" | "codex" | "gemini" | "none" | ["ocr","gemini"] 같은 배열
-  baton: { warn: 0.5, hard: 0.7 }, // Claude Code 자동 압축(기본 약 83%, CLAUDE_AUTOCOMPACT_PCT_OVERRIDE) 보다 앞서야 의미가 있다
   tdd: { exclude: ["**/migrations/**", "**/*.config.*", "**/*.d.ts", "**/generated/**", "**/*.g.dart", "**/*.freezed.dart"] },
   pdf: { engine: "typst", font: "Noto Sans KR" },
   image: { backend: "auto" }, // auto | web | api
@@ -15,7 +14,6 @@ export const DEFAULTS = Object.freeze({
   design: { enforce: "block", exclude: [], widths: [320, 768, 1440], systemGenerator: "ui-ux-pro-max" }, // 디자인 표면 변경은 Gemini 피드백 라운드 없이는 finish 게이트를 통과하지 못한다. systemGenerator: "none" 이면 방향 생성(0단계)을 건너뛴다
   loop: { extraAllowedTools: [] }, // 루프 서브세션에 추가로 허용할 Bash 패턴. 환경별 프록시(예: "Bash(rtk:*)")를 여기서 더한다. push·권한 상승은 더해도 걸러진다
   videoGate: { enforce: "block", freshMinutes: 20 }, // 유료 영상·이미지 생성: OpenMontage 밖 배치 스크립트는 차단, 모든 유료 호출은 .nereus/budget.json 예산(사이트 잔액 기준) 안에서만. "warn" | "off" 로 완화
-  autoClear: { enabled: true, prompt: "resume" }, // handoff 뒤 /clear·재개를 자동 입력 (Orca 터미널 안에서만 동작). 슬래시 커맨드는 TUI 자동완성이 가로채므로 자연어로 두고, resume 스킬 발동은 라우터가 맡는다. router 의 resume 규칙이 "resume" 을 영어로도 잡는다 — 바꿀 때 router.test.ts 의 기본 프롬프트 라우팅 테스트가 지킨다
 });
 
 const isPlain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);

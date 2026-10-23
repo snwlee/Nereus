@@ -33,7 +33,7 @@ Node 20 이상과 Git이 필요하다. `setup`이 외부 도구를 감지하고,
 
 | 플러그인 | 버전 | 더하는 것 |
 |---|---|---|
-| `nereus` | 0.23.0 | 워크플로 본체: 스킬 27종, 전문가 에이전트 10종, Node 훅, Baton 핸드오프, setup·doctor |
+| `nereus` | 0.24.0 | 워크플로 본체: 스킬 25종, 전문가 에이전트 10종, Node 훅, 50% 자동 압축, setup·doctor |
 | `nereus-game` | 0.3.0 | 게임 개발: 로블록스·Unity(폰)·Switch·Flutter/Flame 어댑터와 레벨·밸런스·내러티브·사운드·라이브옵스·규정 준수 스킬 |
 | `nereus-ads` | 0.1.0 | AdMob 운영: 계정을 살려두는 정책 게이트, 배치 설계, 수익 레버 |
 | `nereus-l10n` | 0.1.0 | 현지화: 소스 문자열·스토어 등재·ASO, 그리고 로케일 하나를 통째로 깨뜨리는 진짜 제약인 폰트 커버리지 |
@@ -51,13 +51,13 @@ Node 20 이상과 Git이 필요하다. `setup`이 외부 도구를 감지하고,
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/nereus-flow-dark.png">
-    <img src="docs/assets/nereus-flow-light.png" alt="Nereus 워크플로: intake → spec → build → e2e → review → finish, 그리고 Baton 컨텍스트 핸드오프" width="900">
+    <img src="docs/assets/nereus-flow-light.png" alt="Nereus 워크플로: intake → spec → build → e2e → review → finish, 그리고 50% 자동 압축" width="900">
   </picture>
 </p>
 
 각 단계는 **자기 게이트를 통과했을 때만** 다음 단계를 부른다. 평소에는 `/nereus:intake` 만 치면 된다.
 
-Baton 은 Claude Code 자체 자동 압축(손실 요약)보다 먼저 작동한다. 컨텍스트 50% 에서 현재 태스크만 마무리하라고 알리고, 70% 에서 멈추고 handoff 를 요구한다. `/nereus:setup` 이 `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80` 설정을 제안해 50% 경고 → 70% 하드 스톱 → 80% 압축(최후 수단) 순서를 만든다.
+컨텍스트는 Claude Code 자체 자동 압축이 맡는다. 임계값은 컨텍스트 50%(`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50`, `/nereus:setup` 이 설정)다. 압축 직전 PreCompact 훅이 요약에 다섯 섹션 — 원문 요청·최종 목표·완료한 작업·남은 작업·MUST NOT — 을 남기라고 지시해 실패한 접근이 요약 뒤에도 살아남게 한다. 대화형 세션에는 handoff 파일이나 `/clear` 순환이 없다. handoff 파일로 상태를 넘기는 것은 `/nereus:loop` 반복뿐이다.
 
 <sub><a href="https://github.com/tt-a1i/archify">archify</a>(MIT)로 저장소에 들어 있는 JSON IR 에서 생성했다 — 손으로 그리지 않았다: <a href="docs/diagrams/nereus-flow.workflow.json"><code>docs/diagrams/nereus-flow.workflow.json</code></a>. 재생성은 <code>archify deliver workflow docs/diagrams/nereus-flow.workflow.json out.html --quality showcase</code>.</sub>
 
@@ -73,10 +73,9 @@ Baton 은 Claude Code 자체 자동 압축(손실 요약)보다 먼저 작동한
 | `/nereus:debug` | 버그·실패의 근본 원인 조사 4단계 (수정 전 필수) |
 | `/nereus:design` | 디자인·UI·UX 작업 3단계 — 방향 후보 생성(ui-ux-pro-max) → 방향 비평 → 렌더 비평. finish 하드 게이트 |
 | `/nereus:review` | 병렬 리뷰, 심각도 게이트 |
-| `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사 + 디자인 피드백) → 커밋, 아카이브, handoff 갱신 |
-| `/nereus:handoff` | 다음 세션용 상태 저장. `/clear` 하면 SessionStart 훅이 다시 주입해 자동으로 이어집니다 — `/nereus:resume` 은 수동 재개(다른 tasks 파일 지정 등)용입니다. |
+| `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사 + 디자인 피드백) → 커밋, 아카이브 |
 | `/nereus:loop "목표" --max N` | 반복마다 새 세션으로 도는 자율 루프 |
-| `/nereus:continue on\|off` | 같은 세션에서 남은 태스크 자동 계속 (기본 꺼짐, 컨텍스트 경고선에서 자동 해제) |
+| `/nereus:continue on\|off` | 같은 세션에서 남은 태스크 자동 계속 (기본 꺼짐, 컨텍스트는 자동 압축이 맡는다) |
 | `/nereus:learn` | 훅이 모은 학습 후보를 검토·승인. 승인된 규칙만 다음 세션에 주입 |
 | `/nereus:hud` | 한 줄 상태: 태스크 진행률, 검증 상태, 컨텍스트 % |
 | `/nereus:doctor` | 다른 하네스 플러그인과의 충돌 보고 — 가려진 MCP 서버, 중복된 에이전트·스킬 이름, 공유 훅 지점. 보고만 하고 절대 지우지 않는다 |
@@ -104,10 +103,10 @@ Baton 은 Claude Code 자체 자동 압축(손실 요약)보다 먼저 작동한
 |---|---|
 | UserPromptSubmit | `learn-watch`: 교정을 관찰에 남기고 세션당 한 번만 안내 |
 | PreToolUse | `pre-tool-guard`: 규칙(regex)에 걸리는 명령·편집 차단(`--no-verify`, force push, 시크릿 파일). `git commit` 시 스테이징의 시크릿·`.env` 는 차단, 디버그 로그는 경고만 |
-| SessionStart | `handoff.md`와 신뢰도 높은 학습 규칙 주입, 미설치 도구 알림 |
-| PostToolUse | `tdd-guard`: 테스트보다 소스를 먼저 고치면 경고. `baton-meter`: 50% 경고, 70% 하드 스톱. `observe`: 판정 없이 관찰만 적재 |
-| PreCompact | 자동 압축 전에 handoff 작성 요구 |
-| Stop | `/nereus:continue` 가 켜져 있으면 다음 태스크로 이어감. 아니면 미커밋 변경·오래된 handoff·evidence 상태 알림 |
+| SessionStart | 신뢰도 높은 학습 규칙과 스킬 맵 주입, 미설치 도구 알림. `/nereus:loop` 반복 안에서는 최신 handoff 도 주입 |
+| PostToolUse | `tdd-guard`: 테스트보다 소스를 먼저 고치면 경고. `observe`: 판정 없이 관찰만 적재 |
+| PreCompact | 압축 요약에 다섯 섹션(원문 요청·목표·완료·남은 작업·MUST NOT)을 남기라고 지시 |
+| Stop | `/nereus:continue` 가 켜져 있으면 다음 태스크로 이어감. 아니면 미커밋 변경·evidence 상태 알림 |
 
 훅은 전부 Node 스크립트다. bash 없음, 런타임 의존성 0, macOS와 Windows에서 동일.
 
@@ -118,7 +117,6 @@ Baton 은 Claude Code 자체 자동 압축(손실 요약)보다 먼저 작동한
 ```json
 {
   "secondOpinion": "both",
-  "baton": { "warn": 0.5, "hard": 0.7 },
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/generated/**"] },
   "design": { "enforce": "block", "widths": [320, 768, 1440] },
   "commitQuality": { "block": ["secret", "env_file"], "warn": ["debug_log"] },

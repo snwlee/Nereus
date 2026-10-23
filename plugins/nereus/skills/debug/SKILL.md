@@ -60,7 +60,7 @@ nereus:common 규칙을 따른다. 이 스킬은 **프로세스 스킬**이다 �
 
 1. **한 문장으로 쓴다.** "X 때문에 Y 가 난다." 모호하면 아직 가설이 아니다.
 2. **가장 작은 실험으로 검증한다.** 로그 한 줄, 테스트 한 개. 한 번에 한 변수만.
-3. **틀리면 새 가설을 세운다.** 기존 수정 위에 수정을 얹지 않는다. 틀린 가설은 이 세션의 handoff MUST NOT 에 남긴다.
+3. **틀리면 새 가설을 세운다.** 기존 수정 위에 수정을 얹지 않는다. 틀린 가설은 이유와 함께 대화에 명시적으로 남긴다(자동 압축 요약의 MUST NOT 섹션이 이어받는다).
 4. **모르면 모른다고 말한다.** "X 를 이해하지 못했습니다." 아는 척이 가장 비싸다.
 
 ### 4단계. 구현
@@ -78,7 +78,7 @@ nereus:common 규칙을 따른다. 이 스킬은 **프로세스 스킬**이다 �
 
 아키텍처 문제의 징후: 고칠 때마다 다른 곳에서 새 공유 상태·결합이 드러난다 / 수정에 "대규모 리팩터링"이 필요하다 / 고치면 다른 증상이 생긴다.
 
-이건 실패한 가설이 아니라 **틀린 구조**다. `ooo unstuck` 을 부르고, 그래도 안 되면 사용자에게 재설계 여부를 묻는다. 시도한 접근 전부를 handoff MUST NOT 에 남긴다.
+이건 실패한 가설이 아니라 **틀린 구조**다. `ooo unstuck` 을 부르고, 그래도 안 되면 사용자에게 재설계 여부를 묻는다. 시도한 접근 전부를 이유와 함께 대화에 명시적으로 남긴다(자동 압축 요약의 MUST NOT 섹션이 이어받는다).
 
 ## 위험 신호 — 이 생각이 들면 1단계로
 
@@ -118,4 +118,4 @@ nereus:common 규칙을 따른다. 이 스킬은 **프로세스 스킬**이다 �
 node "${CLAUDE_PLUGIN_ROOT}/skills/debug/scripts/find-polluter.mjs" ".git" "tests/**/*.test.ts" --cmd "npm test"
 ```
 - `references/defense-in-depth.md` — 진입점·비즈니스 로직·환경 가드·계측 4층 검증
-- 출처: superpowers `systematic-debugging`, ECC `agent-introspection-debugging` 을 Nereus(TDD 강제·evidence·handoff)에 맞춰 이식.
+- 출처: superpowers `systematic-debugging`, ECC `agent-introspection-debugging` 을 Nereus(TDD 강제·evidence)에 맞춰 이식.
