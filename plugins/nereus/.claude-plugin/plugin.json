@@ -1,6 +1,6 @@
 {
   "name": "nereus",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "description": "개인 개발 하네스: intake → spec → build(TDD) → review → finish 워크플로, 전문가 에이전트, 50% 자동 압축 + 압축 요약 지시",
   "author": {
     "name": "snwlee",

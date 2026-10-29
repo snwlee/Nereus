@@ -33,7 +33,7 @@ The core harness is the workflow. Domain packs add skills and one expert agent e
 
 | Plugin | Version | What it adds |
 |---|---|---|
-| `nereus` | 0.24.0 | The workflow itself: 25 skills, 10 expert agents, Node hooks, auto-compaction at 50%, setup and doctor |
+| `nereus` | 0.25.0 | The workflow itself: 26 skills, 10 expert agents, Node hooks, auto-compaction at 50%, setup and doctor |
 | `nereus-game` | 0.3.0 | Game development: Roblox, Unity (mobile), Switch, Flutter/Flame adapters plus level, balance, narrative, sound, liveops and compliance skills |
 | `nereus-ads` | 0.1.0 | AdMob operations: the policy gate that keeps an account alive, placement design, and revenue levers |
 | `nereus-l10n` | 0.1.0 | Localization: source strings, store listings and ASO, plus typeface coverage — the constraint that silently breaks a whole locale |
@@ -79,7 +79,7 @@ Context is managed by Claude Code's own auto-compaction, set to 50% of the conte
 | `/nereus:learn` | Review and approve what the hooks observed; approved rules are injected next session |
 | `/nereus:hud` | One-line status: task progress, verification state, context % |
 | `/nereus:doctor` | Report conflicts with other harness plugins — shadowed MCP servers, duplicate agent or skill names, shared hook points. Reports only, never uninstalls |
-| `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo`, `/nereus:phone` | Standalone skills |
+| `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo`, `/nereus:phone`, `/nereus:sfx` | Standalone skills |
 
 ## Skill routing
 
