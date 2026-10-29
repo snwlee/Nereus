@@ -201,3 +201,13 @@ describe("router: sfx", () => {
     expect(routePrompt("립싱크 영상 만들어").map((h) => h.skill)).toContain("nereus:video");
   });
 });
+
+describe("router: montage styles", () => {
+  it("영상 스타일·룩·lemo 는 montage", () => {
+    for (const p of ["이 광고 영상 스타일 골라줘", "영상 룩 좀 다르게", "lemo opuscar 스타일로", "영상스타일 추천"])
+      expect(routePrompt(p).map((h) => h.skill)).toContain("nereus:montage");
+  });
+  it("화면 스타일은 montage 가 아니다", () => {
+    expect(routePrompt("버튼 스타일 수정").map((h) => h.skill)).not.toContain("nereus:montage");
+  });
+});

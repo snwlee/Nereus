@@ -42,11 +42,45 @@ cd ~/OpenMontage && make setup
 ## 2. 절차
 
 1. **AGENT_GUIDE.md → PROJECT_CONTEXT.md 를 먼저 읽는다.** 파이프라인을 즉흥으로 만들지 않는다.
-2. **파이프라인을 고른다** (`pipeline_defs/`). 레퍼런스 영상이 있으면 그걸 붙여 분석부터 한다.
-3. **제안 단계에서 총비용을 사용자에게 보인다.** 공급자 `estimate_cost` 합계 + 재시도 여유.
-4. **스토리보드 승인 게이트(Backlot)** — 장면별 테이크·프롬프트·장당 비용. 사용자가 승인하기 전엔 생성하지 않는다.
+2. **스타일을 고른다.** 고르지 않으면 매번 같은 기본 문법(키네틱 타이포·중앙 정렬 카드)이 나온다.
+   ```bash
+   S="node ${CLAUDE_PLUGIN_ROOT}/skills/montage/scripts/styles.mjs"
+   $S pick "luxury hotel gala invitation" --commercial     # 영문 키워드 — 카탈로그의 uses 가 영문이다
+   $S show art-deco                                         # 고른 스타일의 STYLE.md 경로와 본문
+   ```
+   후보 3~5 개를 사용자에게 보이고 하나를 고른다. 고른 STYLE.md 의 **규칙**(팔레트 논리·타이포·모션 품질·카메라 문법·함정)을
+   스토리보드의 장면 지시로 옮긴다. DEMO.md 의 줄거리·소품은 옮기지 않는다. 광고·상업이면 `--commercial` 을 꼭 붙인다.
+3. **파이프라인을 고른다** (`pipeline_defs/`). 레퍼런스 영상이 있으면 그걸 붙여 분석부터 한다.
+4. **제안 단계에서 총비용을 사용자에게 보인다.** 공급자 `estimate_cost` 합계 + 재시도 여유.
+5. **스토리보드 승인 게이트(Backlot)** — 장면별 테이크·프롬프트·장당 비용. 사용자가 승인하기 전엔 생성하지 않는다.
    사용자가 PC 를 못 보면 스토리보드를 사용자가 볼 수 있는 곳(공유 페이지 등)에 띄운다.
-5. 생성 → 조립 → **효과음은 `nereus:sfx`**(합성 → Openverse → 유료 폴백, 정점을 컷에 맞춰 믹스, `SOUNDS.md`) → **렌더 후 자기검토**(ffprobe 길이, 프레임 샘플, 오디오 레벨). 통과 전에는 "완성"이라 하지 않는다.
+6. 생성 → 조립 → **효과음은 `nereus:sfx`**(합성 → Openverse → 유료 폴백, 정점을 컷에 맞춰 믹스, `SOUNDS.md`) → **렌더 후 자기검토**(ffprobe 길이, 프레임 샘플, 오디오 레벨). 통과 전에는 "완성"이라 하지 않는다.
+
+### 스타일 출처와 동반 도구
+
+스타일 카탈로그는 **Lemo-Opuscar**(MIT, 스타일 67종, 2026-10-30 기준)다. **플러그인으로 설치하지 않는다** — 설치하면
+그 스킬이 영상 요청을 가로챈다. 고르기에는 `styles/` 만 필요하니 얇게 받는다:
+```bash
+H=~/.local/share/nereus/montage/lemo-opuscar            # 다른 곳이면 NEREUS_LEMO
+git clone --depth 1 --filter=blob:none --sparse https://github.com/lemomo-ai/lemo-opuscar "$H"
+git -C "$H" sparse-checkout set styles                  # 134MB. 렌더러까지 받으면 수백 MB + 샘플 1.4GB
+$S doctor                                               # 현재 커밋과 스타일 수
+```
+커밋은 고정하지 않는다 — 주마다 스타일이 늘어난다. 경로를 외우지 않고 `styles/*/style.json` 을 읽는다.
+스타일은 Opus 5.5 에 맞춰 쓰였고 Lemo 자체 렌더러(canvas/WebGL)를 전제로 한다. HyperFrames 로 옮기면 3D·셰이더 계열은 품질이 떨어질 수 있다.
+데모 영상 샘플(CC BY 4.0)을 쓰면 크레딧을 납품물에 넣는다.
+
+릴스(Web Lab AI, 2026-10)가 함께 소개한 도구는 정책으로 판정한다 — `$S companion <이름> [--commercial] [--named] [--paid-key]`:
+
+| 도구 | 판정 | 이유 |
+|---|---|---|
+| Lemo-Opuscar | allow | MIT, 키 불필요. 라이브러리로만 |
+| Collage B-roll | 키 없으면 block · 있으면 conditional | Gemini 유료 영상 생성 — video-gate·budget 승인, 정지 이미지는 `nereus:image` |
+| Claude Animation Base | 광고 block · 비상업 conditional | Clawd(Anthropic 마스코트) 상표. 자체 캐릭터로 바꿔 엔진·가이드만 참고 |
+| onetake | 광고 block · 비상업이고 사용자가 지명했을 때만 conditional | PolyForm Noncommercial. 전역 설치하면 promo 요청을 HyperFrames 에서 가로챈다 |
+
+광고 모드(`--commercial`)의 `pick` 은 Clawd 가 나오는 `living-screencast` 를 후보에서 뺀다.
+근거: `docs/research/2026-10-30-video-style-skills.md`
 
 ## 3. 유료 생성 게이트 (video-gate + budget)
 
