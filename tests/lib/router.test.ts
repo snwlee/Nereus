@@ -190,3 +190,14 @@ describe("router: phone", () => {
     expect(routePrompt("전화 인증 SMS 코드").map((h) => h.skill)).not.toContain("nereus:phone");
   });
 });
+
+describe("router: sfx", () => {
+  it("효과음 넣기·찾기·만들기는 nereus:sfx", () => {
+    for (const p of ["이 영상에 효과음 넣어줘", "효과음 붙여줘", "효과음 찾아줘", "사운드 이펙트 깔아줘", "add sfx to this clip", "효과음 만들어줘"])
+      expect(routePrompt(p).map((h) => h.skill)).toContain("nereus:sfx");
+  });
+  it("효과음 만들기는 더 이상 video 가 아니다, 립싱크는 video", () => {
+    expect(routePrompt("효과음 만들어줘").map((h) => h.skill)).not.toContain("nereus:video");
+    expect(routePrompt("립싱크 영상 만들어").map((h) => h.skill)).toContain("nereus:video");
+  });
+});

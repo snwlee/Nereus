@@ -19,7 +19,7 @@ Gemini 웹세션(`nereus:image`)은 **이미지만** 만든다. 영상·립싱�
 | 이미지 → 영상 | `i2v` | 이 스킬 |
 | 영상 → 영상(편집·워터마크 제거·모션) | `v2v` | 이 스킬 |
 | 립싱크 | `lipsync` | 이 스킬 |
-| 음악·효과음 | `audio` | 이 스킬 |
+| 음악·효과음 | `audio` | 이 스킬 — **효과음은 `nereus:sfx` 가 먼저**(무료 합성·검색). 거기서 안 될 때만 여기 |
 
 **여러 씬짜리 영상 제작이면 이 스킬이 아니다 → `nereus:montage`(OpenMontage 파이프라인).** 이 스킬의 `generate` 는
 유료 생성 게이트의 **예산**(`.nereus/budget.json`, 사이트 잔액 기준) 안에서만 돈다 — 절차는 `nereus:montage` 3절.

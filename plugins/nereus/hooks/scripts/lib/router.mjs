@@ -16,7 +16,9 @@ export const ROUTES = Object.freeze([
   { skill: "nereus:finish", why: "완료·커밋·마무리", re: /(마무리|끝내|완료\s?처리|커밋(하|해)|푸시(하|해)|정리해\s?줘|pr\s?(만들|올려)|배포\s?준비)/i },
   { skill: "nereus:research", why: "시장·기술 조사", re: /(조사(해|를)|리서치|비교(해|해줘)|시장\s?분석|경쟁(사|자)|research|벤치마킹)/i },
   { skill: "nereus:image", why: "이미지·아이콘 생성", re: /(이미지\s?(만들|생성)|아이콘|배너|썸네일|일러스트|목업\s?이미지|스토어\s?아트)/i },
-  { skill: "nereus:video", why: "영상·립싱크·오디오 생성 (Muapi, 유료 키)", re: /((영상|동영상|비디오)\s?(만들|생성|뽑)|립싱크|lipsync|\bt2v\b|\bi2v\b|텍스트\s?투\s?비디오|효과음\s?(만들|생성))/i },
+  // 효과음은 무료 우선(합성 → 공개 라이선스 검색)이라 sfx 가 먼저 받는다. 유료 생성은 sfx 가 video 로 넘긴다.
+  { skill: "nereus:sfx", why: "영상 효과음 — 합성·무료 검색·배치·크레딧", re: /(효과음\s?(을|를)?\s?(넣|붙|깔|찾|입혀|만들|생성|골라)|사운드\s?이펙트|\bsfx\b|sound\s?effects?)/i },
+  { skill: "nereus:video", why: "영상·립싱크·오디오 생성 (Muapi, 유료 키)", re: /((영상|동영상|비디오)\s?(만들|생성|뽑)|립싱크|lipsync|\bt2v\b|\bi2v\b|텍스트\s?투\s?비디오)/i },
   { skill: "nereus:pdf", why: "PDF·문서 산출", re: /(pdf|보고서로|문서로\s?(만들|뽑)|타이포스트|typst)/i },
   { skill: "nereus:seo", why: "검색 노출·메타", re: /(seo|검색\s?(노출|엔진)|메타\s?태그|사이트맵|lighthouse)/i },
   { skill: "nereus:loop", why: "병렬·자율 반복 실행", re: /(울트라워크|ultrawork|\bulw\b|hyperplan|병렬(\s?(실행|작업|처리)|로)|동시\s?실행|자율\s?(루프|반복)|team\.mode|연속\s?실행)/i },
