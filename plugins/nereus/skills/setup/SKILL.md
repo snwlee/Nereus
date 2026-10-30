@@ -51,6 +51,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/doctor.mjs"
 - ouroboros: `/plugin marketplace add Q00/ouroboros` → `/plugin install ouroboros@ouroboros`
 - codex: `/plugin install codex@openai-codex`
 - impeccable: `npx impeccable install` 후 `/impeccable init`
+- Emil Kowalski 스킬(모션·디자인 엔지니어링): `npx skills@latest add emilkowalski/skills` — `review-animations` 등은 에이전트가 스스로 못 부르게 설정돼 있어 사람이 `/review-animations` 로 부른다. 자동 검사는 nereus `motion-check.mjs` 가 한다
 - 공식 마켓플레이스: skill-creator, plugin-dev, hookify, mcp-server-dev, claude-security, security-guidance, code-simplifier, 그리고 스택 LSP(typescript-lsp, jdtls-lsp, kotlin-lsp)
 - credstore: `/plugin install credstore@nereus` (CredStore npm 게시 후 동작)
 

@@ -43,6 +43,14 @@ D="${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs"
 node "$D" direction --brief docs/design/hero-brief.md --target web
 ```
 0단계를 돌렸으면 그 파일을 그대로 먹인다 — `--brief docs/design/checkout-system.md`.
+
+**레퍼런스는 이미지로 붙인다.** 텍스트로 "Stripe 같은 느낌"이라 적으면 비평가는 그게 무엇인지도, 브리프가 무엇을 가져오는지도 모른다.
+```bash
+node "$D" direction --brief docs/design/hero-brief.md --ref-image refs/stripe-hero.png --ref-image refs/linear-pricing.webp
+```
+png·jpg·jpeg·webp 만, 하나라도 없거나 형식이 틀리면 종료코드 2 로 멈춘다(레퍼런스를 빠뜨린 채 비평받지 않는다).
+이미지 첨부는 웹세션만 받는다 — agy 로 내려가지 않는다. MCP 경로면 `prompt direction --ref-image …` 로 프롬프트를 받고 같은 이미지를 `upload_file` 로 올린다.
+**Figma 디자인이 레퍼런스면** 전역 `figma` 스킬(또는 Figma MCP)로 해당 프레임 스크린샷을 떠서 `--ref-image` 로 넘긴다.
 브리프가 "깔끔하고 미니멀" 수준이면 Gemini 가 그 자체를 지적한다. REVISE 면 방향을 고쳐 다시 돌린다.
 REVISE 를 받으면 브리프를 직접 고치거나, 0단계를 다른 다이얼로 다시 생성한다.
 
@@ -57,6 +65,26 @@ node "$D" visual \
   --files src/components/hero/Hero.tsx,src/components/hero/hero.css
 ```
 `--files` 에 적은 파일만 커버된다. 빼먹으면 게이트가 계속 차단한다(스크립트가 경고한다).
+
+### 모션 검사 — 렌더 비평이 못 보는 것
+Gemini 는 정지 스크린샷만 본다. 모션 실수는 화면에 안 찍힌다. diff 에서 결정적으로 잡는다:
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/motion-check.mjs"            # 미커밋 diff
+node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/motion-check.mjs" --base main
+```
+| 규칙 | 잡는 것 | 고치는 법 |
+|---|---|---|
+| `transition-all` | `transition: all`, `transition-all` | 바뀌는 속성만 명시 |
+| `layout-prop` | width·height·top·left·margin·padding 전환 | transform·opacity |
+| `scale-zero` | `scale(0)`, `scale-0` 에서 등장 | `scale(0.95)` + `opacity: 0` |
+| `ease-in` | 진입·반응에 `ease-in` | `ease-out` 또는 커스텀 곡선 |
+| `long-duration` | 500ms 초과 | UI 반응 150–300ms |
+| `no-reduced-motion` | 모션을 추가했는데 reduced-motion 처리가 없음 | `prefers-reduced-motion`·`motion-reduce:` |
+
+**권고다 — finish 게이트를 막지 않는다**(취향으로 막지 않는다는 위 원칙). 반영하거나, 의도한 것이면 이유를 남긴다.
+저장소의 스타일·마크업 파일 어딘가에 전역 reduced-motion 처리(`globals.css` 의 `@media (prefers-reduced-motion)` 등)가 있으면 `no-reduced-motion` 은 묻지 않는다.
+CI 등에서 막고 싶으면 `--strict`(지적이 있으면 종료코드 1). 규칙의 출처는 Emil Kowalski 의 공개 원칙이다 —
+사람이 직접 깊게 보려면 동반 스킬 `/review-animations` (에이전트가 스스로 부를 수 없게 설정된 스킬이다).
 
 ### 현황 확인
 ```bash

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { directionPrompt, visualPrompt, parseCritique, planRunner, feedbackReport, MCP_SOURCE, promptFor, planRecord } from "../../plugins/nereus/skills/design/scripts/design-feedback.mjs";
+import { directionPrompt, visualPrompt, parseCritique, planRunner, feedbackReport, MCP_SOURCE, promptFor, planRecord, validRefImages } from "../../plugins/nereus/skills/design/scripts/design-feedback.mjs";
 
 describe("prompts", () => {
   it("direction prompt carries the brief and demands a verdict line", () => {
@@ -262,5 +262,32 @@ describe("visualPrompt — 직전 라운드를 기억시킨다", () => {
   it("축 태그를 출력 형식으로 요구한다", () => {
     const p = visualPrompt({ shots: [{ path: "s.png", width: 320 }] });
     expect(p).toContain("[a11y]");
+  });
+});
+
+describe("design-motion.refs", () => {
+  it("웹세션 경로에 이미지마다 --file", () => {
+    const p = planRunner({ phase: "direction", promptFile: "p", refImages: ["a.png", "b.jpg"], has: () => true });
+    expect(p.args.join(" ")).toContain("--file a.png");
+    expect(p.args.join(" ")).toContain("--file b.jpg");
+  });
+  it("이미지가 있으면 agy 로 내려가지 않는다", () => {
+    const p = planRunner({ phase: "direction", promptFile: "p", refImages: ["a.png"], has: (b: string) => b === "agy" });
+    expect(p.error).toMatch(/agy/);
+  });
+  it("이미지가 없으면 기존처럼 agy 폴백", () => {
+    expect(planRunner({ phase: "direction", promptFile: "p", has: (b: string) => b === "agy" }).bin).toBe("agy");
+  });
+  it("프롬프트에 첨부 레퍼런스와 대조 항목", () => {
+    const p = directionPrompt({ brief: "b", refImages: ["/x/stripe-hero.png"] });
+    expect(p).toContain("첨부 레퍼런스");
+    expect(p).toContain("stripe-hero.png");
+    expect(p).toMatch(/가져오고.*버리/);
+    expect(directionPrompt({ brief: "b" })).not.toContain("첨부 레퍼런스");
+  });
+  it("형식·존재 검사", () => {
+    const r = validRefImages(["a.png", "b.gif", "c.webp"], (p: string) => p !== "c.webp");
+    expect(r.ok).toEqual(["a.png"]);
+    expect(r.rejected.map((x) => x.path)).toEqual(["b.gif", "c.webp"]);
   });
 });

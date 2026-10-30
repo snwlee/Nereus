@@ -53,13 +53,36 @@ const VERDICT_RULE = [
   "실제 제품 스크린샷으로 통할 수준이 아니면 봐주지 말고 REVISE 를 주세요.",
 ].join("\n");
 
-export function directionPrompt({ brief = "", target = "web", refs = "" } = {}) {
+const REF_IMAGE = /\.(png|jpe?g|webp)$/i;
+
+/** 레퍼런스 이미지 — 웹세션이 받는 형식이고 실제로 있는 것만. 나머지는 이유와 함께 돌려준다. */
+export function validRefImages(paths = [], exists = () => true) {
+  const rejected = [];
+  const ok = paths.filter((p) => {
+    if (!REF_IMAGE.test(p)) return rejected.push({ path: p, reason: "png·jpg·jpeg·webp 만 첨부한다" }) && false;
+    if (!exists(p)) return rejected.push({ path: p, reason: "파일이 없다" }) && false;
+    return true;
+  });
+  return { ok, rejected };
+}
+
+// 레퍼런스를 텍스트로만 적으면 비평가는 그것이 실재하는지도, 브리프가 무엇을 가져오는지도 모른다.
+const refSection = (refImages) => (refImages.length
+  ? [
+    "\n## 첨부 레퍼런스 (첨부 순서 = 아래 순서)",
+    ...refImages.map((p) => `- ${path.basename(p)}`),
+    "- 브리프가 각 레퍼런스에서 무엇을 가져오고 무엇을 버리는지 말하는가 — 통째로 베끼는 방향이면 지적하세요",
+  ].join("\n")
+  : "");
+
+export function directionPrompt({ brief = "", target = "web", refs = "", refImages = [] } = {}) {
   return [
     `당신은 까다로운 시니어 프로덕트 디자이너입니다. 아래 ${target} UI 의 **디자인 방향**을 코드 작성 전에 비평하세요.`,
     "",
     "## 방향 브리프",
     brief.trim() || "(브리프 없음 — 방향이 비어 있다는 것 자체를 지적하세요)",
     refs ? `\n## 레퍼런스\n${refs.trim()}` : "",
+    refSection(refImages),
     "",
     "## 볼 것",
     "- 방향이 '깔끔하고 미니멀' 같은 무색 기본값인가, 특정 스타일 방향(에디토리얼·네오브루탈·라이트 럭셔리·벤토·스크롤리텔링 등)으로 결정됐는가",
@@ -155,13 +178,18 @@ const GEMINI_CLI = () => path.resolve(fileURLToPath(new URL("../../image/scripts
 // (크레딧은 미차감 — 생성 전 단계가 아니라 스트림이 끊긴다), 같은 프롬프트가 flash 로는 완주했다.
 const VISUAL_MODEL = "gemini-flash";
 
-export function planRunner({ phase, shots = [], promptFile = "", model = "", has = (b) => !!which(b) } = {}) {
+export function planRunner({ phase, shots = [], refImages = [], promptFile = "", model = "", has = (b) => !!which(b) } = {}) {
   if (phase === "direction") {
+    // agy 는 이미지 첨부를 받지 않는다 — 레퍼런스를 떨군 채 조용히 비평받지 않는다.
+    if (refImages.length && !has("python3")) {
+      return { error: "레퍼런스 이미지 첨부에는 python3 + Gemini 웹세션이 필요합니다 (agy 는 이미지 첨부를 받지 않습니다)." };
+    }
     // 웹세션이 먼저다. 2026-09-12 실측: agy 는 할당량 소진(~2026-09-16 리셋), 웹세션은 살아 있다.
     // agy 는 웹세션이 없을 때의 대체 경로로 남긴다.
     if (has("python3")) {
       const args = [GEMINI_CLI(), "ask", "--prompt-file", promptFile];
       if (model) args.push("--model", model);
+      for (const p of refImages) args.push("--file", p);
       return { bin: "python3", args, source: "gemini-web" };
     }
     if (has("agy")) return { bin: "agy", args: ["-p", "@" + promptFile], source: "gemini-agy", stdinPrompt: true };
@@ -184,9 +212,9 @@ export const MCP_SOURCE = "gemini-mcp";
 const PHASES = ["direction", "visual"];
 
 /** MCP 로 Gemini 에 넣을 프롬프트. planRunner 를 타지 않는 경로여서 프롬프트만 따로 뽑는다. */
-export function promptFor({ phase, brief = "", target = "web", refs = "", shots = [], context = "", previous = "" } = {}) {
+export function promptFor({ phase, brief = "", target = "web", refs = "", refImages = [], shots = [], context = "", previous = "" } = {}) {
   if (!PHASES.includes(phase)) throw new Error(`phase 는 direction 또는 visual 이어야 합니다 (받은 값: ${phase})`);
-  if (phase === "direction") return directionPrompt({ brief, target, refs });
+  if (phase === "direction") return directionPrompt({ brief, target, refs, refImages });
   if (!shots.length) throw new Error("visual 프롬프트에는 스크린샷이 최소 1장 필요합니다 (--shot 320:path.png)");
   return visualPrompt({ shots, context, previous });
 }
@@ -234,6 +262,16 @@ export function feedbackReport({ pass, findings = [] }) {
 const flag = (argv, name, fallback = null) => { const i = argv.indexOf(name); return i > -1 ? argv[i + 1] : fallback; };
 const flags = (argv, name) => argv.reduce((acc, v, i) => (v === name && argv[i + 1] ? [...acc, argv[i + 1]] : acc), []);
 
+// --ref-image 를 검사한다. 하나라도 못 쓰면 멈춘다 — 레퍼런스를 빠뜨린 채 비평받으면 방향이 틀어진다.
+function parseRefImages(argv) {
+  const { ok, rejected } = validRefImages(flags(argv, "--ref-image"), fs.existsSync);
+  if (rejected.length) {
+    process.stderr.write(rejected.map((r) => `[design] --ref-image ${r.path}: ${r.reason}`).join("\n") + "\n");
+    process.exit(2);
+  }
+  return ok;
+}
+
 function parseShots(argv) {
   return flags(argv, "--shot").map((v) => {
     const m = String(v).match(/^(\d+):(.+)$/);
@@ -241,7 +279,7 @@ function parseShots(argv) {
   });
 }
 
-function collectDiff(cwd, base) {
+export function collectDiff(cwd, base) {
   const args = base ? ["diff", `${base}...HEAD`] : ["diff", "HEAD"];
   let diff = run("git", args, { cwd }).stdout;
   if (!base) {
@@ -288,6 +326,7 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
           brief: bf ? fs.readFileSync(bf, "utf8") : flag(argv, "--text", "") ?? "",
           target: flag(argv, "--target", "web") ?? "web",
           refs: flag(argv, "--refs", "") ?? "",
+          refImages: parseRefImages(argv),
           shots: parseShots(argv),
           context: flag(argv, "--context", "") ?? "",
           previous: previousNotes(readRounds(cwd)),
@@ -321,15 +360,16 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
   const briefFile = flag(argv, "--brief");
   const brief = briefFile ? fs.readFileSync(briefFile, "utf8") : flag(argv, "--text", "") ?? "";
   const shots = parseShots(argv);
+  const refImages = cmd === "direction" ? parseRefImages(argv) : [];
   const context = flag(argv, "--context", "") ?? "";
   const prompt = cmd === "direction"
-    ? directionPrompt({ brief, target: flag(argv, "--target", "web"), refs: flag(argv, "--refs", "") ?? "" })
+    ? directionPrompt({ brief, target: flag(argv, "--target", "web"), refs: flag(argv, "--refs", "") ?? "", refImages })
     : visualPrompt({ shots, context, previous: previousNotes(readRounds(cwd)) });
 
   const promptFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "nereus-design-")), "prompt.txt");
   fs.writeFileSync(promptFile, prompt);
 
-  const plan = planRunner({ phase: cmd, shots, promptFile, model: flag(argv, "--model", "") ?? "" });
+  const plan = planRunner({ phase: cmd, shots, refImages, promptFile, model: flag(argv, "--model", "") ?? "" });
   if (plan.error) { process.stderr.write(plan.error + "\n"); process.exit(2); }
 
   const args = plan.stdinPrompt ? ["-p", prompt] : plan.args;

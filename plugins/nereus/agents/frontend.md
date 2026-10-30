@@ -18,10 +18,11 @@ nereus:build, **nereus:design(필수 — 방향 후보 생성 → 방향 비평 
 - 접근성: 키보드 내비게이션, 대비, reduced-motion 확인.
 - 서버 상태와 클라이언트 상태를 섞지 않는다. URL로 공유될 상태는 URL에.
 - 완료 전 320/768/1440 폭 스크린샷을 한 번씩 본다.
+- 모션(transition·animation·keyframes)을 만졌으면 `motion-check.mjs` 를 돌리고 지적을 반영하거나 이유를 남긴다. 스크린샷 비평은 모션을 못 본다.
 - **디자인 판단을 혼자 내리지 않는다.** 방향 브리프는 빈 종이에서 쓰지 말고 `design-system.mjs "<제품 한 줄>" --stack <스택>` 으로 후보를 먼저 뽑는다(무색 기본값 방지). 신규 화면·컴포넌트는 코드 전에 `design-feedback.mjs direction --brief <그 파일>` 으로 방향을, 구현 후에는 그 스크린샷을 `design-feedback.mjs visual --files ...` 로 비평받는다. REVISE 면 고치고 다시 받는다.
 
 ## 출력 계약
-코드 + 컴포넌트 테스트 + 스크린샷 파일 경로 + 콘솔 에러 0 확인 + Gemini 디자인 라운드 verdict.
+코드 + 컴포넌트 테스트 + 스크린샷 파일 경로 + 콘솔 에러 0 확인 + Gemini 디자인 라운드 verdict + (모션을 만졌으면) motion-check 결과.
 
 ## 완료 조건
 테스트 통과, 콘솔 에러 없음, 세 폭에서 가로 스크롤 없음, `design-feedback.mjs status` 통과(디자인 라운드 verdict OK), tasks 체크.
