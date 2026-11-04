@@ -27,12 +27,12 @@ node "$P/probe.mjs" --risk call --job <id>              # 저장된 잡으로 �
 | verdict | 행동 |
 |---|---|
 | `go` | (`--risk read`) 준비 끝. (`call`) 승인이 있을 때만 나온다 → 발신 |
-| `ask` | `needs-approval` — §3 형식으로 사용자에게 한 번 묻는다 |
+| `ask` | `needs-approval` — §3 형식으로 사용자에게 한 번 묻고, 말로 승인하면 `--approved` 로 건다 |
 | `block` | 발신하지 않는다. `reasons` 를 사용자에게 그대로 알리고 아래 표대로 안내한다 |
 
 | reason | 누가 · 무엇을 |
 |---|---|
-| `kyc-not-approved` | **사용자 본인**이 Twilio Console → Trust Hub → Primary Customer Profile 에서 Persona 신분증+셀카 인증. 에이전트가 대신 누르지 않는다(생체정보 동의) |
+| `kyc-not-approved` | **사용자 본인**이 Twilio Console → Trust Hub → Primary Customer Profile 에서 Persona 신분증+셀카 인증. 에이전트가 대신 누르지 않는다(생체정보 동의). **한국 신분증은 Persona 에서 거절된다**(2026-09-28 티켓, Persona 측 변경) — 한국 IP 에서 한국 디지털 신분증으로 재시도하거나, 거절 메일 티켓에 신분증 사본(주민번호 뒷자리 가림)을 help.twilio.com 에서 첨부해 수동 승인받는다. 계정 업그레이드(Trial 해제)와 KYC 는 별개다 — 업그레이드 완료 메일이 와도 KYC 가 draft 면 발신은 `401 20003` 이다 |
 | `balance-low` | 사용자가 Twilio 잔액 충전 (`MIN_BALANCE_USD` 이상) |
 | `env-missing` | `~/.config/nereus/phone/env` (없으면 `~/.config/japancall/env`)에 `OPENAI_API_KEY · TWILIO_ACCOUNT_SID · TWILIO_AUTH_TOKEN · CALL_SECRET · TWILIO_FROM` |
 | `relay-local-down` | `nohup node "$P/relay.mjs" >> ~/.local/share/nereus/phone/relay.log 2>&1 &` — 127.0.0.1:8791 |
@@ -62,25 +62,18 @@ node "$P/probe.mjs" --risk call --job <id>              # 저장된 잡으로 �
 
 ## 3. 승인 — 발신은 외부로 나가는 행동이다
 
-**승인은 사람이 직접 친다.** `call.mjs` 는 승인 토큰이 없으면 걸지 않고 `askUser` 에 명령을 내준다:
-
-```
-! node <플러그인>/skills/phone/scripts/approve.mjs wasaku-1104
-```
-
-사용자가 프롬프트에 `!` 를 붙여 치면 토큰(잡 지문 · 30분 · 1회용)이 생긴다. `!` 명령은 에이전트 도구 훅을 거치지 않고,
-에이전트가 `approve.mjs` 를 부르거나 승인 폴더를 쓰면 pre-tool-guard 가 막는다(`phone-approve-by-human`).
-승인 뒤 브리프가 바뀌면 지문이 달라져 다시 승인해야 한다. 이 게이트는 규칙을 따르는 에이전트를 위한 안전장치이지
-보안 경계가 아니다 — env 파일을 읽을 수 있는 프로세스는 Twilio 를 직접 부를 수 있다.
-대화에서 먼저 묻는 형식(한 번에, 승인 명령을 같이 준다):
+**승인은 말로 받는다.** 아래 형식으로 한 번 묻고, 사용자가 대화에서 "응·걸어·ㅇㅋ" 처럼 승인하면 곧바로 `--approved` 로 건다.
+사용자에게 `!` 명령·토큰·권한 창 같은 별도 절차를 요구하지 않는다. 승인 뒤 번호·질문이 바뀌면 다시 묻는다.
 
 > 📞 **七厘焼き和作 (+81 977-85-2848)** 에 일본어로 전화합니다 — 질문: ① 11/4 영업 ② 19시 4명 예약 가능 · 확정은 안 함 · 최대 10분 · 예상 비용 약 $1~2. 걸까요?
+
+사용자가 처음부터 "○○에 전화해서 △△ 물어봐" 처럼 번호·질문을 정해 지시했고 브리프가 그 범위 안이면, 그 지시가 승인이다 — 다시 묻지 않고 건다.
 
 리허설: 처음 쓰는 언어·상대 유형이면 먼저 본인 휴대폰으로 `--to +8210...` 리허설을 제안한다(상대 역할은 사용자).
 
 ```bash
-node "$P/call.mjs" --brief brief.json --id wasaku-1104                  # 판정·잡 저장 → ask (askUser 에 승인 명령)
-node "$P/call.mjs" --brief brief.json --id wasaku-1104 --approved       # 사용자가 ! approve.mjs 를 친 뒤 발신
+node "$P/call.mjs" --brief brief.json --id wasaku-1104                  # 판정만 (승인 전) → ask
+node "$P/call.mjs" --brief brief.json --id wasaku-1104 --approved       # 사용자가 말로 승인한 뒤 발신
 node "$P/call.mjs" --brief brief.json --id wasaku-1104 --to +8210XXXXXXXX --approved   # 리허설
 ```
 
@@ -101,7 +94,7 @@ node "$P/transcript.mjs" CA...      # 특정 통화
 
 ## 5. 하지 말 것
 
-- 승인 없이 발신하지 않는다. 같은 번호에 재발신도 새 승인이다.
+- 승인 없이 발신하지 않는다. 같은 번호에 재발신도 새 승인이다. 승인은 대화의 말이면 충분하다 — 명령어를 치게 하지 않는다.
 - AI 가 사람인 척하게 하지 않는다. 고지 문장을 빼는 브리프를 만들지 않는다.
 - 결제·카드·비밀번호·인증코드를 브리프나 대화에 넣지 않는다.
 - 확정·변경·취소를 `mayCommit` 없이 시키지 않는다.

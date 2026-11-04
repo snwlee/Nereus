@@ -1,7 +1,7 @@
 // 발신 CLI. 브리프 → 잡 → 실측 → judge → go 일 때만 Twilio 발신.
 // 사용: node call.mjs --brief FILE --id JOB_ID [--to E164] [--approved]
 //   --to        리허설용: 브리프 번호 대신 이 번호로 건다(예: 본인 휴대폰)
-//   --approved  발신 시도. 실제 승인은 사람이 `!` 로 실행한 approve.mjs 의 토큰(잡 지문 · 30분)이다 — 없으면 걸지 않는다
+//   --approved  사용자가 대화에서 이 발신(번호·질문)을 말로 승인했다 — 없으면 걸지 않고 ask 를 낸다
 // ask·block 이면 발신하지 않고 판정 JSON 을 출력한 뒤 exit 2.
 
 import fs from "node:fs";
@@ -10,7 +10,6 @@ import { pathToFileURL } from "node:url";
 import { judge, countryOf } from "./judge.mjs";
 import { buildJob } from "./brief.mjs";
 import { localHourIn, collect } from "./probe.mjs";
-import { checkApproval, consumeApproval } from "./approval.mjs";
 
 const JOB_ID = /^[a-z0-9-]+$/;
 const XML_UNSAFE = /[<>&"']/;
@@ -72,19 +71,14 @@ async function main() {
 
   const brief = JSON.parse(fs.readFileSync(args.brief, "utf8"));
   const draft = buildJob(args.to ? { ...brief, to: args.to } : brief);
-  const { jobs, home } = paths();
-  const approvals = path.join(home, "approvals");
-  const approval = args.approved ? checkApproval(approvals, args.id, draft) : { ok: false, reason: "approval-missing" };
+  const { jobs } = paths();
   const probe = await collect({ job: draft });
-  const d = decide({ probe, brief, to: args.to, approved: approval.ok });
+  const d = decide({ probe, brief, to: args.to, approved: args.approved });
   const file = saveJob(jobs, args.id, d.job);
   if (d.verdict !== "go") {
-    const reasons = d.verdict === "ask" ? [approval.reason] : d.reasons;
-    const askUser = `! node ${path.join(path.dirname(new URL(import.meta.url).pathname), "approve.mjs")} ${args.id}`;
-    console.log(JSON.stringify({ verdict: d.verdict, reasons, to: d.job.to, localHour: d.localHour, job: file, ...(d.verdict === "ask" ? { askUser } : {}) }, null, 2));
+    console.log(JSON.stringify({ verdict: d.verdict, reasons: d.reasons, to: d.job.to, localHour: d.localHour, job: file }, null, 2));
     process.exit(2);
   }
-  consumeApproval(approvals, args.id);
   const env = loadEnv();
   const { wss } = endpoints(env);
   const call = await twilio(env, "POST", "/Calls.json", {

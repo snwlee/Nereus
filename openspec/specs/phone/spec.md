@@ -121,6 +121,54 @@ The system MUST satisfy the following. `parseLog(text)` 는 jsonl 을 `{turns:[{
 - **WHEN** 로그에 `상대`·`AI` 줄과 `end_call`, `stop`
 - **THEN** `endedBy` 가 `"ai"`, `turns` 에 system 줄이 없다
 
+### Requirement: 발신은 사용자가 대화에서 말로 승인해야 한다 (2026-11-04 교정)
+<!-- id: phone.approvalGate -->
+<!-- entities: PhoneGate -->
+<!-- enforced: tests/lib/phone-gate.test.ts, tests/skills/phone-call.test.ts -->
+
+The system MUST satisfy the following. 에이전트는 번호·언어·질문·확정 여부·비용을 한 번에 보여 주고, 사용자가 대화에서 승인하면 `call.mjs --approved` 로 바로 건다.
+사용자에게 `!` 명령이나 별도 토큰을 요구하지 않는다. `--approved` 없이 부르면 `call.mjs` 는 `ask`(`needs-approval`)를 내고 걸지 않는다.
+승인 뒤 번호·질문이 바뀌거나 같은 번호에 다시 걸면 새로 승인받는다.
+
+#### Scenario: 승인 없이 호출
+- **WHEN** `decide` 에 `approved` false
+- **THEN** `verdict` 가 `"ask"`
+
+#### Scenario: 훅은 발신 실행을 막지 않는다
+- **WHEN** 에이전트 Bash 가 `node call.mjs --brief b.json --id w --approved`
+- **THEN** pre-tool-guard 가 막지 않는다
+
+### Requirement: 중계는 기존 aicall 동작을 유지해야 한다 (역스펙 기준선)
+<!-- id: phone.relay -->
+<!-- entities: Relay -->
+<!-- enforced: tests/skills/phone-relay.test.ts -->
+
+The system MUST satisfy the following. 기준선: `Japan2026/tools/aicall/server.mjs` (2026-09-25). 중계는 비밀 경로(`<prefix>/<CALL_SECRET>/stream`)가 아닌 업그레이드를 끊어야 한다.
+Twilio `start` 이벤트의 `customParameters.job` 으로 잡을 읽어 Realtime `session.update`(μ-law 입출력, 전사 언어, server VAD, `end_call` 도구)를 보내야 한다.
+Twilio `media` 는 `input_audio_buffer.append` 로, Realtime `response.output_audio.delta` 는 Twilio `media` 로 넘겨야 한다.
+상대가 말을 시작하면 Twilio 에 `clear` 를 보내고 AI 응답을 자른다. 상대가 `NO_SPEECH_KICK_MS` 동안 말이 없으면 AI 가 먼저 말한다.
+전사(상대·AI)와 시스템 이벤트를 `logs/<callSid>.jsonl` 에 한 줄씩 남긴다.
+
+#### Scenario: 가짜 Twilio·가짜 Realtime 사이 왕복
+- **WHEN** 가짜 Realtime 서버가 `response.output_audio.delta` 와 전사를 보내고, 가짜 Twilio 가 `start`·`media` 를 보낸다
+- **THEN** 가짜 Twilio 가 `media` 를 받고, 가짜 Realtime 이 `session.update` 와 `input_audio_buffer.append` 를 받고, 로그 파일에 `AI` 전사 줄이 있다
+
+#### Scenario: 틀린 경로
+- **WHEN** 비밀이 다른 경로로 업그레이드를 시도
+- **THEN** 연결이 거절된다
+
+### Requirement: 기록을 읽어 사람이 볼 요약을 내야 한다
+<!-- id: phone.transcript -->
+<!-- entities: Transcript -->
+<!-- enforced: tests/skills/phone-transcript.test.ts -->
+
+The system MUST satisfy the following. `parseLog(text)` 는 jsonl 을 `{turns:[{t,who,text}], ended, endedBy, errors}` 로 읽어야 한다.
+`end_call` 이 있으면 `endedBy` 가 `"ai"`, `stop` 만 있으면 `"remote"`, 둘 다 없으면 `ended` 가 false 다. `system` 의 `error`·`실패` 줄은 `errors` 에 모은다.
+
+#### Scenario: AI 가 끊은 통화
+- **WHEN** 로그에 `상대`·`AI` 줄과 `end_call`, `stop`
+- **THEN** `endedBy` 가 `"ai"`, `turns` 에 system 줄이 없다
+
 ### Requirement: 발신은 사람이 권한 창에서 허용해야 한다 (보안 리뷰 2026-09-26)
 <!-- id: phone.approvalGate -->
 <!-- entities: PhoneGate -->
