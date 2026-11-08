@@ -62,6 +62,7 @@ node plugins/nereus-game/lib/roblox-gate.mjs   # robloxStageTwo, 종료코드 0=
 5. **DataStore 쓰기** — 실패·재시도·세션 잠금이 있는가. 진행도 소실은 되돌릴 수 없다.
 
 `nereus:security` 에이전트를 이 체크리스트로 투입한다.
+1~3번의 검증 순서·전송 선택·남용 매트릭스는 `references/remote-validation.md`, 5번의 세션 잠금·재시도 멱등성은 `references/datastores.md` 에 있다.
 
 ## 4. finish 는 커밋이 아니라 롤아웃이다
 
@@ -72,7 +73,20 @@ node plugins/nereus-game/lib/roblox-gate.mjs   # robloxStageTwo, 종료코드 0=
 3. **지표를 관측한다** — 동시접속·세션 길이·D1 리텐션·에러율. 악화되면 되돌린다.
 4. 코드 품질이 아니라 리텐션이 성패를 가른다. 이 판정을 `nereus:finish` 뒤에 붙인다.
 
-## 5. 하지 말 것
+## 5. 참고 자료
+
+판단 지식만 둔다. API 시그니처·한도 수치는 내장 Studio MCP 의 API 문서가 진실이다 — 복사해두면 낡는다.
+
+| 자료 | 언제 |
+|---|---|
+| `references/remote-validation.md` | Remote 를 새로 만들거나 바꿀 때, 익스플로잇·비동기 경합을 볼 때 |
+| `references/datastores.md` | 저장·로드·세션 잠금·재시도·삭제 요청 |
+| `references/simulator-economy.md` | 타이쿤·시뮬레이터 경제를 서버에 옮길 때. 수치 판정은 `nereus-game:balance` 가 먼저 |
+| `templates/economy_math.luau` · `templates/test_economy_math.luau` | 경제 수식 ModuleScript 와 lune 테스트. 고치지 않고 넣는다 |
+
+출처: awesome-gamedev-agent-skills (Apache-2.0). 귀속은 플러그인 `NOTICE`.
+
+## 6. 하지 말 것
 
 - `Roblox/testez`(2024 아카이브)·`jsdotlua/jest-lua`(정체)를 새로 도입하지 않는다.
   런타임 테스트는 `Roblox/jest-roblox`, 로컬은 lune 이다.
