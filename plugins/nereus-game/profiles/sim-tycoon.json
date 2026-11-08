@@ -46,5 +46,24 @@
     "maxFontKb": 1200,
     "minSizePx": 14,
     "note": "상점·업그레이드 라벨이 작고 촘촘하다"
+  },
+  "pacing": {
+    "rebirthWaitRatio": [
+      1.2,
+      1.6
+    ],
+    "rebirthHorizon": 8,
+    "manyLevels": 30,
+    "maxGrowthForManyLevels": 1.15,
+    "offlineEfficiency": [
+      0.25,
+      0.5
+    ],
+    "offlineMaxHours": [
+      8,
+      12
+    ],
+    "precisionLimit": 1e15,
+    "note": "환생 대기는 직전보다 조금만 길어야 한다(x1.2~x1.6). 가산 배율이면 비율이 requirementGrowth 로 수렴하므로 그 값이 곧 장기 비율이다. 출발점: awesome-gamedev-agent-skills roblox-simulator-economy 의 pacing targets(Apache-2.0)."
   }
 }
