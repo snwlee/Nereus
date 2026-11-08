@@ -17,4 +17,12 @@ describe("nereus-game 패키징", () => {
     expect(notice).toContain("Claude-Code-Game-Studios");
     expect(notice).toContain("MIT");
   });
+
+  it("awesome-gamedev-agent-skills 귀속과 Apache 전문을 동봉한다", () => {
+    const notice = fs.readFileSync("plugins/nereus-game/NOTICE", "utf8");
+    expect(notice).toContain("awesome-gamedev-agent-skills");
+    expect(notice).toContain("Apache License, Version 2.0");
+    expect(notice).toContain("All skills in this repository are original works");
+    expect(fs.readFileSync("plugins/nereus-game/LICENSES/Apache-2.0.txt", "utf8")).toContain("TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION");
+  });
 });

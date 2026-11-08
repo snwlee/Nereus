@@ -121,7 +121,7 @@ detectFlutterGame(root) → { runner, flame, flavors, layers, notes }
 
 ## 도메인 스킬 (엔진 무관)
 
-`level` · `narrative` · `gameux` · `asset` · `balance` · `craft` — 전부 특정 엔진 문법을 담지 않는다.
+`level` · `narrative` · `gameux` · `asset` · `balance` · `craft` · `save` · `perf` — 전부 특정 엔진 문법을 담지 않는다.
 메인 플랫폼이 없고 로블록스와 2D 폰게임을 동시에 대응해야 하므로, 도메인 지식이 엔진에 묶이면 두 벌이 된다.
 테스트가 이것을 강제한다(`tests/smoke/game-domain.test.ts`).
 
@@ -143,6 +143,21 @@ detectFlutterGame(root) → { runner, flame, flavors, layers, notes }
 
 `lib/balance-sim.mjs` — 결정론적(seed 기반). 경제 정의를 N턴 돌려
 `bottlenecks` · `inflation` · `cliffs` 를 수치로 낸다. 같은 입력이면 같은 출력이라 게이트로 쓸 수 있다.
+
+## 이식한 검사기 (awesome-gamedev-agent-skills, Apache-2.0)
+
+엔진 API 참고서였던 원본에서 **판정으로 바꿀 수 있는 것만** 옮겼다. 전부 stdin JSON → stdout JSON 프로세스다.
+
+| 검사기 | 부르는 스킬 | 판정 |
+|---|---|---|
+| `lib/economy-curve.mjs` (`checkPacing`) | `balance` | 환생 대기 비율·가파른 가격 성장·오프라인 효율/상한·정밀도 — `sim-tycoon.pacing` 기준 |
+| `lib/puzzle-board.mjs` (`checkBoard`) | `level` | 매치-3 시작 매치·데드락, 슬라이딩 패리티 |
+| `lib/save-check.mjs` (`checkSave`) | `save` | 버전·마이그레이션 구멍·제자리 쓰기·백업·자동저장 덮어쓰기·새 버전 거부·회귀 표본 |
+| `lib/frame-budget.mjs` (`checkFrames`) | `perf` | p95 초과·히치·발열·GC — 에디터 측정은 `pass` 가 될 수 없다 |
+
+로블록스는 판단 지식만 `skills/roblox/references/` 로(Remote 검증·DataStore·경제 서버 패턴), 경제 수식은
+`skills/roblox/templates/` 에 원본 Luau 그대로 들어 있다. **unity-\* 는 옮기지 않았다** — 엔진 API 는 공식 플러그인에 위임한다(`skills/unity` §4).
+귀속은 `NOTICE`, 라이선스 전문은 `LICENSES/Apache-2.0.txt`.
 
 ## 2단 테스트 게이트 (로블록스)
 

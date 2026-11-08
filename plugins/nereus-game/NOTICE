@@ -16,3 +16,56 @@ adapted from Claude Code Game Studios:
 Adapted material has been rewritten to fit the Nereus plugin format and
 hook wiring. Shell-based hooks from the upstream project are NOT used;
 this plugin ships Node hooks so that it runs on Windows as well as macOS.
+
+---
+
+Portions of this plugin are adapted from awesome-gamedev-agent-skills:
+
+  awesome-gamedev-agent-skills
+  https://github.com/gamedev-skills/awesome-gamedev-agent-skills
+  (commit 19d93f97c9c1ea0f8b306e77aa81e0d3e352d3e9)
+  Copyright 2026 Abhishek Barali and the awesome-gamedev-agent-skills contributors
+  Licensed under the Apache License, Version 2.0. A copy of the license is
+  included at LICENSES/Apache-2.0.txt.
+
+The upstream NOTICE reads, in part:
+
+  This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+  All skills in this repository are original works. They were authored from primary
+  documentation (engine and framework docs, language references, and platform
+  specifications). Third-party sources and other skill collections were studied for
+  general patterns only; no text or code was copied from them.
+
+  Game engine, framework, and platform names referenced in this repository
+  (including but not limited to Godot, Unity, Unreal Engine, Phaser, PixiJS,
+  three.js, Babylon.js, Bevy, GameMaker, LÖVE, and MonoGame) are trademarks of
+  their respective owners and are used for identification and descriptive purposes
+  only. Their use does not imply any affiliation with or endorsement by those owners.
+
+Adapted files and the changes made:
+
+  skills/roblox/templates/economy_math.luau
+  skills/roblox/templates/test_economy_math.luau
+      From skills/other-engines/roblox-simulator-economy/scripts/. Unmodified
+      except for an added attribution header.
+
+  lib/economy-curve.mjs
+      Formulas from roblox-simulator-economy (economy_math.luau, formulas.md),
+      rewritten in JavaScript; the pacing check (checkPacing) is new.
+  lib/puzzle-board.mjs
+      Match-3 and sliding-puzzle rules from genres/puzzle, rewritten as checks.
+  lib/save-check.mjs, skills/save/SKILL.md
+      Derived from disciplines/save-systems; rewritten as a plan check.
+  lib/frame-budget.mjs, skills/perf/SKILL.md
+      Derived from disciplines/performance-optimization; rewritten as a check.
+  skills/roblox/references/datastores.md
+  skills/roblox/references/remote-validation.md
+  skills/roblox/references/simulator-economy.md
+      Selected guidance from roblox-datastores, roblox-networking and
+      roblox-simulator-economy, rewritten in Korean.
+  skills/balance/SKILL.md, skills/level/SKILL.md, profiles/sim-tycoon.json
+      Sections and pacing targets informed by the material above.
+
+Material from awesome-gamedev-agent-skills remains under the Apache License,
+Version 2.0; the rest of this plugin remains under the MIT License.
