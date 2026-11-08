@@ -107,3 +107,32 @@ const r = simulate({ profile, economy, turns: 60, seed: 1 });
 
 경제 설계가 **유료 확률 아이템**(알·펫 뽑기, 상자, 스핀)을 만들면 `nereus-game:compliance` 로 넘긴다.
 확률 공개는 **법적 요건**이라 밸런스 판단과 분리한다 — 밸런스는 우리가 정하고, 규정은 남이 정한다.
+
+## 증분·방치형 페이싱 — `sim-tycoon`
+
+시뮬레이터는 병목과 절벽을 본다. 타이쿤·클리커·방치형이 실제로 무너지는 곳은 그 사이다 —
+"환생 6이 몇 주 걸린다", "레벨 50 가격이 레벨 0 의 6억 배다", "오프라인이 며칠치를 준다".
+셋 다 **수입 없이 설정만으로** 계산되므로 시뮬레이션 전에 판정한다.
+
+```bash
+echo '{"genre":"sim-tycoon","config":{
+  "upgrades":[{"id":"Income","baseCost":10,"costGrowth":1.15,"maxLevel":40}],
+  "rebirth":{"baseRequirement":1e6,"requirementGrowth":1.8,"multiplierPerRebirth":0.5},
+  "offline":{"maxHours":8,"efficiency":0.5},
+  "peakBalance":1e12}}' | node plugins/nereus-game/lib/economy-curve.mjs
+```
+
+JS 에서는 `checkPacing({ profile, config })`. 기준은 프로파일의 `pacing` 이고 지금은 `sim-tycoon` 만 선언한다
+(없는 장르는 `no-baseline` — 통과가 아니다).
+
+| 위반 | 뜻 | 대응 |
+|---|---|---|
+| `rebirth-ratio` | 연속 환생 대기 비율이 범위(x1.2~x1.6) 밖 | 가산 배율이면 비율이 `requirementGrowth` 로 수렴한다 — 그 값이 곧 장기 비율이다. 낮추거나 곱셈 배율(`multiplierGrowth`, 비율 r/q 로 일정)로 바꾼다 |
+| `steep-growth` | 여러 번(30+) 사는 업그레이드의 성장 계수가 1.15 초과 | 1.07~1.15. 드물게 사는 큰 업그레이드만 1.5~3 |
+| `free-upgrade` | 가격 1 미만 | buy max 루프가 멈추지 않는다 |
+| `offline-efficiency` · `offline-cap` | 효율 0.25~0.5 · 상한 8~12시간 밖 | 켜두는 쪽이 늘 낫게, 깨진 타임스탬프가 며칠치를 주지 않게 |
+| `precision` | 최대 잔액이 1e15 초과 | 배정밀도 정수 한계(2^53). 가수·지수 쌍이나 log10 으로 저장한다 |
+
+`unmeasured` 에 실린 축(`rebirth`·`offline`·`peakBalance`)은 재지 않은 것이다. 비어 있지 않으면 통과로 읽지 않는다.
+큰 수 표기는 `formatNumber` — 반올림을 먼저 해야 `999950` 이 `1000.0K` 가 아니라 `1.0M` 이 된다.
+엔진에서의 서버 구현(구매·환생·오프라인을 서버가 소유)은 엔진 스킬이 갖는다 — 로블록스는 `nereus-game:roblox` 의 `references/simulator-economy.md`.

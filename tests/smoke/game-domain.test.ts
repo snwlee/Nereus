@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = "plugins/nereus-game";
-const DOMAIN_SKILLS = ["level", "narrative", "gameux", "asset", "balance", "craft"];
+const DOMAIN_SKILLS = ["level", "narrative", "gameux", "asset", "balance", "craft", "save", "perf"];
 const ENGINE_TOKENS = [/game\.Players/, /:GetService/, /MonoBehaviour/, /UnityEngine/];
 
 describe("선언한 자산은 실재한다", () => {
@@ -149,3 +149,35 @@ describe("에이전트 이름은 코어와 겹치지 않는다", () => {
   });
 });
 
+
+// awesome-gamedev-agent-skills 이식(2026-11-09). 축이 아예 없던 둘은 라우트까지가 한 벌이고,
+// 이미 있던 축에 붙인 검사기는 스킬이 부르는 곳까지가 한 벌이다.
+describe("이식 축 (save · perf)", () => {
+  const ext = JSON.parse(fs.readFileSync(`${ROOT}/nereus-extension.json`, "utf8"));
+  const route = (s: string) => ext.routes.find((r: any) => r.skill === `nereus-game:${s}`);
+  it("두 스킬이 자기 검사기를 가리킨다", () => {
+    expect(fs.readFileSync(`${ROOT}/skills/save/SKILL.md`, "utf8")).toContain("save-check.mjs");
+    expect(fs.readFileSync(`${ROOT}/skills/perf/SKILL.md`, "utf8")).toContain("frame-budget.mjs");
+  });
+  it("save 라우트가 세이브 요청을 잡는다", () => {
+    const re = new RegExp(route("save").re, "i");
+    expect(re.test("세이브 마이그레이션 짜줘")).toBe(true);
+    expect(re.test("자동 저장 슬롯")).toBe(true);
+  });
+  it("perf 라우트는 renderbudget 의 프레임 드랍·드로우 콜을 뺏지 않는다", () => {
+    const re = new RegExp(route("perf").re, "i");
+    expect(re.test("프레임 예산 넘는지 봐줘")).toBe(true);
+    expect(re.test("게임이 끊김")).toBe(true);
+    expect(re.test("프레임 드랍")).toBe(false);
+    expect(re.test("드로우 콜 줄여줘")).toBe(false);
+    // 리뷰 R1: 네트워크 끊김을 perf 로 보냈다.
+    expect(re.test("와이파이 연결 끊김")).toBe(false);
+  });
+});
+
+describe("이식 검사기 배선", () => {
+  it("balance 가 페이싱 검사기를, level 이 퍼즐 판 검사기를 가리킨다", () => {
+    expect(fs.readFileSync(`${ROOT}/skills/balance/SKILL.md`, "utf8")).toContain("economy-curve.mjs");
+    expect(fs.readFileSync(`${ROOT}/skills/level/SKILL.md`, "utf8")).toContain("puzzle-board.mjs");
+  });
+});

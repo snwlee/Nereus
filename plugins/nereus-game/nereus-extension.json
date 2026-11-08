@@ -80,6 +80,16 @@
       "skill": "nereus-game:flutter",
       "why": "Flutter 게임·Flame·플레이버 다작",
       "re": "플러터|flutter|dart\\s?게임|flame|플레이버|flavor|pubspec|골든\\s?테스트"
+    },
+    {
+      "skill": "nereus-game:save",
+      "why": "세이브·마이그레이션·자동저장 — 소실 경로 판정",
+      "re": "세이브|save\\s?(system|file|slot|data)|저장\\s?(슬롯|파일)|자동\\s?저장|autosave|진행도\\s?(저장|소실|날아)"
+    },
+    {
+      "skill": "nereus-game:perf",
+      "why": "프레임 예산·히치·발열 — 렌더 예산(드로우 콜·GPU 메모리)은 nereus-3d:renderbudget 이 갖는다. 프레임 드랍을 넣으면 MAX_HITS=2 에서 그 자리를 뺏는다.",
+      "re": "성능\\s?(최적화|측정|예산|문제)|프레임\\s?(예산|타임)|frame\\s?(budget|time)|(게임|화면|프레임)\\s?(이|가)?\\s?끊(김|겨|긴)|버벅|스터터|stutter|히치|hitch|gc\\s?(스파이크|할당)|오브젝트\\s?풀|object\\s?pool|발열"
     }
   ],
   "stacks": [
