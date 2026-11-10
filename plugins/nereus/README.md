@@ -13,7 +13,7 @@
 ## 구성
 
 - `hooks/` SessionStart(학습 규칙·스킬 맵 주입, 루프 반복에서만 handoff 주입), PostToolUse(tdd-guard), PreCompact(압축 요약 다섯 섹션 지시)
-- `skills/` setup, common, intake, spec, build, review, finish, baton, e2e, pdf, image, research, seo
+- `skills/` setup, common, intake, spec, goldfish, build, review, drift, finish, baton, e2e, pdf, image, research, seo
 - `agents/` architect, backend, frontend, app, researcher, seo, reviewer, security, qa, writer
 - 커맨드는 별도 디렉터리 없이 스킬 이름으로 호출 (`/nereus:setup`, `/nereus:intake`, `/nereus:loop` 등)
 

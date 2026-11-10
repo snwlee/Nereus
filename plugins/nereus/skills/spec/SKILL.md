@@ -73,8 +73,14 @@ verdict 가 REVISE 면 방향을 고쳐 다시 돌린다. 이 라운드가 없�
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/lint-tasks.mjs" <tasks파일>
 ```
-- 저장 후 **Self-Review** (스스로, 서브에이전트 없이): (1) spec coverage — 스펙의 각 요구를 가리키는 태스크가 있는가, 없으면 태스크 추가. (2) placeholder scan — 위 금지 패턴을 파일에서 검색해 수정. (3) type consistency — 뒤 태스크의 타입·시그니처·이름이 앞 태스크 정의와 일치하는가.
+- 저장 후 **Self-Review** (스스로, 서브에이전트 없이 — 새 맥락 리뷰는 §3 goldfish 가 한다): (1) spec coverage — 스펙의 각 요구를 가리키는 태스크가 있는가, 없으면 태스크 추가. (2) placeholder scan — 위 금지 패턴을 파일에서 검색해 수정. (3) type consistency — 뒤 태스크의 타입·시그니처·이름이 앞 태스크 정의와 일치하는가.
 
-## 3. 마무리
+## 3. Goldfish 리뷰 (medium/large)
+
+Self-Review 는 문서를 쓴 맥락이 한다. 그 맥락은 자기 가정을 검증해 버린다.
+크기가 medium 이나 large 면 tasks 저장 뒤 `nereus:goldfish` 를 대상(OpenSpec change 디렉터리 또는 spec-kit 기능 디렉터리)에 돌린다.
+small·`tasks-only` 는 건너뛴다. 남은 CRITICAL/HIGH 가 0 이 될 때까지 build 로 넘어가지 않는다.
+
+## 4. 마무리
 
 그 다음 `nereus:build`로 넘어간다.

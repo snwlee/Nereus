@@ -7,6 +7,10 @@
 export const ROUTES = Object.freeze([
   { skill: "nereus:debug", why: "버그·실패·예상과 다른 동작", re: /(버그|에러|오류|예외|실패|깨(졌|진|져)|터(졌|져)|크래시|스택\s?트레이스|디버그|디버깅|재현|안\s?(되|돼|됨|먹)|왜\s?(이러|안|그)|이상해|먹통|무한\s?루프|타임아웃|bug|crash|stack\s?trace|traceback|regression|flaky)/i },
   { skill: "nereus:intake", why: "새 기능·새 프로젝트 시작", re: /(개발해|구축해|처음부터|from\s?scratch|프로젝트\s?(시작|셋업)|착수|(새|신규)\s?(기능|프로젝트|서비스|앱|화면|시스템)|(기능|프로젝트|서비스|앱|시스템)\s?(을|를)?\s?(만들|추가해)|(새|신규)\s?\S{0,6}\s?만들)/i },
+  // 설계 문서 리뷰는 review(코드 diff)보다 앞이어야 한다. "디자인 리뷰"는 design 이 가진다 — 여기는 문서 단어가 붙을 때만.
+  { skill: "nereus:goldfish", why: "설계 문서·스펙을 새 맥락 서브에이전트로 리뷰 (EGM)", re: /((설계|스펙|명세|제안서|기획서|디자인\s?문서|proposal)\s?(문서|서)?\s?(을|를|좀)?\s?(리뷰|검토|비평)|goldfish|골드피시|\begm\b|elephant.?goldfish|design\s?doc(ument)?s?\s?review)/i },
+  // "드리프트 레이싱"·"차량 drift" 는 게임 요청이다. 문서·코드 단어나 리포트·검사 동사가 붙을 때만.
+  { skill: "nereus:drift", why: "스펙·README 와 코드의 어긋남 보고", re: /((문서|스펙|명세|readme|설계|코드).{0,12}(드리프트|\bdrift\b)|(드리프트|\bdrift\b)\s?(리포트|report|검사|체크|확인|봐)|(문서|스펙|명세|readme).{0,12}(어긋|안\s?맞|달라졌|낡았|뒤처))/i },
   { skill: "nereus:montage", why: "여러 씬짜리 영상 제작 (OpenMontage 파이프라인, 무료·유료 공통)", re: /(openmontage|오픈\s?몽타주|(생일|생신|기념|결혼|웨딩|추모|가족|광고|홍보|브랜드|제품|뮤직|다큐|트레일러|시네마틱|숏폼|릴스|쇼츠|유튜브|설명|편집본|몽타주)\s?\S{0,4}\s?(영상|비디오)|뮤직\s?비디오|영상\s?(제작|기획|편집본|콘티|스토리보드)|스토리보드\s?(짜|만들)|(영상|비디오)\s?(스타일|룩)|\blemo\b|opuscar)/i },
   { skill: "nereus:design", why: "디자인·UI·UX·미감", re: /(디자인|ui\b|ux\b|화면|레이아웃|스타일|테마|폰트|타이포|팔레트|색(상|깔)|여백|간격|컴포넌트|예쁘게|이쁘게|미감|보기\s?좋게|반응형|다크\s?모드|css|tailwind|figma)/i },
   { skill: "nereus:spec", why: "스펙·계획·태스크 분해", re: /(스펙|명세|요구사항|계획\s?(세워|짜)|설계해|태스크로|작업\s?쪼개|로드맵|spec\b|prd\b)/i },

@@ -72,7 +72,9 @@ Node 20 이상과 Git이 필요하다. `setup`이 외부 도구를 감지하고,
 | `/nereus:e2e` | `[flow]` 태스크의 엔드투엔드 검증 |
 | `/nereus:debug` | 버그·실패의 근본 원인 조사 4단계 (수정 전 필수) |
 | `/nereus:design` | 디자인·UI·UX 작업 3단계 — 방향 후보 생성(ui-ux-pro-max) → 방향 비평 → 렌더 비평. finish 하드 게이트 |
+| `/nereus:goldfish` | 대화 맥락 없는 새 서브에이전트가 설계 문서를 5단계로 리뷰 (Elephant-Goldfish Model). 연속 2회 clean 이면 수렴, medium/large 는 spec 끝에서 자동 |
 | `/nereus:review` | 병렬 리뷰, 심각도 게이트 |
+| `/nereus:drift` | 체크인된 스펙·README 와 코드의 어긋남 보고 |
 | `/nereus:finish` | 완료 게이트(테스트 evidence + 무결성 검사 + 디자인 피드백) → 커밋, 아카이브 |
 | `/nereus:loop "목표" --max N` | 반복마다 새 세션으로 도는 자율 루프 |
 | `/nereus:continue on\|off` | 같은 세션에서 남은 태스크 자동 계속 (기본 꺼짐, 컨텍스트는 자동 압축이 맡는다) |

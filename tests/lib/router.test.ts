@@ -211,3 +211,28 @@ describe("router: montage styles", () => {
     expect(routePrompt("버튼 스타일 수정").map((h) => h.skill)).not.toContain("nereus:montage");
   });
 });
+
+describe("router: goldfish · drift (EGM 이식)", () => {
+  it("설계 문서·스펙 리뷰는 goldfish 가 첫 번째다", () => {
+    for (const p of ["설계 문서 리뷰해줘", "이 스펙 검토해줘", "제안서 리뷰 좀", "goldfish 리뷰 돌려", "egm 으로 봐줘", "design doc review please"])
+      expect(routePrompt(p)[0]?.skill).toBe("nereus:goldfish");
+  });
+  it("코드 리뷰는 goldfish 가 아니다", () => {
+    for (const p of ["코드 리뷰해줘", "이 PR 리뷰해줘"])
+      expect(routePrompt(p).map((h) => h.skill)).not.toContain("nereus:goldfish");
+  });
+  it("문서와 코드 어긋남은 drift", () => {
+    for (const p of ["스펙이랑 코드 드리프트 봐줘", "문서가 코드랑 어긋났는지 확인해", "drift report 뽑아", "문서가 낡았는지 봐줘"])
+      expect(routePrompt(p).map((h) => h.skill)).toContain("nereus:drift");
+  });
+  it("드리프트 없는 일반 문장은 drift 가 아니다", () => {
+    expect(routePrompt("README 업데이트해줘").map((h) => h.skill)).not.toContain("nereus:drift");
+  });
+});
+
+describe("router: drift 오탐 회귀", () => {
+  it("드리프트 레이싱 게임은 drift 가 아니다", () => {
+    for (const p of ["드리프트 레이싱 게임 만들어", "차량 drift 물리 튜닝"])
+      expect(routePrompt(p).map((h) => h.skill)).not.toContain("nereus:drift");
+  });
+});

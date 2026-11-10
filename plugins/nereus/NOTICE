@@ -1,0 +1,47 @@
+nereus
+Copyright (c) 2026 snwlee
+
+This plugin is distributed under the MIT License.
+
+---
+
+Portions of this plugin are adapted from the Elephant-Goldfish Model (EGM):
+
+  elephant-goldfish-model
+  https://github.com/google/elephant-goldfish-model
+  (commit 6d2af49f635515a472ce0dbba375c62b73dace26)
+  Copyright Google LLC and the elephant-goldfish-model contributors
+  Licensed under the Apache License, Version 2.0. A copy of the license is
+  included at LICENSES/Apache-2.0.txt.
+
+The upstream project does not ship a NOTICE file. Its README states:
+"This is not an officially supported Google product."
+
+Files copied from the upstream project:
+
+  skills/goldfish/personas/zoom_out.md                   <- agents/zoom_out.md
+  skills/goldfish/personas/comprehension.md              <- agents/comprehension.md
+  skills/goldfish/personas/design_critic.md              <- agents/design_critic.md
+  skills/goldfish/personas/structural.md                 <- agents/structural.md
+  skills/goldfish/personas/style.md                      <- agents/style.md
+  skills/goldfish/personas/implementation_readiness.md   <- agents/implementation_readiness.md
+  skills/goldfish/personas/codebase_details.md           <- agents/codebase_details.md
+  skills/goldfish/personas/inventive_catalyst.md         <- agents/inventive_catalyst.md
+  skills/goldfish/personas/synthesizer.md                <- agents/synthesizer.md
+  skills/goldfish/standards/*.md                         <- resources/document_standards/*.md
+
+Modified files (Apache-2.0 section 4(b)):
+
+  skills/goldfish/personas/synthesizer.md
+    The "Personas Directory" and "Document Standards Directory" lines were
+    changed to point to this plugin's personas/ and standards/ directories.
+
+Rewritten (not copied) from upstream workflows:
+
+  skills/goldfish/SKILL.md, skills/goldfish/scripts/goldfish.mjs
+    Based on skills/egm-review, skills/egm-review-loop and skills/egm-resolve.
+    Interactive checkpoint gates were replaced with a non-interactive flow:
+    fixes are applied automatically and only ESCALATE findings are asked.
+  skills/drift/SKILL.md, skills/drift/scripts/drift.mjs
+    Based on skills/egm-drift-report. A deterministic reference check was
+    added in front of the agent's semantic comparison.

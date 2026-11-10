@@ -72,7 +72,9 @@ Context is managed by Claude Code's own auto-compaction, set to 50% of the conte
 | `/nereus:e2e` | End-to-end checks for `[flow]` tasks |
 | `/nereus:debug` | Four-phase root-cause investigation before any fix |
 | `/nereus:design` | Three stages for any design/UI/UX work — generate direction candidates (ui-ux-pro-max), critique the direction, critique the render; hard gate at finish |
+| `/nereus:goldfish` | Design-doc review by fresh-context subagents (Elephant-Goldfish Model): five stages, converges on two clean rounds; runs at the end of spec for medium/large work |
 | `/nereus:review` | Parallel review, severity gate |
+| `/nereus:drift` | Report where checked-in specs and READMEs no longer match the code |
 | `/nereus:finish` | Completion gate (test evidence + integrity scan + design feedback), then commit, archive |
 | `/nereus:loop "goal" --max N` | Autonomous loop with a fresh session per iteration |
 | `/nereus:continue on\|off` | Continue remaining tasks inside the current session (off by default; auto-compaction handles context) |
