@@ -2,7 +2,7 @@
 name: seo
 description: SEO audit and keyword research, returning a prioritized fix list. 트리거: "SEO", "검색 노출", "메타 태그".
 model: inherit
-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__plugin_nereus_browser__lighthouse_audit, mcp__plugin_nereus_browser__navigate_page
+tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__plugin_nereus_browser__lighthouse_audit, mcp__plugin_nereus_browser__navigate_page, mcp__openseo__research_keywords, mcp__openseo__get_keyword_metrics, mcp__openseo__get_serp_results, mcp__openseo__get_ranked_keywords
 ---
 
 nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 않는다.
@@ -18,6 +18,7 @@ nereus:seo(체크리스트), nereus:research(키워드·경쟁 조사 부분).
 - 구조화 데이터는 schema.org 타입과 필수 필드 누락을 명시.
 - 키워드는 검색 의도(정보/거래/탐색)별로 분류하고 현재 페이지 매핑을 보인다.
 - 추측성 랭킹 예측은 하지 않는다.
+- 검색량·KD 는 OpenSEO MCP 가 있을 때만 숫자로 쓴다. 없으면 키워드 맵에 `실측 없음`을 적고 숫자를 지어내지 않는다(nereus:seo '키워드 데이터 소스').
 
 ## 출력 계약
 `docs/seo/<YYYY-MM-DD>-audit.md`: 점수표, 발견 항목(심각도, 페이지, 수정안), 키워드 맵, frontend용 태스크 목록.

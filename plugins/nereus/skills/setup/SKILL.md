@@ -149,6 +149,15 @@ nereus 는 MCP 서버 두 개를 제공한다 — `browser`(chrome-devtools-mcp)
 
 `.mcp.json` 쪽에서 이미 해둔 것: 버전 고정(`@latest` 금지 — 세션마다 레지스트리 조회 + `~/.npm/_npx` 무한 증식), `CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS=1`(텔레메트리 watchdog 자식 프로세스 제거, 실측 51MB/서버).
 
+### 선택 MCP — OpenSEO (키워드 실측)
+
+nereus:seo 키워드 단계에 검색량·KD·SERP 실측을 붙인다. 없어도 seo 는 돈다(키워드 맵이 `실측 없음`으로 나온다). 기본으로 묶지 않는 이유: DataForSEO 유료 키가 있어야 데이터가 오고, 앱 위주 작업에는 필요 없을 때가 많다. 목록만 보여주고 사용자가 원할 때 연결한다.
+
+- 정체: `every-app/open-seo` (MIT). Semrush·Ahrefs 대체, 데이터는 DataForSEO 종량제.
+- 호스팅판: `claude mcp add --transport http --scope user openseo https://app.openseo.so/mcp` → 첫 호출 때 OpenSEO 로그인. 요청당 DataForSEO 원가에 28% 가 붙는다.
+- 자체 호스팅: Docker 나 Cloudflare 로 띄우고 같은 명령에 자기 주소의 `/mcp` 를 넣는다. DataForSEO 키는 그 서버에 넣는다.
+- **서버 이름은 반드시 `openseo`.** seo 에이전트의 tools 가 `mcp__openseo__*` 이름으로 고정돼 있어서 다른 이름이나 claude.ai 디렉터리 연결로 붙이면 에이전트가 도구를 못 본다.
+
 ## 8. 마무리
 
 무엇을 설치했고 무엇이 남았는지 표로 요약한다. 남은 필수 도구가 있으면 어떤 워크플로 단계가 영향을 받는지 알려준다 (예: `ooo` 없음 → intake 인터뷰 불가, `ocr` 없음 → review는 2차 의견만).
