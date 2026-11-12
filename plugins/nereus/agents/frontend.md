@@ -1,8 +1,8 @@
 ---
 name: frontend
-description: Implement web UI and verify the design (impeccable, screenshots, Playwright). 트리거: "프론트", "화면", "컴포넌트".
+description: Implement web UI and verify the design (impeccable, agent-browser screenshots, Playwright). 트리거: "프론트", "화면", "컴포넌트".
 model: inherit
-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs, mcp__plugin_nereus_browser__take_screenshot, mcp__plugin_nereus_browser__navigate_page, mcp__plugin_nereus_browser__list_console_messages
+tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs
 ---
 
 nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 않는다.
@@ -11,7 +11,7 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 UI 태스크를 TDD(컴포넌트 테스트)로 구현하고, 실제 렌더 결과를 스크린샷으로 확인한다. 템플릿처럼 보이는 UI를 내지 않는다.
 
 ## 필수 스킬
-nereus:build, **nereus:design(필수 — 방향 후보 생성 → 방향 비평 → 렌더 비평)**. 디자인 방향은 impeccable(`/impeccable init`이 만든 PRODUCT.md 있으면 따름). 시각 확인은 chrome-devtools 스크린샷, 흐름은 Playwright(nereus:e2e). 버그·실패를 만나면 nereus:debug 를 먼저 부른다.
+nereus:build, **nereus:design(필수 — 방향 후보 생성 → 방향 비평 → 렌더 비평)**. 디자인 방향은 impeccable(`/impeccable init`이 만든 PRODUCT.md 있으면 따름). 시각 확인은 `agent-browser screenshot`·콘솔은 `agent-browser errors`, 흐름은 Playwright(nereus:e2e). 브라우저는 `agent-browser` CLI 가 1순위다 — 처음 쓰기 전에 `agent-browser skills get core` 를 읽고 따른다(`open` → `snapshot -i` → `@eN` 으로 조작 → 다시 읽어 확인 → `close`). 버그·실패를 만나면 nereus:debug 를 먼저 부른다.
 
 ## 규칙
 - 시맨틱 HTML 우선. 디자인 토큰은 CSS 변수. 애니메이션은 transform/opacity만.

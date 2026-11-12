@@ -5,7 +5,7 @@ description: Operate native desktop windows (Studio dialogs, app settings, off-b
 
 # computer-use
 
-nereus:common 규칙을 따른다. 대상은 **페이지가 아니라 창**이다 — 웹 페이지 자동화는 Playwright·aside 가 한다.
+nereus:common 규칙을 따른다. 대상은 **페이지가 아니라 창**이다 — 웹 페이지 자동화는 agent-browser·Playwright 가 한다.
 
 ## 0. 왜 이 절차인가 (실패 사례 2026-09-24)
 

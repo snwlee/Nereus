@@ -131,13 +131,13 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/setup/scripts/autocompact.mjs" --set 50   # �
 
 ## 7. MCP 서버 개별로 끄기
 
-nereus 는 MCP 서버 두 개를 제공한다 — `browser`(chrome-devtools-mcp), `context7`. 세션마다 둘 다 상주하므로 세션이 많으면 비용이 배수로 붙는다.
+nereus 는 MCP 서버 하나를 제공한다 — `context7`. 브라우저는 MCP 가 아니라 `agent-browser` CLI 다(쓸 때만 데몬이 뜨고 1시간 유휴면 닫힌다). 예전 browser 서버(chrome-devtools-mcp)는 세션마다 npx 3단 프로세스로 상주해 세션당 RAM 1~2GB 를 썼다(2026-09-21 실측) — 2026-11-12 에 뺐다.
 
 **끄는 방법은 사용자 설정이다.** `~/.claude/settings.json` 에 넣는다 — 플러그인 업데이트가 `.mcp.json` 을 덮어써도 살아남는다.
 ```json
-{ "deniedMcpServers": ["plugin:nereus:browser"] }
+{ "deniedMcpServers": ["plugin:nereus:context7"] }
 ```
-- 서버 이름 형식은 `plugin:<플러그인>:<서버>` 이고 **정확히 일치**해야 한다. 커맨드·URL 은 정규식으로도 쓸 수 있다(`"npx.*chrome-devtools-mcp"`).
+- 서버 이름 형식은 `plugin:<플러그인>:<서버>` 이고 **정확히 일치**해야 한다. 커맨드·URL 은 정규식으로도 쓸 수 있다(`"https://mcp\\.context7\\.com/.*"`).
 - `enabledPlugins` 로 끄면 nereus 하네스 전체를 잃는다. `disabledMcpjsonServers` 는 프로젝트 `.mcp.json` 전용이라 플러그인 서버에는 듣지 않는다.
 
 **끄면 잃는 것**
