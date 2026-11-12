@@ -1,5 +1,6 @@
 // SessionStart: 루프 서브세션에 직전 반복의 handoff 주입, codegraph 인덱스·외부 도구 상태 한 줄 요약.
 // 대화형 세션에는 handoff 를 넣지 않는다 — 컨텍스트는 Claude Code 자동 압축(50%)이 맡는다.
+import { HUMAN_LAST_POLICY } from "./human-gate.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -155,7 +156,7 @@ export function handle(input, deps = {}) {
   // 스킬 맵: 압축된 description 만으로는 모델이 스킬을 떠올리지 못한다. 새 컨텍스트마다 한 번 심는다.
   // compact 는 대화가 이어지므로 다시 넣지 않는다.
   if (input.source !== "compact") {
-    parts.push(`## 작업 방식\n${ASK_POLICY}`);
+    parts.push(`## 작업 방식\n${ASK_POLICY}\n${HUMAN_LAST_POLICY}`);
     parts.push(skillMapBlock({ extraRoutes: [
       ...(deps.extensions ?? (() => loadExtensions()))().routes,
       ...(deps.delegates ?? (() => delegateRoutes()))(),

@@ -129,6 +129,12 @@ describe("작업 방식 정책 주입", () => {
     expect(ctx).toContain("순서");
     expect(ctx).toContain("묻지 않는다");
   });
+  it("injects the human-last rule: AI first, everything else done, human step last", () => {
+    const out = handle({ session_id: "s1", cwd: "/r", source: "startup" }, deps({}));
+    const ctx = out!.hookSpecificOutput.additionalContext;
+    expect(ctx).toContain("최후순위");
+    expect(ctx).toContain("나머지 일을 전부 끝내");
+  });
   it("does not repeat the rule on compact", () => {
     const out = handle({ session_id: "s1", cwd: "/r", source: "compact" }, deps({}));
     const ctx = out?.hookSpecificOutput?.additionalContext ?? "";
