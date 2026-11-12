@@ -7,6 +7,8 @@ description: Implement a task with TDD (enforced when a test runner exists). Gat
 
 nereus:common 규칙을 따른다. 담당 에이전트: 스택에 따라 backend / frontend / app. 두 스택 이상이면 태스크별로 나눈다.
 
+입출력·상태·게이트·handoff 선언: `assets/runtime-contract.json` — `tests/skills/build-contract.test.ts` 가 이 문서와 대조한다. 이 문서의 게이트 문구를 바꾸면 계약도 같이 바꾼다.
+
 ## 1. TDD 가능 환경 판별
 
 `nereus` 훅 라이브러리의 `detectTestRunner`와 같은 기준이다.
