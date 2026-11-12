@@ -1,7 +1,7 @@
 // CloakBrowser 무료 티어 고정 검사.
 //
 // 조사에서 차단(403·Cloudflare·캡차)에 막혔을 때만 쓰는 **선택 경로**다.
-// 우리 앱의 E2E·design·SEO 는 chrome-devtools MCP 가 계속 담당한다 — 자기 사이트에
+// 우리 앱의 E2E·design·SEO 는 agent-browser·Lighthouse 가 담당한다 — 자기 사이트에
 // 봇 탐지를 우회할 이유가 없고, 이쪽은 Lighthouse·CDP 트레이스·콘솔 수집이 아예 없다.
 //
 // **고정하지 않으면 최신 빌드를 받는다.** 최신은 v148+ 이고 Pro 구독이 있어야 내려받아진다.

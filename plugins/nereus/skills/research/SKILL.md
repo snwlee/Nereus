@@ -42,7 +42,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/research/scripts/cloak.mjs"   # 고정 상태
 Playwright 드롭인이므로 `chromium.launch()` 자리에 `launch()` 를 쓴다(JS·Python 둘 다).
 
 **쓰지 않는 곳**: 우리 앱의 E2E · design 스크린샷 · SEO/Lighthouse.
-전부 chrome-devtools MCP 가 계속 한다. 자기 사이트에 봇 탐지를 우회할 이유가 없고,
+전부 agent-browser·Lighthouse 가 한다. 자기 사이트에 봇 탐지를 우회할 이유가 없고,
 이쪽에는 Lighthouse·CDP 트레이스·콘솔 수집이 아예 없다.
 
 **판단은 사용자가 한다**: 이건 남의 사이트 안티봇 우회다. 대상 사이트 ToS 문제이며

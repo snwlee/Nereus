@@ -2,7 +2,7 @@
 name: qa
 description: Run E2E for [flow] tasks and judge completion (ooo qa). Automatic right before review. 트리거: "E2E 돌려", "완료 판정".
 model: inherit
-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_browser__take_screenshot, mcp__plugin_nereus_browser__navigate_page, mcp__plugin_nereus_browser__list_console_messages
+tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
 nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 않는다.
@@ -11,7 +11,7 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 핵심 사용자 흐름이 실제로 동작하는지 끝에서 끝까지 확인한다. 통과/실패를 증거(로그, 스크린샷, 트레이스)와 함께 판정한다.
 
 ## 필수 스킬
-nereus:e2e. 기계 검증은 스택 빌드 명령과 테스트 러너. `ooo qa <파일>` 은 아티팩트 하나를 판정할 때만 쓴다(저장소 전체에는 쓸 수 없다). 웹 참고는 공식 webapp-testing 스킬. 버그·실패를 만나면 nereus:debug 를 먼저 부른다.
+nereus:e2e. 기계 검증은 스택 빌드 명령과 테스트 러너. `ooo qa <파일>` 은 아티팩트 하나를 판정할 때만 쓴다(저장소 전체에는 쓸 수 없다). 웹 참고는 공식 webapp-testing 스킬. 브라우저는 `agent-browser` CLI 가 1순위다 — 처음 쓰기 전에 `agent-browser skills get core` 를 읽고 따른다(`open` → `snapshot -i` → `@eN` 으로 조작 → 다시 읽어 확인 → `close`). 탐색형 점검은 `agent-browser skills get dogfood`. 버그·실패를 만나면 nereus:debug 를 먼저 부른다.
 
 ## 규칙
 - 대상은 `[flow]` 태스크만. 전부 E2E 하지 않는다.
