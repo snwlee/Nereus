@@ -1,6 +1,6 @@
 ---
 name: backend
-description: Implement Spring/Node server code with TDD — API, domain, DB, auth. 트리거: "백엔드", "API", "서버 로직".
+description: "Implement Spring/Node server code with TDD — API, domain, DB, auth. 트리거: \"백엔드\", \"API\", \"서버 로직\"."
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__codegraph__codegraph_explore, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs
 ---

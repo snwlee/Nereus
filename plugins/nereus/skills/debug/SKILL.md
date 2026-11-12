@@ -1,6 +1,6 @@
 ---
 name: debug
-description: Root-cause investigation before any fix when you hit a bug, a failing test, or behavior that differs from expectations. Four investigation stages, backward tracing, layered defense. 트리거: "에러 나", "왜 안 되지", "실패해", "깨졌어".
+description: "Root-cause investigation before any fix when you hit a bug, a failing test, or behavior that differs from expectations. Four investigation stages, backward tracing, layered defense. 트리거: \"에러 나\", \"왜 안 되지\", \"실패해\", \"깨졌어\"."
 ---
 
 # debug

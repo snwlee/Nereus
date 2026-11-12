@@ -1,6 +1,6 @@
 ---
 name: finish
-description: Completion gate (evidence + integrity) → commit, archive, check off tasks. Runs right after review. 트리거: "마무리", "커밋하고 정리".
+description: "Completion gate (evidence + integrity) → commit, archive, check off tasks. Runs right after review. 트리거: \"마무리\", \"커밋하고 정리\"."
 ---
 
 # finish

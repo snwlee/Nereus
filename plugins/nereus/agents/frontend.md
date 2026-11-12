@@ -1,6 +1,6 @@
 ---
 name: frontend
-description: Implement web UI and verify the design (impeccable, agent-browser screenshots, Playwright). 트리거: "프론트", "화면", "컴포넌트".
+description: "Implement web UI and verify the design (impeccable, agent-browser screenshots, Playwright). 트리거: \"프론트\", \"화면\", \"컴포넌트\"."
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs
 ---

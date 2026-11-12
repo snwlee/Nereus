@@ -1,6 +1,6 @@
 ---
 name: pdf
-description: Markdown/Typst/LaTeX → PDF. Typst by default; templates report/adr/research/spec. 트리거: "PDF로", "보고서 출력".
+description: "Markdown/Typst/LaTeX → PDF. Typst by default; templates report/adr/research/spec. 트리거: \"PDF로\", \"보고서 출력\"."
 ---
 
 # pdf

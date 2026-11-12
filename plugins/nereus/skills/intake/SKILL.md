@@ -1,6 +1,6 @@
 ---
 name: intake
-description: First step of any new work. Judges request size, plans the tools (plan.mjs), interviews only when the plan calls for it, then hands off to spec. Use --quick for small edits. 트리거: 새 기능·프로젝트 시작, "개발해줘".
+description: "First step of any new work. Judges request size, plans the tools (plan.mjs), interviews only when the plan calls for it, then hands off to spec. Use --quick for small edits. 트리거: 새 기능·프로젝트 시작, \"개발해줘\"."
 ---
 
 # intake

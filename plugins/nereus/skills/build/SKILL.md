@@ -1,6 +1,6 @@
 ---
 name: build
-description: Implement a task with TDD (enforced when a test runner exists). Gate: tests pass + stack build check. Runs automatically right after spec. 트리거: "구현해", "이 태스크".
+description: "Implement a task with TDD (enforced when a test runner exists). Gate: tests pass + stack build check. Runs automatically right after spec. 트리거: \"구현해\", \"이 태스크\"."
 ---
 
 # build

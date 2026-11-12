@@ -1,6 +1,6 @@
 ---
 name: research
-description: Market and technology research procedure: gh search → web → last30days → Agent-Reach, producing a report + PDF under docs/research/. 트리거: "조사", "리서치", "비교".
+description: "Market and technology research procedure: gh search → web → last30days → Agent-Reach, producing a report + PDF under docs/research/. 트리거: \"조사\", \"리서치\", \"비교\"."
 ---
 
 # research

@@ -1,6 +1,6 @@
 ---
 name: review
-description: OCR delegation plus EGM second opinion (fresh-context subagents, no conversation history), gated at 0 CRITICAL/HIGH. Runs automatically right after build. 트리거: "리뷰", "코드 검토".
+description: "OCR delegation plus EGM second opinion (fresh-context subagents, no conversation history), gated at 0 CRITICAL/HIGH. Runs automatically right after build. 트리거: \"리뷰\", \"코드 검토\"."
 ---
 
 # review
@@ -63,6 +63,20 @@ Codex 는 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로�
 
 계획에 포함된 리뷰어만 실행하고, 결과를 `{source, file, line, severity, message}` 배열로 정규화한다.
 
+## 2.5 security 반증 (CRITICAL/HIGH 가 있을 때만)
+
+security 에이전트가 낸 CRITICAL/HIGH 는 발견한 맥락이 아닌 **새 서브에이전트가 반박해 본다**(출처: cloudflare/security-audit-skill — 확인하는 에이전트는 발견한 에이전트가 아니다).
+대상은 `refutationTargets(findings)` 로 고르고, 항목마다 `Agent`(general-purpose)를 같은 메시지에서 병렬로 띄운다. 프롬프트에는 페르소나 경로(`review.mjs` 출력의 `securityRefuter`)와 그 항목 하나만 넣는다 — 다른 항목·이 대화의 판단은 넣지 않는다.
+```text
+You are a Goldfish verifier. First read your persona file and follow it exactly: <securityRefuter 경로>
+Finding to refute (JSON): {"file","line","severity","message"}
+```
+돌려받은 판정 배열을 `applyRefutations(findings, verdicts)` 로 적용한다.
+- `confirmed` → 그대로 차단(심각도는 내려갈 수 있다).
+- `rejected` → findings 에서 빠진다. 사유와 함께 `.nereus/review.md` 에 남긴다.
+- `needs_validation` → 심각도를 떼고 빠진 사실을 붙여 ledger 로. 게이트를 막지 않는다.
+- 판정이 없거나 형식이 깨졌으면 차단을 유지한다. 반증을 못 했다고 차단을 조용히 풀지 않는다.
+
 ## 3. 병합과 게이트
 
 정규화된 findings를 심각도순으로 병합해 사용자에게 보인다(`mergeFindings` 형식). 같은 위치를 두 리뷰어가 지적하면 신뢰도가 높다고 표시한다.
@@ -77,6 +91,7 @@ Codex 는 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로�
 | CRITICAL | `fix-now` | 즉시수정. 수정 루프에 진입한다 |
 | HIGH | `must-resolve` | 해결 전 진행금지. 수정 루프에 진입한다 |
 | MEDIUM 이하 | `defer-ledger` | 연기 + ledger에 기록하고 `nereus:finish`로 |
+| NEEDS_VALIDATION | `defer-ledger` | 배포 사실 하나가 없어 판정 보류. 빠진 사실을 ledger 에 적는다 |
 | unknown | `defer-ledger` | 알 수 없는 심각도는 연기 기본값 |
 
 ### 3.1 수정 루프 상한 — 5라운드 (출처: superpowers SDD fix loop)

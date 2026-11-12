@@ -1,6 +1,6 @@
 ---
 name: drift
-description: Detect drift between checked-in specs/READMEs and the current code — a deterministic reference check, then an agent comparison per doc. 트리거: "드리프트", "스펙이랑 코드 어긋", "문서가 낡았", "drift report".
+description: "Detect drift between checked-in specs/READMEs and the current code — a deterministic reference check, then an agent comparison per doc. 트리거: \"드리프트\", \"스펙이랑 코드 어긋\", \"문서가 낡았\", \"drift report\"."
 ---
 
 # drift

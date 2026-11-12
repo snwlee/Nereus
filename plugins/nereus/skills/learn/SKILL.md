@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Review and approve the learning candidates the hooks collected, turning them into rules that are auto-injected next session. 트리거: "학습 후보", "이거 기억해", "다음부터 이렇게", 교정받은 직후.
+description: "Review and approve the learning candidates the hooks collected, turning them into rules that are auto-injected next session. 트리거: \"학습 후보\", \"이거 기억해\", \"다음부터 이렇게\", 교정받은 직후."
 ---
 
 # learn — 세션에서 배우기

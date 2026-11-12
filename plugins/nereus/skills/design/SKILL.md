@@ -1,6 +1,6 @@
 ---
 name: design
-description: Design, UI, UX and aesthetic work must go through impeccable critique: direction candidates → direction (impeccable shape, before code) → render critique (impeccable critique/audit, after code). Hard gate at finish. 트리거: "디자인", "화면 만들어", "UI 수정", "예쁘게".
+description: "Design, UI, UX and aesthetic work must go through impeccable critique: direction candidates → direction (impeccable shape, before code) → render critique (impeccable critique/audit, after code). Hard gate at finish. 트리거: \"디자인\", \"화면 만들어\", \"UI 수정\", \"예쁘게\"."
 ---
 
 # design

@@ -1,6 +1,6 @@
 ---
 name: phone
-description: AI places a voice call on the user's behalf (Twilio + OpenAI Realtime) to ask a shop, hotel or office questions — probe readiness, write a brief, get the user's approval, dial, read the transcript, report. 트리거: "전화해서 물어봐", "AI 전화", "통화로 확인해", "phone call".
+description: "AI places a voice call on the user's behalf (Twilio + OpenAI Realtime) to ask a shop, hotel or office questions — probe readiness, write a brief, get the user's approval, dial, read the transcript, report. 트리거: \"전화해서 물어봐\", \"AI 전화\", \"통화로 확인해\", \"phone call\"."
 ---
 
 # phone
@@ -65,7 +65,7 @@ node "$P/probe.mjs" --risk call --job <id>              # 저장된 잡으로 �
 **승인은 말로 받는다.** 아래 형식으로 한 번 묻고, 사용자가 대화에서 "응·걸어·ㅇㅋ" 처럼 승인하면 곧바로 `--approved` 로 건다.
 사용자에게 `!` 명령·토큰·권한 창 같은 별도 절차를 요구하지 않는다. 승인 뒤 번호·질문이 바뀌면 다시 묻는다.
 
-> 📞 **七厘焼き和作 (+81 977-85-2848)** 에 일본어로 전화합니다 — 질문: ① 11/4 영업 ② 19시 4명 예약 가능 · 확정은 안 함 · 최대 10분 · 예상 비용 약 $1~2. 걸까요?
+> 📞 **○○식당 (+81 X-XXXX-XXXX)** 에 일본어로 전화합니다 — 질문: ① 11/4 영업 ② 19시 4명 예약 가능 · 확정은 안 함 · 최대 10분 · 예상 비용 약 $1~2. 걸까요?
 
 사용자가 처음부터 "○○에 전화해서 △△ 물어봐" 처럼 번호·질문을 정해 지시했고 브리프가 그 범위 안이면, 그 지시가 승인이다 — 다시 묻지 않고 건다.
 
