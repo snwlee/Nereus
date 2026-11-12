@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "skill": "build",
+  "source": { "repo": "NVIDIA/auto-ontology", "path": "skills/*/assets/runtime-contract.yaml", "license": "Apache-2.0" },
+  "workflows": {
+    "tdd_cycle": { "input": ["TasksFile", "TddOverride"], "output": ["TasksFile", "EvidenceRecord"] },
+    "gate": { "input": ["EvidenceRecord"], "output": [] }
+  },
+  "artifacts": {
+    "TasksFile": { "kind": "runtime", "path": "spec 단계의 tasks.md (OpenSpec change 또는 spec-kit 기능 디렉터리)" },
+    "EvidenceRecord": { "kind": "runtime", "path": ".nereus/evidence.json" },
+    "TddOverride": { "kind": "runtime", "path": ".nereus/tdd-override" },
+    "RunTests": { "kind": "script", "path": "skills/build/scripts/run-tests.mjs" }
+  },
+  "required_fields": { "EvidenceRecord": ["command", "exitCode", "hash", "at"] },
+  "statuses": ["RED", "GREEN", "STALE", "테스트 없음(사용자 선택)"],
+  "gates": [
+    { "id": "red-first", "check": "실패를 확인" },
+    { "id": "evidence-fresh", "check": "마지막 편집 뒤에 반드시 한 번 더 돌린다", "script": "skills/build/scripts/run-tests.mjs" },
+    { "id": "all-tests-pass", "check": "전체 테스트 실행 → 전부 통과", "script": "skills/build/scripts/run-tests.mjs" },
+    { "id": "stack-build-check", "check": "스택별 빌드·정적 검사를 한 번 더 돌린다" },
+    { "id": "design-render-round", "check": "렌더 라운드", "script": "skills/design/scripts/design-feedback.mjs" }
+  ],
+  "handoffs": [
+    { "when": "버그·실패 테스트·예상과 다른 동작", "to": "nereus:debug" },
+    { "when": "디자인 표면(스타일시트·디자인 토큰·시각 마크업)을 만졌다", "to": "nereus:design" },
+    { "when": "[flow] 태스크가 포함됐다", "to": "nereus:e2e" },
+    { "when": "게이트 통과", "to": "nereus:review" }
+  ]
+}
+
