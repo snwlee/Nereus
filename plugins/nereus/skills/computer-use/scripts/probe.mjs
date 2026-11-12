@@ -86,10 +86,21 @@ const run = (cmd, argv) => {
   }
 };
 
+// PATH 에서 실행 파일을 찾는 명령. Windows 에는 /usr/bin/which 가 없다 — 그 탓에 설치된 cua-driver 가 미설치로 판정됐다.
+export function lookupCommand(plat, name) {
+  return plat === "win32" ? ["where", [name]] : ["/usr/bin/which", [name]];
+}
+
+// `where` 는 일치하는 경로를 줄마다 낸다(.exe·.cmd 등). 첫 줄이 PATH 우선순위상 실제로 실행되는 것이다.
+export function firstPath(text) {
+  const line = String(text ?? "").split(/\r?\n/).map((s) => s.trim()).find(Boolean);
+  return line ?? null;
+}
+
 const resolveBin = (name, extra = []) => {
   for (const p of extra) if (existsSync(p)) return p;
-  const found = run("/usr/bin/which", [name]);
-  return found ? found.trim() : null;
+  const [cmd, argv] = lookupCommand(platform(), name);
+  return firstPath(run(cmd, argv));
 };
 
 export function probeHost() {

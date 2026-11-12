@@ -145,3 +145,21 @@ describe("probe 인자", () => {
       .toEqual({ risk: "irreversible", targetConfirmed: true, remoteControl: true, approved: true, needsIsolation: true, targetKind: "dialog" });
   });
 });
+
+describe("probe — 실행 파일 찾기 (Windows)", async () => {
+  const { lookupCommand, firstPath } = await import("../../plugins/nereus/skills/computer-use/scripts/probe.mjs");
+  it("Windows 에서는 where 로 찾는다 — /usr/bin/which 가 없어 cua 가 미설치로 판정됐다", () => {
+    expect(lookupCommand("win32", "cua-driver")).toEqual(["where", ["cua-driver"]]);
+  });
+  it("macOS·Linux 는 which 그대로다", () => {
+    expect(lookupCommand("darwin", "cua-driver")).toEqual(["/usr/bin/which", ["cua-driver"]]);
+    expect(lookupCommand("linux", "lume")).toEqual(["/usr/bin/which", ["lume"]]);
+  });
+  it("where 의 여러 줄 출력에서 첫 경로만 쓴다", () => {
+    expect(firstPath("C:\Cua\bin\cua-driver.exe\r\nC:\other\cua-driver.cmd\r\n")).toBe("C:\Cua\bin\cua-driver.exe");
+  });
+  it("빈 출력·null 은 null", () => {
+    expect(firstPath("")).toBeNull();
+    expect(firstPath(null)).toBeNull();
+  });
+});
