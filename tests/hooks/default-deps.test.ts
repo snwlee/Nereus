@@ -57,6 +57,11 @@ describe("default (file-backed) dependencies", () => {
     expect(probes).toBe(a.missing.length);
     expect(sessionStart({ cwd: dir, source: "startup" }, { toolStatus: () => toolStatusCached({ cacheFile, now: 3000 }) })).not.toBeNull();
   });
+  it("codex 는 필수 도구가 아니다 — 2차 의견 기본이 EGM 이라 없어도 세션 시작에서 경고하지 않는다", () => {
+    const r = toolStatusCached({ cacheFile: path.join(dir, "tools-nocodex.json"), probe: () => false, now: 5000 });
+    expect(r.missing).not.toContain("codex");
+    expect(r.missing).toContain("ocr");
+  });
   it("exec.run executes a real command and reports missing ones", () => {
     expect(run("node", ["-e", "process.stdout.write('hi')"]).stdout).toBe("hi");
     expect(run("definitely-not-a-binary-xyz", []).ok).toBe(false);

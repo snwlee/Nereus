@@ -34,8 +34,8 @@ function autocompactNote(input, env) {
 // 루프 반복은 매번 새 `claude -p` 세션이다. 직전 반복이 남긴 handoff 가 유일한 상태다.
 const LOOP_LEAD = "직전 반복이 남긴 handoff 입니다. 완료 항목은 반복하지 말고, MUST NOT 에 적힌 접근은 다시 시도하지 마세요.";
 
-// agy 는 2026-09-12 부로 필수가 아니다 — gemini 2차 의견은 웹세션(python3)으로 받는다.
-const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3", "codex"];
+// 2026-11-12: 2차 의견 기본은 EGM(서브에이전트)이라 codex 는 필수가 아니다(opt-in). python3 는 무료 이미지 생성용이다.
+const REQUIRED_TOOLS = ["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3"];
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function toolStatusCached({ now = Date.now(), cacheFile = path.join(userConfigDir(), "tools.json"), probe = (t) => !!which(t) } = {}) {

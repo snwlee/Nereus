@@ -1,12 +1,15 @@
 ---
 name: design
-description: Design, UI, UX and aesthetic work must go through Gemini feedback: direction candidates → direction critique (before code) → render critique (after code). Hard gate at finish. 트리거: "디자인", "화면 만들어", "UI 수정", "예쁘게".
+description: Design, UI, UX and aesthetic work must go through impeccable critique: direction candidates → direction (impeccable shape, before code) → render critique (impeccable critique/audit, after code). Hard gate at finish. 트리거: "디자인", "화면 만들어", "UI 수정", "예쁘게".
 ---
 
 # design
 
-디자인 표면을 만지는 모든 작업 — 신규 생성, 수정, 방향 설계 — 은 Gemini 비평을 통과해야 완료로 인정된다.
+디자인 표면을 만지는 모든 작업 — 신규 생성, 수정, 방향 설계 — 은 **impeccable** 비평을 통과해야 완료로 인정된다.
 게이트는 `design.enforce="block"`(기본)에서 finish 를 실제로 차단한다. 내 눈으로 판단하지 않는다.
+
+비평 채널은 동반 플러그인 `impeccable` 의 스킬 하나다(2026-11-12 방침). 이미지 생성 외의 외부 웹세션은 쓰지 않는다.
+impeccable 이 없으면 `/nereus:setup` 이 설치를 안내하고, 게이트는 그대로 차단한다 — 비평 없이 통과시키지 않는다.
 
 ## 언제 걸리나
 `designTouched` 가 디자인 표면으로 분류하는 변경:
@@ -37,37 +40,46 @@ node "$D/design-system.mjs" "결제 완료 히어로, 신뢰감, B2B SaaS" \
 ### 1. direction — 코드 쓰기 **전**
 신규 화면·컴포넌트를 만들 때 필수. 방향 브리프(스타일 방향, 팔레트, 타이포 페어링, 레퍼런스)를 먼저 적고 비평받는다.
 
-**채널 1순위는 browser MCP 다** (아래 "채널" 참조). MCP 가 안 되면 CLI 로 내려간다:
+1. `impeccable` 스킬을 `shape <대상>` 으로 부른다. 0단계 파일(`docs/design/<이름>-system.md`)이 있으면 그것을 브리프로 넘긴다.
+   **레퍼런스는 이미지로 붙인다** — "Stripe 같은 느낌" 같은 텍스트는 비평가가 대조할 수 없다. Figma 가 레퍼런스면 `figma` 스킬로 프레임 스크린샷을 뜬다.
+2. 결과를 아래 "옮기는 형식"으로 파일에 적고 기록한다:
 ```bash
 D="${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs"
-node "$D" direction --brief docs/design/hero-brief.md --target web
+node "$D" prompt direction --brief docs/design/hero-brief.md     # 옮길 형식·체크리스트 (참고용)
+node "$D" record direction --critique-file .nereus/design/direction.md --report .nereus/design/direction-raw.md
 ```
-0단계를 돌렸으면 그 파일을 그대로 먹인다 — `--brief docs/design/checkout-system.md`.
-
-**레퍼런스는 이미지로 붙인다.** 텍스트로 "Stripe 같은 느낌"이라 적으면 비평가는 그게 무엇인지도, 브리프가 무엇을 가져오는지도 모른다.
-```bash
-node "$D" direction --brief docs/design/hero-brief.md --ref-image refs/stripe-hero.png --ref-image refs/linear-pricing.webp
-```
-png·jpg·jpeg·webp 만, 하나라도 없거나 형식이 틀리면 종료코드 2 로 멈춘다(레퍼런스를 빠뜨린 채 비평받지 않는다).
-이미지 첨부는 웹세션만 받는다 — agy 로 내려가지 않는다. MCP 경로면 `prompt direction --ref-image …` 로 프롬프트를 받고 같은 이미지를 `upload_file` 로 올린다.
-**Figma 디자인이 레퍼런스면** 전역 `figma` 스킬(또는 Figma MCP)로 해당 프레임 스크린샷을 떠서 `--ref-image` 로 넘긴다.
-브리프가 "깔끔하고 미니멀" 수준이면 Gemini 가 그 자체를 지적한다. REVISE 면 방향을 고쳐 다시 돌린다.
-REVISE 를 받으면 브리프를 직접 고치거나, 0단계를 다른 다이얼로 다시 생성한다.
+`--report` 는 impeccable 이 낸 **원본 보고서를 손대지 않고** 저장한 파일이다. 라운드에 그 해시가 남아, 옮긴 비평을 원본과 대조할 수 있다.
+없으면 기록이 거절되고, 원본에 `DEGRADED` 가 있으면(서브에이전트 격리가 깨짐) 역시 거절된다.
+브리프가 "깔끔하고 미니멀" 수준이면 그 자체가 지적 대상이다. 차단 지적이 남으면 브리프를 고치거나 0단계를 다른 다이얼로 다시 생성하고 다시 받는다.
 
 ### 2. visual — 렌더 결과 **후**
-구현 후 실제 스크린샷을 첨부해 미감을 판정받는다. 폭은 `design.widths`(기본 320/768/1440).
-**채널 1순위는 browser MCP 다.** MCP 가 안 되면 CLI 로 내려간다:
+구현 후 실제 화면으로 비평받는다. 폭은 `design.widths`(기본 320/768/1440).
+
+1. `impeccable` 스킬을 `critique <대상>` 으로 부른다(접근성·성능·반응형은 `audit <대상>` 을 더한다).
+   impeccable critique 는 디자인 리뷰와 결정론적 detector 를 **서로 격리된 서브에이전트 둘**로 돌린다 — 새 맥락 비평이다.
+   보고서 첫 줄에 `⚠️ DEGRADED` 가 있으면 격리가 깨진 것이다. 그 라운드는 기록하지 않고 다시 받는다.
+2. 결과를 옮겨 기록한다. `--files` 에 적은 파일만 커버된다 — 빼먹으면 게이트가 계속 차단한다.
 ```bash
-# 스크린샷은 chrome-devtools MCP(take_screenshot) 또는 Playwright 로 먼저 확보한다
-node "$D" visual \
-  --shot 320:/tmp/s320.png --shot 768:/tmp/s768.png --shot 1440:/tmp/s1440.png \
-  --context "결제 완료 히어로" \
+node "$D" record visual --critique-file .nereus/design/visual.md --report .nereus/design/visual-raw.md \
   --files src/components/hero/Hero.tsx,src/components/hero/hero.css
 ```
-`--files` 에 적은 파일만 커버된다. 빼먹으면 게이트가 계속 차단한다(스크립트가 경고한다).
+
+### 옮기는 형식 — impeccable 보고서 → 게이트
+게이트 파서는 한 줄에 지적 하나, 심각도·축 태그, 마지막 줄 `VERDICT:` 를 읽는다. **옮기며 심각도를 낮추지 않는다** — 그러면 게이트가 느슨해진다.
+
+| impeccable | 게이트 |
+|---|---|
+| P0 / blocker / 접근성 위반 | `[CRITICAL]` |
+| P1 / priority issue | `[HIGH]` |
+| P2 / minor observation | `[MEDIUM]` |
+| P3 / nit | `[LOW]` |
+
+축은 아래 "축" 표의 여덟 개 중 하나를 붙인다(`- [HIGH][a11y] 비활성 버튼 대비 2.4:1 — 명도를 올릴 것`).
+고칠 것이 없으면 마지막 줄 `VERDICT: OK`, 아니면 `VERDICT: REVISE`. 직전 라운드 지적을 되돌리는 항목은 줄 앞에 `[REVERSAL]` 을 붙인다.
+`prompt direction|visual` 이 같은 형식·체크리스트를 출력한다.
 
 ### 모션 검사 — 렌더 비평이 못 보는 것
-Gemini 는 정지 스크린샷만 본다. 모션 실수는 화면에 안 찍힌다. diff 에서 결정적으로 잡는다:
+정지 화면 비평은 모션 실수를 못 본다. diff 에서 결정적으로 잡는다(impeccable `animate` 는 모션을 **만드는** 쪽이다):
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/motion-check.mjs"            # 미커밋 diff
 node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/motion-check.mjs" --base main
@@ -93,7 +105,7 @@ node "$D" status            # 종료코드 0=통과, 1=차단
 
 ## 판정 규칙
 - 커버는 **파일 내용 해시** 기준이다. 비평 후 그 파일을 고치면 그 파일만 STALE 이 되고 다시 비평받아야 한다. 무관한 백엔드 수정은 디자인 비평을 무효화하지 않는다.
-- Gemini 응답에 `VERDICT: OK` 가 없거나, `[HIGH]`·`[CRITICAL]` 지적이 하나라도 있으면 **REVISE** 로 기록된다(fail-closed).
+- 기록한 비평에 `VERDICT: OK` 가 없거나, `[HIGH]`·`[CRITICAL]` 지적이 하나라도 있으면 **REVISE** 로 기록된다(fail-closed).
 - **막는 것은 verdict 가 아니라 차단 축의 지적이다** (아래 "축"). 차단 0 건이면 REVISE 로 기록돼도 게이트는 통과한다.
 - 차단이 남았는데 파일이 그대로면 `design_feedback_unaddressed` 로 차단된다. 고치고 다시 비평받는 것이 유일한 통로다.
 - 신규 디자인 파일이 있는데 direction 라운드가 한 번도 없으면 `design_direction_missing` 으로 차단된다.
@@ -130,36 +142,11 @@ node "$D" status            # 종료코드 0=통과, 1=차단
 
 ## 채널
 
-우선순위: **browser MCP → Gemini 웹세션 CLI → agy**. MCP 를 앞에 두는 이유는 쿠키·플랫폼에
-의존하지 않기 때문이다 — Windows 는 Chrome 127+ App-Bound Encryption 때문에 쿠키 자동 추출이
-안 된다(`image` 스킬 참조). `agy` 를 맨 뒤로 내린 이유는 두 가지다: 이미지 첨부를 못 받아
-visual 라운드를 아예 못 하고, 2026-09-12 실측으로 할당량이 소진돼 있었다.
-
-### 1순위 — browser MCP (직접 조작)
-스크립트는 MCP 도구를 부를 수 없다. 그래서 **프롬프트를 내보내고 응답을 들여오는** 두 단계로 잇는다.
-```bash
-D="${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs"
-node "$D" prompt direction --brief docs/design/hero-brief.md            # 프롬프트를 stdout 으로
-node "$D" prompt visual --shot 320:/tmp/s320.png --context "결제 히어로"
-```
-그 텍스트를 browser MCP 로 `gemini.google.com` 에 넣는다 — `navigate_page` → `fill`(프롬프트) →
-visual 이면 `upload_file`(스크린샷) → `click`(전송) → `take_snapshot` 으로 응답을 읽는다.
-받은 응답을 그대로 파일에 저장하고 기록한다:
-```bash
-node "$D" record direction --critique-file /tmp/critique.txt
-node "$D" record visual --critique-file /tmp/critique.txt --files src/hero/Hero.tsx,src/hero/hero.css
-```
-`record` 는 `gemini-mcp` source 로 남는다. **verdict 판정은 CLI 경로와 동일한 파서를 쓴다** —
-`VERDICT: OK` 가 없거나 `[HIGH]`·`[CRITICAL]` 이 있으면 REVISE 다. MCP 경로가 게이트를 느슨하게
-만들지 않는다. 빈 비평은 거부한다(빈 기록은 게이트 우회다).
-
-브라우저가 없거나 Gemini 에 로그인되어 있지 않으면 2순위로 내려간다. 억지로 붙들지 않는다.
-
-### 2·3순위 — CLI
-- **direction**: Gemini 웹세션 CLI → 없으면 `agy`(Antigravity CLI)
-- **visual**: Gemini 웹세션 CLI(`skills/image/scripts/gemini_cli.py ask --file`). `agy` 는 이미지 첨부를 못 받는다.
-- 웹세션이 죽으면 `SESSION DEAD` — Chrome 로그인 상태를 확인한다. Windows/Linux 는 쿠키 재Export 가
-  필요하다(`image` 스킬의 `cookies-import.mjs`).
+**impeccable 하나다.** 이전의 브라우저 웹세션 → 웹세션 CLI → Antigravity CLI 사슬은 2026-11-12 에 없앴다.
+- 웹세션은 쿠키(Windows App-Bound Encryption)·할당량·긴 이미지 비평의 스트림 끊김으로 자주 못 썼고, Antigravity CLI 는 이미지 첨부를 못 받았다.
+- impeccable critique 는 격리된 서브에이전트로 비평한다 — 디자인 리뷰도 EGM(새 맥락) 원칙을 따른다.
+- 예전 하위 명령(`direction`·`visual` 직접 실행)은 이제 안내만 내고 종료코드 2 로 끝난다.
+- 예전 라운드 기록(옛 source 값)은 그대로 읽힌다. 새 라운드의 source 는 `impeccable` 이다.
 
 ### generate (0단계)
 `ui-ux-pro-max` 로컬 데이터셋(python3, 네트워크·API 키 불필요). 스킬이 아니라 데이터 엔진으로만

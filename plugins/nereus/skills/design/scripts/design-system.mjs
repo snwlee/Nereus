@@ -1,6 +1,6 @@
 // 디자인 방향 생성기. ui-ux-pro-max 의 search.py --design-system 을 호출해 후보 디자인 시스템
 // (스타일·팔레트·타이포 페어링·안티패턴·체크리스트)을 docs/design/<slug>-system.md 로 쓴다.
-// 그 파일이 그대로 design-feedback.mjs direction --brief 의 입력이 된다.
+// 그 파일이 그대로 impeccable shape 의 브리프가 된다(결과는 design-feedback.mjs record direction 으로 기록).
 //
 // 상류를 포함하지 않고 래퍼로만 호출한다(Ruling: 외부 도구는 래퍼로 호출).
 // 데이터 엔진으로만 설치하므로 상시 컨텍스트 비용이 없고 nereus:design 과 트리거가 겹치지 않는다.
@@ -151,8 +151,9 @@ function main() {
       `방향 후보를 썼다: ${path.relative(cwd, plan.out)}`,
       "",
       "이 파일은 **후보**다. 그대로 구현하지 않는다. 다음:",
-      `  node "\${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" direction --brief ${path.relative(cwd, plan.out)}`,
-      "REVISE 를 받으면 이 파일을 직접 고치거나 다이얼(--variance/--motion/--density)을 바꿔 다시 생성한다.",
+      `  impeccable 스킬 shape 에 이 파일(${path.relative(cwd, plan.out)})을 브리프로 넘겨 방향을 비평받는다`,
+      `  → node "\${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" record direction --critique-file <옮긴 비평> --report <원본 보고서>`,
+      "차단 지적이 남으면 이 파일을 직접 고치거나 다이얼(--variance/--motion/--density)을 바꿔 다시 생성한다.",
       "",
     ].join("\n"),
   );

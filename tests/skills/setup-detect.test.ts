@@ -8,9 +8,12 @@ const j = (...seg: string[]) => path.join(...seg);
 describe("setup detect", () => {
   it("declares required and optional tools with per-platform installers", () => {
     const required = TOOLS.filter((t) => t.required).map((t) => t.bin);
-    expect(required).toEqual(expect.arrayContaining(["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3", "codex"]));
-    // agy 는 gemini 웹세션으로 대체됐다 — 대체 채널로만 남는다.
-    expect(required).not.toContain("agy");
+    expect(required).toEqual(expect.arrayContaining(["codegraph", "ooo", "ocr", "specify", "openspec", "typst", "python3"]));
+    // 2026-11-12: 제3자 검증은 EGM(서브에이전트)이 기본이다. codex 는 opt-in 이라 필수가 아니고,
+    // agy 는 리뷰·디자인 어디에도 쓰지 않아 목록에서 빠졌다. python3 는 이미지(Gemini 무료)·ui-ux-pro-max 용이다.
+    expect(required).not.toContain("codex");
+    expect(TOOLS.map((t: any) => t.bin)).not.toContain("agy");
+    expect(TOOLS.find((t: any) => t.bin === "python3").label).not.toMatch(/2차 의견|디자인 비평/);
     for (const t of TOOLS) {
       expect(t.install.darwin).toBeTruthy();
       expect(t.install.win32).toBeTruthy();

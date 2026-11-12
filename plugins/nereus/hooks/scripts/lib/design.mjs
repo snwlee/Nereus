@@ -1,4 +1,4 @@
-// 디자인 피드백 게이트. "디자인 표면을 만졌으면 Gemini 비평을 받았다"는 증거를 요구한다.
+// 디자인 피드백 게이트. "디자인 표면을 만졌으면 impeccable 비평을 받았다"는 증거를 요구한다.
 // evidence.mjs 와 같은 모양이지만 무결성 판정을 파일 단위로 한다 — 백엔드 수정이 디자인 비평을 무효화하면 안 되기 때문.
 import fs from "node:fs";
 import path from "node:path";
@@ -112,17 +112,17 @@ export function designGate({ touched = [], hashes = {}, created = [], rounds = [
         // blocking 이 없는 옛 라운드는 예전처럼 verdict 로 판정한다.
         const blocked = Number.isFinite(covering.blocking) ? covering.blocking > 0 : covering.verdict !== "OK";
         if (blocked) {
-          findings.push({ category: "design_feedback_unaddressed", file: t.file, message: `Gemini 가 REVISE 로 판정했고 그 뒤 이 파일이 바뀌지 않았습니다 — ${String(covering.notes || "").slice(0, 200) || "지적 사항 미반영"}` });
+          findings.push({ category: "design_feedback_unaddressed", file: t.file, message: `impeccable 비평에 차단 지적이 남았고 그 뒤 이 파일이 바뀌지 않았습니다 — ${String(covering.notes || "").slice(0, 200) || "지적 사항 미반영"}` });
         }
         continue;
       }
       const anyRound = visual.some((r) => t.file in (r.files ?? {}));
       findings.push(anyRound
-        ? { category: "design_feedback_stale", file: t.file, message: "비평 이후 파일이 바뀌었습니다 — 렌더 결과로 다시 비평받으세요 (design-feedback.mjs visual)" }
-        : { category: "design_feedback_missing", file: t.file, message: `디자인 표면 변경(${t.why})에 Gemini 미감 피드백이 없습니다 (design-feedback.mjs visual)` });
+        ? { category: "design_feedback_stale", file: t.file, message: "비평 이후 파일이 바뀌었습니다 — impeccable critique 로 다시 비평받고 design-feedback.mjs record visual 로 기록하세요" }
+        : { category: "design_feedback_missing", file: t.file, message: `디자인 표면 변경(${t.why})에 impeccable 비평이 없습니다 — impeccable critique 후 design-feedback.mjs record visual` });
     }
     if (created.length && !rounds.some((r) => r.phase === "direction")) {
-      findings.push({ category: "design_direction_missing", file: created[0], message: `신규 디자인 파일 ${created.length}건 — 방향을 코드 이전에 비평받은 기록이 없습니다 (design-feedback.mjs direction)` });
+      findings.push({ category: "design_direction_missing", file: created[0], message: `신규 디자인 파일 ${created.length}건 — 방향을 코드 이전에 비평받은 기록이 없습니다 (impeccable shape 후 design-feedback.mjs record direction)` });
     }
   }
   return { pass: enforce === "block" ? findings.length === 0 : true, findings, enforce };

@@ -1,5 +1,7 @@
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import { describe, it, expect } from "vitest";
-import { directionPrompt, visualPrompt, parseCritique, planRunner, feedbackReport, MCP_SOURCE, promptFor, planRecord, validRefImages } from "../../plugins/nereus/skills/design/scripts/design-feedback.mjs";
+import { directionPrompt, visualPrompt, parseCritique, feedbackReport, RECORD_SOURCE, promptFor, planRecord, validRefImages } from "../../plugins/nereus/skills/design/scripts/design-feedback.mjs";
 
 describe("prompts", () => {
   it("direction prompt carries the brief and demands a verdict line", () => {
@@ -53,54 +55,22 @@ VERDICT: OK
   });
 });
 
-describe("planRunner", () => {
-  // 2026-09-12: agy 는 할당량이 소진됐고 웹세션은 살아 있다. 방향 라운드도 웹세션을 먼저 쓴다.
-  it("prefers the gemini web session for a text-only direction round", () => {
-    const p = planRunner({ phase: "direction", promptFile: "/tmp/p.txt", has: () => true });
-    expect(p.bin).toBe("python3");
-    expect(p.source).toBe("gemini-web");
-    expect(p.args).toEqual(expect.arrayContaining(["ask", "--prompt-file", "/tmp/p.txt"]));
+// 2026-11-12 사용자 방침: 디자인 비평은 impeccable 1순위. Gemini 는 무료 이미지 생성에만 쓴다.
+describe("디자인 비평 채널은 impeccable", () => {
+  it("라운드 출처는 impeccable 이다", () => {
+    expect(RECORD_SOURCE).toBe("impeccable");
   });
-  it("falls back to agy when only agy is installed", () => {
-    const p = planRunner({ phase: "direction", has: (b: string) => b === "agy" });
-    expect(p.bin).toBe("agy");
-    expect(p.args).toContain("-p");
+  it("디자인 스크립트는 Gemini 웹세션·agy 를 부르지 않는다", () => {
+    const src = fs.readFileSync("plugins/nereus/skills/design/scripts/design-feedback.mjs", "utf8");
+    expect(src).not.toMatch(/gemini_cli/);
+    expect(src).not.toMatch(/["']agy["']/);
   });
-  it("uses the gemini image CLI for a visual round because screenshots must be attached", () => {
-    const p = planRunner({ phase: "visual", shots: [{ path: "a.png", width: 320 }], promptFile: "/tmp/p.txt", has: () => true });
-    expect(p.bin).toBe("python3");
-    expect(p.args).toEqual(expect.arrayContaining(["ask", "--prompt-file", "/tmp/p.txt", "--file", "a.png"]));
-  });
-  it("errors instead of silently passing when no gemini channel exists", () => {
-    const p = planRunner({ phase: "direction", has: () => false });
-    expect(p.error).toMatch(/agy/);
-    expect(p.bin).toBeUndefined();
-  });
-  // 2026-09-22 실측: 계정 기본 모델(Pro)은 이미지 첨부 비평의 긴 응답을 생성하다
-  // "connection to Gemini was lost" 로 죽는다 — 7회 연속. 같은 프롬프트가 flash 로는 완주했다.
-  // 그래서 visual 은 flash 를 기본으로 둔다. 짧은 direction 라운드는 계정 기본값을 유지한다.
-  it("pins a visual round to gemini-flash because pro drops the stream on long image critiques", () => {
-    const p = planRunner({ phase: "visual", shots: [{ path: "a.png", width: 320 }], promptFile: "/tmp/p.txt", has: () => true });
-    expect(p.args).toEqual(expect.arrayContaining(["--model", "gemini-flash"]));
-  });
-  it("lets an explicit model override the visual default", () => {
-    const p = planRunner({ phase: "visual", shots: [{ path: "a.png", width: 320 }], promptFile: "/tmp/p.txt", model: "gemini-pro", has: () => true });
-    expect(p.args).toEqual(expect.arrayContaining(["--model", "gemini-pro"]));
-    expect(p.args).not.toContain("gemini-flash");
-  });
-  it("leaves a direction round on the account default until a model is asked for", () => {
-    const p = planRunner({ phase: "direction", promptFile: "/tmp/p.txt", has: () => true });
-    expect(p.args).not.toContain("--model");
-    const q = planRunner({ phase: "direction", promptFile: "/tmp/p.txt", model: "gemini-flash", has: () => true });
-    expect(q.args).toEqual(expect.arrayContaining(["--model", "gemini-flash"]));
-  });
-  it("never puts --model on the agy fallback, which has no such flag", () => {
-    const p = planRunner({ phase: "direction", model: "gemini-flash", has: (b: string) => b === "agy" });
-    expect(p.bin).toBe("agy");
-    expect(p.args).not.toContain("--model");
-  });
-  it("refuses a visual round with no screenshots", () => {
-    expect(planRunner({ phase: "visual", shots: [], has: () => true }).error).toMatch(/스크린샷/);
+  it("direction·visual 직접 실행은 impeccable 안내와 함께 종료코드 2", () => {
+    for (const phase of ["direction", "visual"]) {
+      const r = spawnSync(process.execPath, ["plugins/nereus/skills/design/scripts/design-feedback.mjs", phase], { encoding: "utf8" });
+      expect(r.status, phase).toBe(2);
+      expect(r.stderr, phase).toMatch(/impeccable/);
+    }
   });
 });
 
@@ -136,10 +106,24 @@ describe("promptFor — MCP 로 내보낼 프롬프트", () => {
 describe("planRecord — MCP 응답을 라운드로", () => {
   const hashOf = (files: string[]) => Object.fromEntries(files.map((f) => [f, "h:" + f]));
 
-  it("MCP 채널을 별도 source 로 남긴다 — 나중에 어느 채널이 판정했는지 추적한다", () => {
+  it("impeccable 출처로 남긴다 — 나중에 어느 채널이 판정했는지 추적한다", () => {
     const r = planRecord({ phase: "direction", critique: "- [LOW] x\nVERDICT: OK", hashOf });
-    expect(r.round.source).toBe(MCP_SOURCE);
-    expect(MCP_SOURCE).toMatch(/mcp/);
+    expect(r.round.source).toBe("impeccable");
+  });
+  // EGM 리뷰 [MEDIUM] (2026-11-12): 비평을 옮기는 것이 코드를 쓴 세션이라 자기 신고가 된다.
+  // impeccable 원본 보고서의 해시를 라운드에 묶어, 옮긴 내용을 원본과 대조할 수 있게 한다.
+  it("원본 보고서를 주면 해시를 라운드에 남긴다", () => {
+    const r = planRecord({ phase: "visual", critique: "- [LOW][rhythm] x\nVERDICT: OK", files: ["a.css"], hashOf, report: "# Critique\nP3 spacing", reportPath: ".nereus/design/raw.md" });
+    expect(r.round.report).toMatchObject({ path: ".nereus/design/raw.md" });
+    expect(r.round.report.hash).toMatch(/^[0-9a-f]{16}$/);
+  });
+  it("격리가 깨진(DEGRADED) impeccable 보고서는 기록을 거절한다", () => {
+    expect(() => planRecord({ phase: "visual", critique: "VERDICT: OK", files: ["a.css"], hashOf, report: "⚠️ DEGRADED: single-context (no subagent)\n..." })).toThrow(/DEGRADED/);
+  });
+  it("CLI record 는 --report 없이 거절한다", () => {
+    const r = spawnSync(process.execPath, ["plugins/nereus/skills/design/scripts/design-feedback.mjs", "record", "direction", "--critique", "VERDICT: OK"], { encoding: "utf8" });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/--report/);
   });
 
   it("verdict 를 기존 파서로 읽는다 (fail-closed 유지)", () => {
@@ -266,18 +250,6 @@ describe("visualPrompt — 직전 라운드를 기억시킨다", () => {
 });
 
 describe("design-motion.refs", () => {
-  it("웹세션 경로에 이미지마다 --file", () => {
-    const p = planRunner({ phase: "direction", promptFile: "p", refImages: ["a.png", "b.jpg"], has: () => true });
-    expect(p.args.join(" ")).toContain("--file a.png");
-    expect(p.args.join(" ")).toContain("--file b.jpg");
-  });
-  it("이미지가 있으면 agy 로 내려가지 않는다", () => {
-    const p = planRunner({ phase: "direction", promptFile: "p", refImages: ["a.png"], has: (b: string) => b === "agy" });
-    expect(p.error).toMatch(/agy/);
-  });
-  it("이미지가 없으면 기존처럼 agy 폴백", () => {
-    expect(planRunner({ phase: "direction", promptFile: "p", has: (b: string) => b === "agy" }).bin).toBe("agy");
-  });
   it("프롬프트에 첨부 레퍼런스와 대조 항목", () => {
     const p = directionPrompt({ brief: "b", refImages: ["/x/stripe-hero.png"] });
     expect(p).toContain("첨부 레퍼런스");

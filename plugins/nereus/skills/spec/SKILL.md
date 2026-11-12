@@ -34,12 +34,13 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/plan.mjs" "$PWD" --size small|me
 
 ## 디자인 방향 (UI 가 있으면 게이트)
 
-화면·컴포넌트가 생기는 스펙이면 태스크를 쪼개기 전에 방향을 Gemini 에게 비평받고 그 결과를 스펙에 적는다.
+화면·컴포넌트가 생기는 스펙이면 태스크를 쪼개기 전에 방향을 impeccable(shape)로 비평받고 그 결과를 스펙에 적는다.
+impeccable 스킬 `shape <대상>` 에 방향 브리프를 넘기고, 결과를 옮겨 기록한다(형식은 `nereus:design` "옮기는 형식"):
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" direction --brief <방향 브리프 파일>
+node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" record direction --critique-file <옮긴 비평> --report <impeccable 원본>
 ```
 브리프에는 스타일 방향(에디토리얼·라이트 럭셔리·벤토 등 구체적으로), 팔레트, 타이포 페어링, 레퍼런스를 적는다.
-verdict 가 REVISE 면 방향을 고쳐 다시 돌린다. 이 라운드가 없으면 신규 디자인 파일이 finish 게이트에서 차단된다.
+차단 지적이 남으면 방향을 고쳐 다시 받는다. 이 라운드가 없으면 신규 디자인 파일이 finish 게이트에서 차단된다.
 
 ## 태스크 규칙 (게이트)
 

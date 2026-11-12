@@ -1,15 +1,16 @@
-// 디자인 피드백 실행기. 방향(텍스트)·렌더 결과(스크린샷 첨부) 모두 Gemini 웹세션 CLI 로 비평받고
-// 결과를 .nereus/design-feedback.json 에 라운드로 적재한다. 게이트 판정은 lib/design.mjs 가 한다.
+// 디자인 피드백 기록기. 비평은 impeccable 스킬(shape·critique·audit)이 하고, 이 스크립트는 그 결과를
+// [SEV][축] 형식으로 옮긴 텍스트를 라운드로 적재한다(.nereus/design-feedback.json). 게이트 판정은 lib/design.mjs 가 한다.
+// 2026-11-12 사용자 방침: 디자인 검토 1순위는 impeccable. Gemini 는 이 플러그인에서 무료 이미지 생성에만 쓴다.
 //
 // 사용:
-//   node design-feedback.mjs direction --brief brief.md            방향 비평 (코드 쓰기 전)
-//   node design-feedback.mjs visual --shot 320:a.png --shot 1440:b.png --files src/hero.css
-//   node design-feedback.mjs status [--base main]                  게이트 현황
+//   node design-feedback.mjs prompt direction|visual [옵션]                옮길 형식(축·VERDICT)과 체크리스트
+//   node design-feedback.mjs record direction --critique-file c.md        방향 라운드 기록 (코드 쓰기 전)
+//   node design-feedback.mjs record visual --critique-file c.md --files src/hero.css
+//   node design-feedback.mjs status [--base main]                         게이트 현황
 import fs from "node:fs";
 import path from "node:path";
-import os from "node:os";
-import { fileURLToPath } from "node:url";
-import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
+import { createHash } from "node:crypto";
+import { run } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 import { designTouched, fileHashes, recordRound, readRounds, designGate } from "../../../hooks/scripts/lib/design.mjs";
 
@@ -168,50 +169,14 @@ export function parseCritique(text, { blockingAxes = BLOCKING_AXES } = {}) {
   return { verdict, items, blocking, advisory, untagged, summary, raw, isCritique };
 }
 
-const NOT_CRITIQUE = "비평이 아닙니다 — 형식에 맞는 지적도 VERDICT: OK 도 없습니다(거절문일 수 있음). 기록하지 않습니다. 실존 인물 사진은 화면별로 한 장씩 보내세요";
+const NOT_CRITIQUE = "비평이 아닙니다 — 형식에 맞는 지적도 VERDICT: OK 도 없습니다(거절문일 수 있음). 기록하지 않습니다. impeccable 보고서를 [SEV][축] 줄과 VERDICT 줄로 옮겼는지 확인하세요";
 
-// URL.pathname 은 Windows 에서 "/C:/..." 를 내놓는다 — fileURLToPath 를 거쳐야 한다.
-const GEMINI_CLI = () => path.resolve(fileURLToPath(new URL("../../image/scripts/gemini_cli.py", import.meta.url)));
-
-// visual 은 gemini-flash 를 기본으로 둔다. 2026-09-22 실측: 계정 기본 모델(Pro)이
-// 이미지 첨부 비평의 긴 응답을 생성하다 "connection to Gemini was lost" 로 7회 연속 죽었고
-// (크레딧은 미차감 — 생성 전 단계가 아니라 스트림이 끊긴다), 같은 프롬프트가 flash 로는 완주했다.
-const VISUAL_MODEL = "gemini-flash";
-
-export function planRunner({ phase, shots = [], refImages = [], promptFile = "", model = "", has = (b) => !!which(b) } = {}) {
-  if (phase === "direction") {
-    // agy 는 이미지 첨부를 받지 않는다 — 레퍼런스를 떨군 채 조용히 비평받지 않는다.
-    if (refImages.length && !has("python3")) {
-      return { error: "레퍼런스 이미지 첨부에는 python3 + Gemini 웹세션이 필요합니다 (agy 는 이미지 첨부를 받지 않습니다)." };
-    }
-    // 웹세션이 먼저다. 2026-09-12 실측: agy 는 할당량 소진(~2026-09-16 리셋), 웹세션은 살아 있다.
-    // agy 는 웹세션이 없을 때의 대체 경로로 남긴다.
-    if (has("python3")) {
-      const args = [GEMINI_CLI(), "ask", "--prompt-file", promptFile];
-      if (model) args.push("--model", model);
-      for (const p of refImages) args.push("--file", p);
-      return { bin: "python3", args, source: "gemini-web" };
-    }
-    if (has("agy")) return { bin: "agy", args: ["-p", "@" + promptFile], source: "gemini-agy", stdinPrompt: true };
-    return { error: "Gemini 채널이 없습니다 — agy(Antigravity CLI) 또는 python3 + Gemini 웹세션이 필요합니다. /nereus:setup 을 실행하세요." };
-  }
-  if (phase === "visual") {
-    if (!shots.length) return { error: "visual 라운드에는 스크린샷이 최소 1장 필요합니다 (--shot 320:path.png)" };
-    if (!has("python3")) return { error: "스크린샷 첨부 비평에는 python3 + Gemini 웹세션이 필요합니다 (agy 는 이미지 첨부를 받지 않습니다)." };
-    const args = [GEMINI_CLI(), "ask", "--prompt-file", promptFile, "--model", model || VISUAL_MODEL];
-    for (const s of shots) args.push("--file", s.path);
-    return { bin: "python3", args, source: "gemini-web" };
-  }
-  return { error: `알 수 없는 phase: ${phase}` };
-}
-
-// browser MCP 로 Gemini 웹을 직접 조작한 라운드. agy·웹세션 CLI 와 구분해 남긴다 —
-// 나중에 어느 채널이 판정했는지 추적할 수 있어야 한다.
-export const MCP_SOURCE = "gemini-mcp";
+// 라운드 출처. 어느 채널이 판정했는지 추적한다(이전 기록의 gemini-web·gemini-agy·gemini-mcp 는 그대로 읽힌다).
+export const RECORD_SOURCE = "impeccable";
 
 const PHASES = ["direction", "visual"];
 
-/** MCP 로 Gemini 에 넣을 프롬프트. planRunner 를 타지 않는 경로여서 프롬프트만 따로 뽑는다. */
+/** impeccable 결과를 옮길 형식·체크리스트. 비평 서브에이전트에 줄 수도 있다. */
 export function promptFor({ phase, brief = "", target = "web", refs = "", refImages = [], shots = [], context = "", previous = "" } = {}) {
   if (!PHASES.includes(phase)) throw new Error(`phase 는 direction 또는 visual 이어야 합니다 (받은 값: ${phase})`);
   if (phase === "direction") return directionPrompt({ brief, target, refs, refImages });
@@ -226,23 +191,29 @@ export function previousNotes(rounds = [], { phase = "visual" } = {}) {
 }
 
 /**
- * MCP 에서 받아온 비평 텍스트를 라운드 레코드로 만든다. verdict 판정은 기존 parseCritique 를
- * 그대로 쓴다 — MCP 경로가 게이트를 느슨하게 만들면 안 된다(VERDICT 줄이 없으면 REVISE).
+ * impeccable 비평을 옮긴 텍스트를 라운드 레코드로 만든다. verdict 판정은 parseCritique 를
+ * 그대로 쓴다 — 옮기는 과정이 게이트를 느슨하게 만들면 안 된다(VERDICT 줄이 없으면 REVISE).
  */
-export function planRecord({ phase, critique = "", files = [], hashOf } = {}) {
+export function planRecord({ phase, critique = "", files = [], hashOf, report = null, reportPath = "" } = {}) {
   if (!PHASES.includes(phase)) throw new Error(`phase 는 direction 또는 visual 이어야 합니다 (받은 값: ${phase})`);
   if (!String(critique).trim()) throw new Error("비평 내용이 비어 있습니다 — 빈 기록은 게이트를 우회합니다");
+  // 옮기는 주체가 코드를 쓴 세션이라 자기 신고가 된다. 원본 보고서를 해시로 묶어 대조할 수 있게 하고,
+  // 격리가 깨진 impeccable 보고서(DEGRADED)는 새 맥락 비평이 아니므로 받지 않는다. — EGM 리뷰 [MEDIUM], 2026-11-12
+  if (report !== null && /DEGRADED/.test(String(report))) {
+    throw new Error("impeccable 보고서가 DEGRADED 입니다 — 서브에이전트 격리가 깨진 비평은 기록하지 않습니다. 다시 받으세요");
+  }
   const parsed = parseCritique(critique);
   if (!parsed.isCritique) throw new Error(NOT_CRITIQUE);
   const list = phase === "visual" ? files.map((f) => String(f).trim()).filter(Boolean) : [];
   const round = {
     phase,
-    source: MCP_SOURCE,
+    source: RECORD_SOURCE,
     verdict: parsed.verdict,
     // 게이트가 보는 숫자. verdict 는 기록용이다 - 취향 축의 REVISE 로는 막지 않는다.
     blocking: parsed.blocking.length,
     files: list.length ? hashOf(list) : {},
     notes: parsed.summary,
+    ...(report !== null ? { report: { path: reportPath, hash: createHash("sha256").update(String(report)).digest("hex").slice(0, 16) } } : {}),
   };
   const warning = phase === "visual" && !list.length
     ? "--files 를 주지 않아 어떤 파일도 이 비평으로 커버되지 않습니다. 게이트는 계속 차단합니다."
@@ -254,7 +225,7 @@ export function feedbackReport({ pass, findings = [] }) {
   const lines = ["## 디자인 피드백 게이트", ""];
   if (!findings.length) lines.push("- 미이행 없음");
   for (const f of findings) lines.push(`- [${f.category}] ${f.file} — ${f.message}`);
-  lines.push("", pass ? "**판정: 통과**" : "**판정: 차단** — Gemini 피드백을 받고 반영한 뒤 다시 실행.");
+  lines.push("", pass ? "**판정: 통과**" : "**판정: 차단** — impeccable 비평을 받고 반영한 뒤 다시 실행.");
   return lines.join("\n");
 }
 
@@ -314,8 +285,7 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
     process.exit(r.pass ? 0 : 1);
   }
 
-  // MCP 경로: prompt 로 내보내고 record 로 들여온다. 스크립트는 MCP 도구를 부를 수 없으므로
-  // 에이전트가 그 사이에서 browser MCP 로 Gemini 웹을 조작한다.
+  // 비평은 에이전트가 impeccable 스킬로 받는다(스크립트는 스킬을 부를 수 없다). prompt 로 옮길 형식을 받고 record 로 들여온다.
   if (cmd === "prompt" || cmd === "record") {
     const phase = argv[1];
     try {
@@ -334,15 +304,21 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
         process.exit(0);
       }
       const cf = flag(argv, "--critique-file");
+      const rp = flag(argv, "--report");
+      if (!rp || !fs.existsSync(rp)) {
+        throw new Error("--report <impeccable 원본 보고서 파일> 이 필요합니다 — 옮긴 비평을 원본과 대조할 수 있어야 합니다");
+      }
       const { round, parsed, warning } = planRecord({
         phase,
         critique: cf ? fs.readFileSync(cf, "utf8") : flag(argv, "--critique", "") ?? "",
         files: (flag(argv, "--files", "") ?? "").split(",").map((x) => x.trim()).filter(Boolean),
         hashOf: (list) => fileHashes(cwd, list),
+        report: fs.readFileSync(rp, "utf8"),
+        reportPath: rp,
       });
       recordRound(cwd, round);
       process.stdout.write(
-        `[design] ${phase} 라운드 기록 (${MCP_SOURCE}) — verdict=${round.verdict}, 차단 ${round.blocking}건 · 권고 ${parsed.advisory.length}건, 대상 ${Object.keys(round.files).length}개 파일\n`,
+        `[design] ${phase} 라운드 기록 (${RECORD_SOURCE}) — verdict=${round.verdict}, 차단 ${round.blocking}건 · 권고 ${parsed.advisory.length}건, 대상 ${Object.keys(round.files).length}개 파일\n`,
       );
       if (warning) process.stderr.write(`[design] 경고: ${warning}\n`);
       process.exit(round.blocking === 0 ? 0 : 1);
@@ -352,55 +328,17 @@ if (process.argv[1] && /design-feedback\.mjs$/.test(process.argv[1])) {
     }
   }
 
-  if (cmd !== "direction" && cmd !== "visual") {
-    process.stderr.write("사용: design-feedback.mjs direction|visual|prompt|record|status [옵션]\n");
+  if (cmd === "direction" || cmd === "visual") {
+    process.stderr.write([
+      `[design] ${cmd} 비평은 impeccable 스킬로 받는다 — Gemini 채널은 없어졌다(2026-11-12).`,
+      cmd === "direction"
+        ? "  1) /impeccable shape <대상> 으로 방향을 잡고 비평받는다"
+        : "  1) /impeccable critique <대상> (+ 필요하면 audit) 로 렌더 결과를 비평받는다",
+      `  2) 결과를 [SEV][축] 형식으로 옮긴다:  node design-feedback.mjs prompt ${cmd} …  (형식·체크리스트)`,
+      `  3) node design-feedback.mjs record ${cmd} --critique-file <파일>${cmd === "visual" ? " --files <파일들>" : ""}`,
+    ].join("\n") + "\n");
     process.exit(2);
   }
-
-  const briefFile = flag(argv, "--brief");
-  const brief = briefFile ? fs.readFileSync(briefFile, "utf8") : flag(argv, "--text", "") ?? "";
-  const shots = parseShots(argv);
-  const refImages = cmd === "direction" ? parseRefImages(argv) : [];
-  const context = flag(argv, "--context", "") ?? "";
-  const prompt = cmd === "direction"
-    ? directionPrompt({ brief, target: flag(argv, "--target", "web"), refs: flag(argv, "--refs", "") ?? "", refImages })
-    : visualPrompt({ shots, context, previous: previousNotes(readRounds(cwd)) });
-
-  const promptFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "nereus-design-")), "prompt.txt");
-  fs.writeFileSync(promptFile, prompt);
-
-  const plan = planRunner({ phase: cmd, shots, refImages, promptFile, model: flag(argv, "--model", "") ?? "" });
-  if (plan.error) { process.stderr.write(plan.error + "\n"); process.exit(2); }
-
-  const args = plan.stdinPrompt ? ["-p", prompt] : plan.args;
-  const r = run(plan.bin, args, { cwd, timeout: 300000 });
-  if (!r.ok && !r.stdout.trim()) {
-    process.stderr.write(`Gemini 호출 실패 (${plan.bin}): ${r.stderr.slice(0, 500)}\n`);
-    process.exit(2);
-  }
-
-  const critique = parseCritique(r.stdout);
-  if (!critique.isCritique) {
-    process.stderr.write(`${NOT_CRITIQUE}\n--- 응답 ---\n${critique.raw.trim().slice(0, 1000)}\n`);
-    process.exit(2);
-  }
-  const files = cmd === "visual"
-    ? fileHashes(cwd, (flag(argv, "--files", "") ?? "").split(",").map((s) => s.trim()).filter(Boolean))
-    : {};
-  recordRound(cwd, {
-    phase: cmd, source: plan.source, verdict: critique.verdict,
-    blocking: critique.blocking.length, files, notes: critique.summary,
-  });
-
-  process.stdout.write(critique.raw.trim() + "\n\n");
-  process.stdout.write(
-    `[design] ${cmd} 라운드 기록 — verdict=${critique.verdict}, 차단 ${critique.blocking.length}건 · 권고 ${critique.advisory.length}건, 대상 ${Object.keys(files).length}개 파일\n`,
-  );
-  if (critique.untagged) {
-    process.stderr.write(`[design] 축을 안 붙인 지적 ${critique.untagged}건 — CRITICAL 만 차단으로 셉니다.\n`);
-  }
-  if (cmd === "visual" && !Object.keys(files).length) {
-    process.stderr.write("[design] 경고: --files 를 주지 않아 어떤 파일도 이 비평으로 커버되지 않습니다. 게이트는 계속 차단합니다.\n");
-  }
-  process.exit(critique.blocking.length === 0 ? 0 : 1);
+  process.stderr.write("사용: design-feedback.mjs prompt|record|status [옵션]\n");
+  process.exit(2);
 }

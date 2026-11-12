@@ -1,4 +1,4 @@
-// 모션 정적 검사. Gemini 는 정지 스크린샷만 본다 — `transition: all`, `scale(0)` 등장, `ease-in` 진입,
+// 모션 정적 검사. 정지 화면 비평은 모션을 못 본다 — `transition: all`, `scale(0)` 등장, `ease-in` 진입,
 // 레이아웃 속성 애니메이션, reduced-motion 누락은 화면으로는 안 보인다. diff 의 추가 줄에서 결정적으로 잡는다.
 //
 // 권고다. design 게이트를 막지 않는다 — 취향으로 사람을 막지 않는다는 원칙(design-feedback.mjs BLOCKING_AXES).

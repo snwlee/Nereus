@@ -1,6 +1,6 @@
 ---
 name: review
-description: OCR delegation plus parallel Codex/Gemini(웹세션) review, gated at 0 CRITICAL/HIGH. Runs automatically right after build. 트리거: "리뷰", "코드 검토".
+description: OCR delegation plus EGM second opinion (fresh-context subagents, no conversation history), gated at 0 CRITICAL/HIGH. Runs automatically right after build. 트리거: "리뷰", "코드 검토".
 ---
 
 # review
@@ -16,31 +16,19 @@ nereus:common 규칙을 따른다. 담당 에이전트: reviewer. 인증·입력
 node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 ```
 설정 `secondOpinion`과 설치 상태로 어떤 리뷰어가 돌지 나온다. `skipped`가 있으면 사용자에게 알린다(차단은 아님).
+EGM 이 계획되면 출력에 `egmPersonas`(goldfish 페르소나 절대 경로)가 함께 나온다.
 
-이 명령은 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로브). 두 CLI 가 각각 다르게 거짓말하기 때문이다.
-
-- `codex` — **신뢰되지 않은 디렉터리에서 부르면 거부한다.** 저장소 루트에서 `--skip-git-repo-check` 와 함께
-  부르면 정상 응답한다(측정 13초). 프로브를 엉뚱한 cwd 에서 돌린 탓에 세 사이클 동안 "codex 불가"로 잘못
-  기록돼 있었다 — 도구는 멀쩡하다.
-- `gemini` — **Gemini 웹세션**(`python3 skills/image/scripts/gemini_cli.py`)으로 돈다. 답변은 stdout,
-  로그·쿠키 안내는 stderr 로 나가므로 판정은 stdout 본문으로 한다. 쿠키가 없으면 "웹세션 없음"으로
-  빠진다(결함 아님) — `cookies-import.mjs` 로 넣는다.
-- `agy`(Antigravity CLI) — 더 이상 기본 gemini 채널이 아니다. 2026-09-12 실측으로 할당량이 소진돼
-  있었다(~2026-09-16 리셋). 쓰려면 `secondOpinion: ["ocr","codex","agy"]` 처럼 **명시**해야 한다.
-  기본 `text` 출력에서는 오류 재시도가 전부 삼켜져 **빈 출력 + exit 0** 으로만 보이므로
-  `--output-format json` 으로 받아야 사유가 드러난다.
-
-`reasons` 에 사유가 붙어 나온다. 예: `할당량 소진 — 할당량이 94h11m42s 뒤에 리셋된다`.
-**할당량 소진은 결함이 아니라 상태다** — 그 리뷰어만 빠지고 리뷰는 계속 돈다.
+**제3자 검증은 EGM 이 1순위이고 기본으로 그것만 돈다**(2026-11-12 방침). 외부 CLI 의 쿠키·할당량·신뢰 디렉터리 문제에 리뷰가 묶이지 않는다.
 
 | 설정값 | 도는 리뷰어 |
 |---|---|
-| `"both"` (기본) | OCR + Codex + Gemini(웹세션) |
-| `"codex"` | OCR + Codex |
-| `"gemini"` | OCR + Gemini(웹세션) |
+| `"egm"` (기본) | OCR + EGM |
+| `"codex"` | OCR + EGM + Codex — 다른 모델의 시각이 필요할 때만 명시한다 |
 | `"none"` | OCR만 (2차 의견 없음) |
-| `["ocr", "gemini"]` | 배열로 직접 지정. 빈 배열이면 리뷰 자체를 건너뛴다 |
-| `["ocr", "agy"]` | agy 를 쓰고 싶을 때만 명시한다 |
+| `["ocr", "egm"]` | 배열로 직접 지정. 빈 배열이면 리뷰 자체를 건너뛴다 |
+
+이전 단축형 값(`"both"` 등)과 배열 속 옛 리뷰어 이름은 `egm` 으로 읽는다 — 걸러내면 2차 의견이 조용히 사라진다.
+Codex 는 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로브). 신뢰되지 않은 디렉터리에서 부르면 거부하므로 저장소 루트에서 `--skip-git-repo-check` 로 부른다.
 
 ## 2. 병렬 실행
 
@@ -51,13 +39,19 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
 > `.md` 는 `unsupported_ext` 로 제외되므로, 문서만 바뀐 범위에서 `0 reviewable` 이 나오는 것은 정상이다.
 
 - **OCR delegation**: `ocr delegate preview --from <base> --to HEAD` 로 리뷰할 파일과 룰을 받고, 파일별 `ocr delegate rule <files>`로 룰을 받아 **이 세션의 모델이 직접** 리뷰한다. OCR이 API 키로 직접 리뷰하게 설정돼 있으면 `ocr review --format json --output .nereus/review-ocr.json`을 쓴다.
-- **Codex**: `codex review` (또는 codex 플러그인의 `/codex:adversarial-review`). 결과를 파일·줄·심각도·메시지로 정리한다.
-- **Gemini (웹세션)**: 프롬프트를 **파일로** 만들어 넘긴다 — diff 를 argv 에 실으면 길이 제한에 걸린다.
-  ```bash
-  { echo "다음 diff를 리뷰하고 file:line, severity(CRITICAL/HIGH/MEDIUM/LOW), message 형식의 JSON 배열로만 답하라."; git diff <base>...HEAD; } > .nereus/review-gemini-prompt.md
-  python3 "${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/gemini_cli.py" ask --prompt-file .nereus/review-gemini-prompt.md
+- **EGM (기본 2차 의견)**: `Agent`(general-purpose) 서브에이전트를 **페르소나마다 하나씩 같은 메시지에서 병렬로** 띄운다.
+  프롬프트에는 아래만 넣는다 — 이 대화의 결정·이유·요약을 넣으면 새 맥락 리뷰가 아니다(goldfish 원칙).
+  ```text
+  You are a Goldfish reviewer. First read your persona file and follow it exactly: <egmPersonas 의 경로 하나>
+  Mode: REVIEW (code). Review only this change (run it yourself; read surrounding code as needed):
+    committed: `git diff <base>...HEAD` · uncommitted: `git diff` plus untracked files from `git status --porcelain`
+  Spec for intent (read, do not review): <변경된 openspec change·spec-kit 디렉터리 경로 또는 "none">
+  You are read-only. Map your persona's severities: Blocker → CRITICAL, Major → HIGH, Nit → LOW.
+  Return a JSON array only: [{"file","line","severity":"CRITICAL|HIGH|MEDIUM|LOW","message"}].
   ```
-  인자는 `geminiWebArgs(promptFile)` 가 만든다 — 스크립트 경로를 손으로 쓰지 않는다.
+  리뷰는 보통 커밋 **전**에 돈다 — 커밋 범위만 주면 서브에이전트는 아무것도 못 본다. 두 범위 중 실제로 변경이 있는 쪽을 넣는다.
+  서브에이전트를 띄울 수 없으면 EGM 을 `skipped` 로 알린다. 같은 맥락에서 대신 리뷰하고 EGM 이라 부르지 않는다.
+- **Codex (명시했을 때만)**: `codex review` (또는 codex 플러그인의 `/codex:adversarial-review`). 결과를 파일·줄·심각도·메시지로 정리한다.
 
 직접 리뷰할 때는 아래 조용한 실패 5항을 반드시 훑는다 (출처: ecc `silent-failure-hunter`. 기계 게이트가 `silent_failure`으로 잡는 것은 빙산의 일각이다):
 
