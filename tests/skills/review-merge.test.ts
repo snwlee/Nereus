@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import path from "node:path";
-import { existsSync } from "node:fs";
-import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction, ocrDelegateArgs, probeArgs, readProbe, makeProbe, geminiWebArgs } from "../../plugins/nereus/skills/review/scripts/review.mjs";
+import { readFileSync } from "node:fs";
+import { mergeFindings, gate, parseOcrJson, planRunners, normalizeReviewers, REVIEWERS, fixLoopStep, MAX_FIX_ROUNDS, severityAction, ocrDelegateArgs, probeArgs, readProbe, makeProbe, EGM_PERSONAS } from "../../plugins/nereus/skills/review/scripts/review.mjs";
 
 describe("review merge", () => {
   it("parses OCR json output into normalized findings", () => {
@@ -15,7 +14,7 @@ describe("review merge", () => {
   });
   it("merges and sorts by severity then file", () => {
     const md = mergeFindings([
-      { source: "gemini", file: "z.ts", line: 1, severity: "MEDIUM", message: "m" },
+      { source: "egm", file: "z.ts", line: 1, severity: "MEDIUM", message: "m" },
       { source: "ocr", file: "a.ts", line: 3, severity: "CRITICAL", message: "c" },
       { source: "codex", file: "a.ts", line: 5, severity: "HIGH", message: "h" },
     ]);
@@ -26,38 +25,6 @@ describe("review merge", () => {
   it("gate fails on CRITICAL or HIGH", () => {
     expect(gate([{ severity: "MEDIUM" }, { severity: "LOW" }])).toEqual({ pass: true, blocking: 0 });
     expect(gate([{ severity: "HIGH" }, { severity: "CRITICAL" }])).toEqual({ pass: false, blocking: 2 });
-  });
-  it("설정 문자열 단축형을 리뷰어 목록으로 편다", () => {
-    expect(normalizeReviewers("both")).toEqual(["ocr", "codex", "gemini"]);
-    expect(normalizeReviewers("codex")).toEqual(["ocr", "codex"]);
-    expect(normalizeReviewers("gemini")).toEqual(["ocr", "gemini"]);
-    expect(normalizeReviewers("none")).toEqual(["ocr"]);
-  });
-  it("배열 형식으로 리뷰어를 직접 고를 수 있다", () => {
-    expect(normalizeReviewers(["codex"])).toEqual(["codex"]);
-    expect(normalizeReviewers(["ocr", "gemini"])).toEqual(["ocr", "gemini"]);
-    expect(normalizeReviewers([])).toEqual([]);
-    expect(normalizeReviewers(["ocr", "nope", "codex"])).toEqual(["ocr", "codex"]); // 모르는 이름은 무시
-  });
-  it("알 수 없는 값은 기본값(both)으로 되돌린다", () => {
-    expect(normalizeReviewers(undefined)).toEqual(["ocr", "codex", "gemini"]);
-    expect(normalizeReviewers("weird")).toEqual(["ocr", "codex", "gemini"]);
-  });
-  it("설치 여부로 실행 계획을 만든다", () => {
-    const avail = (b: string) => ["ocr", "python3"].includes(b);
-    expect(planRunners("both", avail)).toEqual({ ocr: true, codex: false, gemini: true, skipped: ["codex"] });
-    expect(planRunners("codex", avail)).toEqual({ ocr: true, codex: false, gemini: false, skipped: ["codex"] });
-    expect(planRunners("gemini", (b: string) => b === "python3")).toEqual({ ocr: false, codex: false, gemini: true, skipped: ["ocr"] });
-  });
-  it("none 이면 2차 의견 없이 OCR 만 돈다", () => {
-    expect(planRunners("none", () => true)).toEqual({ ocr: true, codex: false, gemini: false, skipped: [] });
-  });
-  it("배열로 codex 만 끌 수 있다", () => {
-    expect(planRunners(["ocr", "gemini"], () => true)).toEqual({ ocr: true, codex: false, gemini: true, skipped: [] });
-  });
-  it("리뷰어 정의에 실행 바이너리가 붙어 있다", () => {
-    expect(REVIEWERS.gemini.bin).toBe("python3");
-    expect(REVIEWERS.codex.bin).toBe("codex");
   });
   it("수정 루프 상한은 5라운드다", () => {
     expect(MAX_FIX_ROUNDS).toBe(5);
@@ -97,28 +64,78 @@ describe("severityAction", () => {
   });
 });
 
-describe("리뷰어 헬스체크", () => {
-  it("PATH 에 있어도 무응답이면 계획에서 빠진다", () => {
-    const probe = (bin: string) => (bin === "python3" ? { ok: false, why: "무응답" } : { ok: true });
-    const plan = planRunners("both", () => true, probe);
-    expect(plan.gemini).toBe(false);
-    expect(plan.skipped).toContain("gemini");
-    expect(JSON.stringify(plan.reasons)).toContain("python3");
-    expect(JSON.stringify(plan.reasons)).toContain("무응답");
+// 2026-11-12 사용자 방침: 제3자 검증은 EGM(대화 맥락 없는 Goldfish 서브에이전트) 1순위, 그것만으로 충분하다.
+// Gemini 는 이 플러그인에서 무료 이미지 생성에만 쓴다. Codex 는 명시할 때만.
+describe("2차 의견 기본은 EGM", () => {
+  it("기본·모르는 값은 OCR + EGM 이다", () => {
+    expect(normalizeReviewers(undefined)).toEqual(["ocr", "egm"]);
+    expect(normalizeReviewers("egm")).toEqual(["ocr", "egm"]);
+    expect(normalizeReviewers("weird")).toEqual(["ocr", "egm"]);
   });
-
-  it("응답하는 리뷰어는 포함된다", () => {
-    const plan = planRunners("codex", () => true, () => ({ ok: true }));
-    expect(plan.codex).toBe(true);
+  it("이전 설정값 gemini 는 기본으로 읽는다 — 사용자 설정 파일을 깨지 않는다", () => {
+    expect(normalizeReviewers("gemini")).toEqual(["ocr", "egm"]);
   });
-
-  it("PATH 에 없으면 프로브를 돌리지 않는다", () => {
+  // EGM 리뷰 [MEDIUM]: "both" 를 직접 적은 사용자는 Codex 를 고른 것이다. 말없이 빼지 않고 EGM 뒤에 둔다(후순위).
+  it("이전 설정값 both 는 EGM 을 앞에 두고 Codex 를 유지한다", () => {
+    expect(normalizeReviewers("both")).toEqual(["ocr", "egm", "codex"]);
+  });
+  // EGM 리뷰 [MEDIUM]: 오타 난 배열이 리뷰를 조용히 끄면 안 된다. 빈 배열만 의도적 끄기다.
+  it("모르는 이름뿐인 배열은 기본으로 읽는다 — 빈 배열만 리뷰를 끈다", () => {
+    expect(normalizeReviewers(["foo"])).toEqual(["ocr", "egm"]);
+    expect(normalizeReviewers([])).toEqual([]);
+  });
+  it("codex 는 명시할 때만 EGM 에 더해진다", () => {
+    expect(normalizeReviewers("codex")).toEqual(["ocr", "egm", "codex"]);
+  });
+  it("none 이면 OCR 만", () => {
+    expect(normalizeReviewers("none")).toEqual(["ocr"]);
+  });
+  it("배열의 gemini·agy 는 EGM 으로 읽는다 — 실측: 전역 설정이 [\"ocr\",\"gemini\"] 라 걸러내면 2차 의견이 조용히 사라졌다", () => {
+    expect(normalizeReviewers(["ocr", "gemini"])).toEqual(["ocr", "egm"]);
+    expect(normalizeReviewers(["ocr", "agy"])).toEqual(["ocr", "egm"]);
+    expect(normalizeReviewers(["ocr", "gemini", "agy", "egm"])).toEqual(["ocr", "egm"]);
+    expect(normalizeReviewers(["ocr", "nope", "codex"])).toEqual(["ocr", "codex"]);
+    expect(normalizeReviewers([])).toEqual([]);
+  });
+  it("Gemini·agy 리뷰어 정의가 없다", () => {
+    expect(Object.keys(REVIEWERS).sort()).toEqual(["codex", "egm", "ocr"]);
+  });
+  it("EGM 은 바이너리가 없다 — PATH·프로브 없이 항상 계획된다", () => {
     let probed = 0;
-    planRunners("both", () => false, () => { probed += 1; return { ok: true }; });
+    const plan = planRunners("egm", () => false, () => { probed += 1; return { ok: false }; });
+    expect(plan.egm).toBe(true);
+    expect(plan.skipped).toEqual(["ocr"]);
     expect(probed).toBe(0);
   });
+  it("설치 여부로 계획을 만든다", () => {
+    expect(planRunners("codex", (b: string) => b === "ocr")).toEqual({ ocr: true, egm: true, codex: false, skipped: ["codex"] });
+    expect(planRunners("none", () => true)).toEqual({ ocr: true, egm: false, codex: false, skipped: [] });
+  });
+  it("EGM 페르소나는 goldfish 의 것이고 실재한다", () => {
+    expect(EGM_PERSONAS.length).toBeGreaterThan(0);
+    for (const p of EGM_PERSONAS) expect(readFileSync(p, "utf8").length, p).toBeGreaterThan(0);
+  });
+  it("리뷰 스크립트는 Gemini 웹세션을 참조하지 않는다", () => {
+    expect(readFileSync("plugins/nereus/skills/review/scripts/review.mjs", "utf8")).not.toMatch(/gemini_cli/);
+  });
+});
 
-  it("probe 를 주지 않으면 기존 계약 그대로다 — reasons 키가 생기지 않는다", () => {
+describe("리뷰어 헬스체크 (codex)", () => {
+  it("PATH 에 있어도 무응답이면 계획에서 빠진다", () => {
+    const plan = planRunners("codex", () => true, (bin: string) => (bin === "codex" ? { ok: false, why: "무응답" } : { ok: true }));
+    expect(plan.codex).toBe(false);
+    expect(plan.skipped).toContain("codex");
+    expect(JSON.stringify(plan.reasons)).toContain("무응답");
+  });
+  it("응답하는 리뷰어는 포함된다", () => {
+    expect(planRunners("codex", () => true, () => ({ ok: true })).codex).toBe(true);
+  });
+  it("PATH 에 없으면 프로브를 돌리지 않는다", () => {
+    let probed = 0;
+    planRunners("codex", () => false, () => { probed += 1; return { ok: true }; });
+    expect(probed).toBe(0);
+  });
+  it("probe 를 주지 않으면 reasons 키가 생기지 않는다", () => {
     const plan = planRunners("codex", () => true);
     expect(plan.codex).toBe(true);
     expect(plan).not.toHaveProperty("reasons");
@@ -129,167 +146,49 @@ describe("ocrDelegateArgs", () => {
   it("base 가 있으면 범위 인자를 만든다", () => {
     expect(ocrDelegateArgs("main")).toEqual(["--from", "main", "--to", "HEAD"]);
   });
-
   it("base 가 없으면 범위 인자 없이 워크스페이스 모드", () => {
     expect(ocrDelegateArgs()).toEqual([]);
     expect(ocrDelegateArgs("")).toEqual([]);
   });
-
   it("공백만 있는 base 도 워크스페이스 모드", () => {
     expect(ocrDelegateArgs("   ")).toEqual([]);
   });
 });
 
-// 프로브 실체. 2026-09-12 조사로 두 CLI 의 실패 양상이 서로 다르다는 것이 확인됐다.
-//  - codex: 신뢰되지 않은 cwd 에서 부르면 즉시 거부한다. 저장소 안에서는 정상 응답한다.
-//  - agy : text 출력에서는 429 재시도가 전부 삼켜져 "빈 출력 + exit 0" 으로 보인다. json 으로 받아야 사유가 나온다.
-describe("리뷰어 프로브 실체", () => {
-  it("codex 프로브는 git 체크를 건너뛰고 read-only 로 부른다", () => {
+// codex: 신뢰되지 않은 cwd 에서 부르면 즉시 거부한다. 저장소 안에서는 정상 응답한다(2026-09-12 조사).
+describe("codex 프로브", () => {
+  it("git 체크를 건너뛰고 read-only 로 부른다", () => {
     const a = probeArgs("codex");
     expect(a).toContain("exec");
     expect(a).toContain("--skip-git-repo-check");
     expect(a.join(" ")).toContain("--sandbox read-only");
   });
-
-  it("agy 프로브는 json 으로 받는다 — text 는 오류를 삼킨다", () => {
-    const a = probeArgs("agy");
-    expect(a.join(" ")).toContain("--output-format json");
-    expect(a).toContain("-p");
-  });
-
-  it("모르는 바이너리는 프로브 인자가 없다", () => {
+  it("프로브 대상이 아닌 바이너리는 인자가 없다", () => {
     expect(probeArgs("ocr")).toEqual([]);
+    expect(probeArgs("agy")).toEqual([]);
+    expect(probeArgs("python3")).toEqual([]);
   });
-
-  it("codex 가 신뢰되지 않은 디렉터리를 거부하면 사유를 그대로 낸다", () => {
+  it("신뢰되지 않은 디렉터리 거부를 사유로 낸다", () => {
     const r = readProbe("codex", { ok: false, status: 1, stdout: "", stderr: "Not inside a trusted directory and --skip-git-repo-check was not specified." });
     expect(r.ok).toBe(false);
     expect(r.why).toContain("신뢰되지 않은 디렉터리");
   });
-
-  it("codex 가 응답하면 통과한다", () => {
+  it("응답하면 통과한다", () => {
     expect(readProbe("codex", { ok: true, status: 0, stdout: "codex\nPONG\n", stderr: "" }).ok).toBe(true);
   });
-
-  it("codex 가 exit 0 이면서 빈 출력이면 통과가 아니다", () => {
+  it("exit 0 이면서 빈 출력이면 통과가 아니다", () => {
     const r = readProbe("codex", { ok: true, status: 0, stdout: "   \n", stderr: "" });
     expect(r.ok).toBe(false);
     expect(r.why).toContain("빈 응답");
   });
-
-  it("agy 의 429 는 결함이 아니라 할당량 소진으로 보고한다", () => {
-    const stdout = JSON.stringify({ status: "ERROR", response: "", error: "API error (attempt 7): RESOURCE_EXHAUSTED (code 429): Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 94h15m29s." });
-    const r = readProbe("agy", { ok: true, status: 0, stdout, stderr: "" });
-    expect(r.ok).toBe(false);
-    expect(r.why).toContain("할당량 소진");
-    expect(r.why).toContain("94h15m29s");
-  });
-
-  it("agy 가 응답을 담아 오면 통과한다", () => {
-    const stdout = JSON.stringify({ status: "OK", response: "PONG" });
-    expect(readProbe("agy", { ok: true, status: 0, stdout, stderr: "" }).ok).toBe(true);
-  });
-
-  it("agy 가 빈 출력 + exit 0 이면 통과가 아니다 — 이것이 세 사이클을 속인 양상이다", () => {
-    const r = readProbe("agy", { ok: true, status: 0, stdout: "", stderr: "" });
-    expect(r.ok).toBe(false);
-    expect(r.why).toContain("빈 응답");
-  });
-
   it("makeProbe 는 주입된 러너로 프로브를 조립한다", () => {
     const calls: Array<{ bin: string; args: string[] }> = [];
-    const probe = makeProbe((bin, args) => {
-      calls.push({ bin, args });
-      return { ok: true, status: 0, stdout: JSON.stringify({ status: "OK", response: "PONG" }), stderr: "" };
-    });
-    expect(probe("agy").ok).toBe(true);
-    expect(calls[0].bin).toBe("agy");
-    expect(calls[0].args.join(" ")).toContain("--output-format json");
+    const probe = makeProbe((bin, args) => { calls.push({ bin, args }); return { ok: true, status: 0, stdout: "PONG", stderr: "" }; });
+    expect(probe("codex").ok).toBe(true);
+    expect(calls[0].bin).toBe("codex");
   });
-
-  it("프로브 대상이 아닌 바이너리는 통과로 둔다 — 프로브 없음이 실패는 아니다", () => {
+  it("프로브 대상이 아닌 바이너리는 통과로 둔다", () => {
     const probe = makeProbe(() => { throw new Error("불려서는 안 된다"); });
     expect(probe("ocr").ok).toBe(true);
-  });
-
-  // codex 2차 의견(2026-09-12, HIGH): agy 경로가 exit code 를 보지 않고, JSON 이 아닌
-  // 아무 stdout 이나 응답으로 인정해 실패한 리뷰어를 계획에 넣을 수 있었다.
-  it("agy 가 비정상 종료하면 stdout 이 비어 있지 않아도 통과가 아니다", () => {
-    const r = readProbe("agy", { ok: false, status: 1, stdout: "usage: agy [flags]\n", stderr: "" });
-    expect(r.ok).toBe(false);
-  });
-
-  it("agy 의 비-JSON stdout 은 응답으로 인정하지 않는다 — json 을 요구해 놓고 받았기 때문이다", () => {
-    const r = readProbe("agy", { ok: true, status: 0, stdout: "some plain chatter\n", stderr: "" });
-    expect(r.ok).toBe(false);
-    expect(r.why).toContain("json");
-  });
-});
-
-// 2026-09-12 사용자 결정: gemini 2차 의견은 agy(Antigravity CLI)가 아니라 **Gemini 웹세션**으로 받는다.
-// 실측: agy 는 할당량 소진(~2026-09-16 리셋), 웹세션은 11,504/12,096 크레딧으로 살아 있다.
-// agy 는 버리지 않고 배열 형식으로 직접 고를 수 있는 별도 리뷰어로 남긴다.
-describe("gemini 2차 의견은 웹세션으로 받는다", () => {
-  it("gemini 리뷰어는 웹세션 CLI(python3 + gemini_cli.py)로 돈다", () => {
-    expect(REVIEWERS.gemini.bin).toBe("python3");
-    expect(REVIEWERS.gemini.script).toMatch(/gemini_cli\.py$/);
-  });
-
-  it("agy 는 버려지지 않고 별도 리뷰어로 남는다", () => {
-    expect(REVIEWERS.agy.bin).toBe("agy");
-    expect(normalizeReviewers(["ocr", "agy"])).toEqual(["ocr", "agy"]);
-  });
-
-  it("단축형 both/gemini 는 여전히 웹세션 gemini 를 가리킨다 — agy 는 명시해야 돈다", () => {
-    expect(normalizeReviewers("both")).toEqual(["ocr", "codex", "gemini"]);
-    expect(normalizeReviewers("gemini")).toEqual(["ocr", "gemini"]);
-  });
-
-  it("gemini 계획은 python3 설치 여부로 갈린다", () => {
-    expect(planRunners("gemini", (b: string) => b === "python3")).toEqual({ ocr: false, codex: false, gemini: true, skipped: ["ocr"] });
-    expect(planRunners("gemini", (b: string) => b === "agy")).toEqual({ ocr: false, codex: false, gemini: false, skipped: ["ocr", "gemini"] });
-  });
-
-  it("웹세션 프로브는 gemini_cli.py 에 ask 로 묻는다", () => {
-    const a = probeArgs("python3");
-    expect(a[0]).toMatch(/gemini_cli\.py$/);
-    expect(a).toContain("ask");
-    expect(a).toContain("--prompt");
-  });
-
-  it("웹세션이 응답하면 통과한다 — 로그는 stderr 로 나가므로 stdout 만 본다", () => {
-    const r = readProbe("python3", { ok: true, status: 0, stdout: "PONG\n", stderr: "INFO Account quota updated: Gemini Pro - 11504/12096 credits remaining" });
-    expect(r.ok).toBe(true);
-  });
-
-  it("쿠키가 없으면 결함이 아니라 '웹세션 없음' 상태로 보고한다", () => {
-    const r = readProbe("python3", { ok: false, status: 1, stdout: "", stderr: "cookie file missing: /Users/x/.nereus/secrets/gemini-web-cookies.json" });
-    expect(r.ok).toBe(false);
-    expect(r.why).toContain("웹세션");
-  });
-
-  it("웹세션도 할당량 소진은 상태로 보고한다", () => {
-    const r = readProbe("python3", { ok: false, status: 1, stdout: "", stderr: "RESOURCE_EXHAUSTED (code 429): quota reached" });
-    expect(r.ok).toBe(false);
-    expect(r.why).toContain("할당량 소진");
-  });
-
-  it("exit 0 + 빈 stdout 은 통과가 아니다", () => {
-    const r = readProbe("python3", { ok: true, status: 0, stdout: "  \n", stderr: "" });
-    expect(r.ok).toBe(false);
-    expect(r.why).toContain("빈 응답");
-  });
-
-  // gemini 웹세션 리뷰 [MEDIUM], 2026-09-12: URL.pathname 은 Windows 에서 "/C:/..." 를 낸다.
-  it("CLI 경로는 실재하는 절대경로다 — Windows 에서 앞 슬래시가 붙으면 안 된다", () => {
-    expect(path.isAbsolute(REVIEWERS.gemini.script)).toBe(true);
-    expect(existsSync(REVIEWERS.gemini.script)).toBe(true);
-    expect(REVIEWERS.gemini.script).not.toMatch(/^\/[A-Za-z]:/);
-  });
-
-  it("리뷰 호출 인자는 프롬프트 파일로 넘긴다 — diff 를 argv 에 실으면 길이 제한에 걸린다", () => {
-    const a = geminiWebArgs("/tmp/review-prompt.md");
-    expect(a[0]).toMatch(/gemini_cli\.py$/);
-    expect(a).toEqual(expect.arrayContaining(["ask", "--prompt-file", "/tmp/review-prompt.md"]));
   });
 });

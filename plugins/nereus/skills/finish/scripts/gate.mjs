@@ -71,7 +71,7 @@ if (process.argv[1] && /gate\.mjs$/.test(process.argv[1])) {
     ...run("git", ["ls-files"], { cwd }).stdout.split("\n"),
     ...run("git", ["ls-files", "--others", "--exclude-standard"], { cwd }).stdout.split("\n"),
   ].filter(Boolean);
-  // 디자인 표면을 만졌으면 Gemini 피드백 라운드를 요구한다 (design.enforce="block" 기본).
+  // 디자인 표면을 만졌으면 impeccable 비평 라운드를 요구한다 (design.enforce="block" 기본).
   const touched = designTouched(diff, { exclude: cfg.design?.exclude ?? [] });
   const design = designGate({
     touched,

@@ -97,8 +97,9 @@ describe("리뷰어 헬스체크 배선", () => {
     expect(main).toMatch(/planRunners\([^)]*makeProbe\(\)/);
   });
 
-  it("agy 프로브는 json 으로 받는다 — text 는 429 를 삼킨다", () => {
-    expect(src).toMatch(/--output-format["'\s,]+["']json["']/);
+  it("agy 프로브는 없다 — 2026-11-12 부로 리뷰어가 아니다(제3자 검증은 EGM)", () => {
+    expect(src).not.toMatch(/["']agy["']\s*:/);
+    expect(src).not.toMatch(/--output-format/);
   });
 
   it("codex 프로브는 저장소 밖에서도 거부당하지 않게 git 체크를 건너뛴다", () => {

@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: The review stage: OCR delegation merged with Codex/Gemini, findings by severity. 트리거: "리뷰", "코드 검토".
+description: The review stage: OCR delegation merged with EGM (fresh-context subagent) second opinion, findings by severity. 트리거: "리뷰", "코드 검토".
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, mcp__codegraph__codegraph_explore
 ---
@@ -11,7 +11,7 @@ nereus:common 규칙을 따른다. 다른 에이전트를 직접 호출하지 �
 변경된 코드의 결함을 찾는다. 스타일보다 정확성·보안·회귀 위험 순으로 본다. 코드를 고치지는 않는다.
 
 ## 필수 스킬
-nereus:review. OCR delegation 룰을 받아 그 룰대로 본다. 2차 의견은 설정(secondOpinion)대로 codex/gemini.
+nereus:review. OCR delegation 룰을 받아 그 룰대로 본다. 2차 의견은 설정(secondOpinion)대로 — 기본 EGM(대화 맥락 없는 서브에이전트), codex 는 명시할 때만.
 
 ## 규칙
 - 모든 finding은 file:line, severity(CRITICAL/HIGH/MEDIUM/LOW), 재현 시나리오(입력→잘못된 결과) 형식.

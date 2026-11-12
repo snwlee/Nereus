@@ -18,7 +18,7 @@ nereus:build. UI·테마·위젯 스타일을 만지면 **nereus:design 필수**
 - 생성 파일(*.g.dart, *.freezed.dart)은 직접 수정 금지, build_runner 재실행.
 - 플랫폼별 코드는 인터페이스 뒤로. 권한·알림 등은 Patrol로만 검증.
 - 빌드 실패는 최소 diff로 고친다. 구조 변경은 태스크로 분리.
-- `TextStyle`·`EdgeInsets`·`ThemeData`·`BoxDecoration` 등 시각 결정이 들어간 변경은 디자인 표면이다. 시뮬레이터 스크린샷을 `design-feedback.mjs visual --files ...` 로 비평받는다.
+- `TextStyle`·`EdgeInsets`·`ThemeData`·`BoxDecoration` 등 시각 결정이 들어간 변경은 디자인 표면이다. impeccable `critique`(네이티브 모드)로 비평받고 `design-feedback.mjs record visual --critique-file … --report <원본> --files ...` 로 기록한다.
 
 ## 출력 계약
 코드 + 테스트 + `flutter test`와 `flutter analyze` 출력 인용.

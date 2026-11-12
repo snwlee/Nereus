@@ -3,7 +3,7 @@ import { DEFAULTS, mergeConfig, loadConfig } from "../../plugins/nereus/hooks/sc
 
 describe("config", () => {
   it("has sane defaults", () => {
-    expect(DEFAULTS.secondOpinion).toBe("both");
+    expect(DEFAULTS.secondOpinion).toBe("egm");
     expect(DEFAULTS).not.toHaveProperty("baton");
     expect(DEFAULTS).not.toHaveProperty("autoClear");
     expect(DEFAULTS.pdf.engine).toBe("typst");

@@ -62,7 +62,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/build/scripts/run-tests.mjs" --cmd "./gradlew
 - 전체 테스트 실행 → 전부 통과. 출력을 인용한다.
 - 스택별 빌드·정적 검사를 한 번 더 돌린다(`flutter analyze`, `./gradlew build`, `npm run build`, `tsc --noEmit`, 또는 `node --check`).
   `ooo qa` 는 **아티팩트 하나**(파일이나 텍스트)를 판정하는 도구다 — `ooo qa <파일>` 형태로만 쓰고, 저장소 전체 게이트로 쓰지 않는다(`--json` 같은 플래그는 없다).
-- 디자인 표면(스타일시트·디자인 토큰·시각 마크업)을 만졌으면 `nereus:design` 의 렌더 라운드를 돌린다. 스크린샷을 확보해 Gemini 비평을 받고 `--files` 로 커버한다. 건너뛰면 finish 게이트가 차단한다.
+- 디자인 표면(스타일시트·디자인 토큰·시각 마크업)을 만졌으면 `nereus:design` 의 렌더 라운드를 돌린다. impeccable critique 로 비평받아 `record visual --files` 로 커버한다. 건너뛰면 finish 게이트가 차단한다.
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" status   # 무엇이 미이행인지 먼저 확인
 ```

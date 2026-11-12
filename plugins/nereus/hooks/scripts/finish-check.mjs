@@ -54,7 +54,7 @@ export function handle(input, deps = {}) {
   else if (ev.status === "FRESH" && !ev.passing) notes.push(`마지막 테스트가 실패 상태입니다(${ev.command})`);
   // 워크플로(finish) 를 안 거치는 즉석 디자인 수정도 세션 끝에는 한 번 알린다. 차단은 하지 않는다.
   const design = (deps.designGate ?? (() => gateNow(cwd)))();
-  if (design.findings?.length) notes.push(`디자인 피드백 미이행 ${design.findings.length}건 (${design.findings.map((f) => f.file).slice(0, 3).join(", ")}) — /nereus:design 으로 Gemini 비평을 받으세요`);
+  if (design.findings?.length) notes.push(`디자인 피드백 미이행 ${design.findings.length}건 (${design.findings.map((f) => f.file).slice(0, 3).join(", ")}) — /nereus:design 으로 impeccable 비평을 받으세요`);
   if (!notes.length) return null;
   return { systemMessage: `[Nereus] ${notes.join(". ")}. 작업 단위가 끝났다면 /nereus:finish 로 마무리하세요.` };
 }

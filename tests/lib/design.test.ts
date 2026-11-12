@@ -187,6 +187,17 @@ describe("designGate", () => {
     expect(r.pass).toBe(false);
     expect(r.findings[0]).toMatchObject({ category: "design_feedback_missing", file: "src/hero.css" });
   });
+  it("게이트 안내는 impeccable 비평 → record 로 이끈다 — Gemini·직접 실행 명령을 가리키지 않는다", () => {
+    const created = ["src/new.css"];
+    const missing = designGate({ touched, hashes, created, rounds: [] }).findings;
+    const stale = designGate({ touched, hashes, created: [], rounds: [{ phase: "visual", verdict: "OK", files: { "src/hero.css": "old" }, at: 1 }] }).findings;
+    const revise = designGate({ touched, hashes, created: [], rounds: [{ phase: "visual", verdict: "REVISE", blocking: 1, files: { "src/hero.css": "h1" }, at: 1 }] }).findings;
+    for (const f of [...missing, ...stale, ...revise]) {
+      expect(f.message, f.category).toMatch(/impeccable/);
+      expect(f.message, f.category).not.toMatch(/Gemini/);
+      expect(f.message, f.category).not.toMatch(/design-feedback\.mjs (visual|direction)\)/);
+    }
+  });
   it("passes when a visual round with verdict OK covers the current file hash", () => {
     const rounds = [{ phase: "visual", verdict: "OK", files: { "src/hero.css": "h1" }, at: 1 }];
     expect(designGate({ touched, hashes, created: [], rounds }).pass).toBe(true);
