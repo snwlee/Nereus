@@ -1,6 +1,6 @@
 ---
 name: common
-description: Shared rules for every Nereus agent and skill. Referenced from agent bodies. 트리거: 없음 — 직접 호출용 아님.
+description: "Shared rules for every Nereus agent and skill. Referenced from agent bodies. 트리거: 없음 — 직접 호출용 아님."
 ---
 
 # Nereus 공통 규칙

@@ -1,6 +1,6 @@
 ---
 name: baton
-description: Baton loop only — the handoff file format that carries state between nereus:loop iterations (each a fresh session). Interactive sessions rely on auto-compaction instead. 트리거: 루프 반복 안에서 참조. 직접 호출용 아님.
+description: "Baton loop only — the handoff file format that carries state between nereus:loop iterations (each a fresh session). Interactive sessions rely on auto-compaction instead. 트리거: 루프 반복 안에서 참조. 직접 호출용 아님."
 ---
 
 # Baton

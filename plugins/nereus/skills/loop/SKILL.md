@@ -1,6 +1,6 @@
 ---
 name: loop
-description: Long-running autonomous reset loop — each iteration is a fresh session that finishes one task and commits. 트리거: "루프 돌려", "끝날 때까지 자동".
+description: "Long-running autonomous reset loop — each iteration is a fresh session that finishes one task and commits. 트리거: \"루프 돌려\", \"끝날 때까지 자동\"."
 ---
 
 # loop

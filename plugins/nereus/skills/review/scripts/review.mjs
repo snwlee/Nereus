@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { which, run } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 
-const ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
+// NEEDS_VALIDATION 은 심각도가 아니라 "배포·환경 사실 하나가 없어 판정 보류"다. 게이트를 막지 않고 맨 뒤에 둔다.
+const ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "NEEDS_VALIDATION"];
 const norm = (s) => { const u = String(s ?? "INFO").toUpperCase(); return ORDER.includes(u) ? u : u === "ERROR" ? "HIGH" : u === "WARNING" ? "MEDIUM" : "INFO"; };
 
 // 2차 의견(제3자 검증)은 EGM 이 기본이다 — 대화 맥락 없는 Goldfish 서브에이전트가 diff 와 스펙만 읽고 리뷰한다.
@@ -21,6 +22,9 @@ export const REVIEWERS = {
 /** EGM 리뷰어가 읽을 goldfish 페르소나. 서브에이전트 프롬프트에 경로만 넘긴다(대화 맥락은 넘기지 않는다). */
 const PERSONA_DIR = path.resolve(fileURLToPath(new URL("../../goldfish/personas/", import.meta.url)));
 export const EGM_PERSONAS = Object.freeze(["codebase_details.md", "design_critic.md"].map((f) => path.join(PERSONA_DIR, f)));
+
+/** security 의 CRITICAL/HIGH 를 반박해 보는 새 맥락 검증자 페르소나 (출처: cloudflare/security-audit-skill, MIT). */
+export const SECURITY_REFUTER_PERSONA = path.join(PERSONA_DIR, "security_refuter.md");
 
 const SHORTHAND = {
   egm: ["ocr", "egm"],
@@ -153,6 +157,45 @@ export function gate(findings) {
   return { pass: blocking === 0, blocking };
 }
 
+// ── 반증 검증 (출처: cloudflare/security-audit-skill "The agent that checks a finding is never the agent that found it") ──
+// security 가 낸 CRITICAL/HIGH 는 발견한 맥락이 아닌 새 서브에이전트가 반박해 본다.
+// 오탐(심층 방어 한 겹 부재, 같은 주체의 자기 영향, 배포 사실 추측)이 수정 루프를 돌리는 것을 막는다.
+const BLOCKING = new Set(["CRITICAL", "HIGH"]);
+const keyOf = (x) => `${x.file}:${x.line}`;
+
+/** 반증 대상: security 출처의 CRITICAL/HIGH. */
+export function refutationTargets(findings) {
+  return findings.filter((x) => x.source === "security" && BLOCKING.has(String(x.severity).toUpperCase()));
+}
+
+/**
+ * 반증 판정을 적용한다. 입력은 바꾸지 않는다.
+ * confirmed → 그대로, rejected → findings 에서 빼 rejected 로(사유 보존), needs_validation → 심각도를 떼고 빠진 사실을 메시지에 붙인다.
+ * 판정이 없거나 모르는 판정은 그대로 둔다 — 검증이 안 됐다고 차단을 조용히 풀지 않는다.
+ */
+export function applyRefutations(findings, verdicts) {
+  const byKey = new Map(verdicts.map((v) => [keyOf(v), v]));
+  const kept = [];
+  const rejected = [];
+  for (const x of findings) {
+    const v = refutationTargets([x]).length ? byKey.get(keyOf(x)) : undefined;
+    if (v?.verdict === "rejected") { rejected.push({ ...x, reason: v.reason ?? "" }); continue; }
+    if (v?.verdict === "needs_validation") {
+      kept.push({ ...x, severity: "NEEDS_VALIDATION", message: `${x.message} — 확인 필요: ${v.missing ?? "(빠진 사실 미기재)"}` });
+      continue;
+    }
+    kept.push(v?.verdict === "confirmed" ? { ...x, severity: lowerOnly(x.severity, v.severity) } : { ...x });
+  }
+  return { findings: kept, rejected };
+}
+
+// 반증자는 심각도를 내릴 수만 있다. 올리거나 모르는 값이면 원래 값을 지킨다.
+function lowerOnly(original, proposed) {
+  const p = String(proposed ?? "").toUpperCase();
+  const pi = ["CRITICAL", "HIGH", "MEDIUM", "LOW"].indexOf(p);
+  return pi >= 0 && pi > ORDER.indexOf(String(original).toUpperCase()) ? p : original;
+}
+
 // 수정 루프 상한 (superpowers SDD fix loop 이식).
 // completedRound: 방금 끝난 fix 라운드 번호 (초기 리뷰 직후면 0). openBlocking: 남은 CRITICAL/HIGH 수.
 // R1-3 resume (같은 맥락 이어서) → R4-5 escalate (fresh + 상위 모델) → 그 이후 breaker (사용자 판정).
@@ -177,5 +220,5 @@ export function severityAction(severity) {
 if (process.argv[1] && /review\.mjs$/.test(process.argv[1])) {
   const cfg = loadConfig();
   const plan = planRunners(cfg.secondOpinion, undefined, makeProbe());
-  process.stdout.write(JSON.stringify({ mode: cfg.secondOpinion, plan, ...(plan.egm ? { egmPersonas: EGM_PERSONAS } : {}) }) + "\n");
+  process.stdout.write(JSON.stringify({ mode: cfg.secondOpinion, plan, ...(plan.egm ? { egmPersonas: EGM_PERSONAS, securityRefuter: SECURITY_REFUTER_PERSONA } : {}) }) + "\n");
 }

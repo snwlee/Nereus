@@ -1,6 +1,6 @@
 ---
 name: continue
-description: Turn same-session auto-continuation of remaining tasks on or off (Stop re-entry). Off by default. 트리거: "자동으로 계속", "멈추지 말고", "continue on/off".
+description: "Turn same-session auto-continuation of remaining tasks on or off (Stop re-entry). Off by default. 트리거: \"자동으로 계속\", \"멈추지 말고\", \"continue on/off\"."
 ---
 
 # continue — 세션 내 자동 계속

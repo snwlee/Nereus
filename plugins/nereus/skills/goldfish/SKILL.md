@@ -1,6 +1,6 @@
 ---
 name: goldfish
-description: Design-doc review by fresh-context subagents (Elephant-Goldfish Model) — five stages, Elephant resolves findings, converges on two clean rounds. Runs automatically at the end of spec for medium/large work. 트리거: "설계 문서 리뷰", "스펙 검토", "goldfish", "egm".
+description: "Design-doc review by fresh-context subagents (Elephant-Goldfish Model) — five stages, Elephant resolves findings, converges on two clean rounds. Runs automatically at the end of spec for medium/large work. 트리거: \"설계 문서 리뷰\", \"스펙 검토\", \"goldfish\", \"egm\"."
 ---
 
 # goldfish

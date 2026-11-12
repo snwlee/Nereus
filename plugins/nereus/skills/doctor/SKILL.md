@@ -1,6 +1,6 @@
 ---
 name: doctor
-description: Diagnose conflicts between Nereus and other harness plugins — shadowed MCP servers, agents and bins, shared hook points, and curated double-gate combinations. Reports; never uninstalls. 트리거: "충돌", "중복", "플러그인 정리", 새 플러그인 설치 직후.
+description: "Diagnose conflicts between Nereus and other harness plugins — shadowed MCP servers, agents and bins, shared hook points, and curated double-gate combinations. Reports; never uninstalls. 트리거: \"충돌\", \"중복\", \"플러그인 정리\", 새 플러그인 설치 직후."
 ---
 
 # doctor

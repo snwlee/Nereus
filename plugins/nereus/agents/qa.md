@@ -1,6 +1,6 @@
 ---
 name: qa
-description: Run E2E for [flow] tasks and judge completion (ooo qa). Automatic right before review. 트리거: "E2E 돌려", "완료 판정".
+description: "Run E2E for [flow] tasks and judge completion (ooo qa). Automatic right before review. 트리거: \"E2E 돌려\", \"완료 판정\"."
 model: inherit
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__plugin_nereus_browser__take_screenshot, mcp__plugin_nereus_browser__navigate_page, mcp__plugin_nereus_browser__list_console_messages
 ---

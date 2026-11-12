@@ -1,6 +1,6 @@
 ---
 name: skill-audit
-description: Check skills for quality, security, duplication and actual usefulness. Use after adding or editing a skill, before installing an external one, or when always-on token cost grows. 트리거: "스킬 점검", "스킬 감사", "이 스킬 안전해?", "스킬이 실제로 쓰이나".
+description: "Check skills for quality, security, duplication and actual usefulness. Use after adding or editing a skill, before installing an external one, or when always-on token cost grows. 트리거: \"스킬 점검\", \"스킬 감사\", \"이 스킬 안전해?\", \"스킬이 실제로 쓰이나\"."
 ---
 
 # skill-audit — 스킬이 안전하고, 겹치지 않고, 실제로 쓰이는가
@@ -16,8 +16,18 @@ description: Check skills for quality, security, duplication and actual usefulne
 
 ## 1. 형식·보안 (키 없이, 항상 가능)
 
+**플러그인 전체를 한 번에** 본다(SkillEvaluator 0.8+). frontmatter 스키마·보안·PII·라이선스·코드 무결성·유니코드를 한 번에 검사한다. 2분 30초쯤 걸린다(nereus, 2026-11-12).
 ```bash
-uv tool install git+https://github.com/NVIDIA/SkillEvaluator.git   # 최초 1회
+uv tool upgrade skillevaluator || uv tool install git+https://github.com/NVIDIA/SkillEvaluator.git   # 0.8 미만이면 올린다
+PYTHONUTF8=1 skillevaluator validate "${CLAUDE_PLUGIN_ROOT}" --type plugin --tiers 1 --no-llm -o "$(pwd)/.nereus/skilleval"
+```
+- **Windows 한글(cp949) 콘솔은 `PYTHONUTF8=1` 이 없으면 결과 출력 중 `UnicodeEncodeError` 로 죽는다.** 분석은 끝났어도 보고서가 안 남는다.
+- `-o` 는 절대 경로로 준다. `..` 이 들어간 상대 경로는 "parent traversal" 로 거부된다.
+- gitleaks·bandit·skillspector 가 없으면 security·code-integrity 가 "didn't run" 으로 남는다. 그건 통과가 아니다 — 사용자에게 그렇게 알린다.
+- frontmatter 오류는 대개 따옴표 없는 description 안의 `트리거: ` 다. YAML 은 값 안의 `: ` 를 새 키로 읽는다. Claude Code 는 관대하게 읽지만 엄격한 도구(SkillEvaluator·`npx skills`·다른 에이전트)는 거부한다 → description 을 큰따옴표로 감싼다.
+
+0.8 미만이거나 스킬 하나만 볼 때는 스킬별로 돈다:
+```bash
 for s in "${CLAUDE_PLUGIN_ROOT}"/skills/*/; do
   skillevaluator validate "$s"
   skillevaluator quality-check "$s"
@@ -32,11 +42,22 @@ done
 
 ```bash
 uv tool install git+https://github.com/NVIDIA/skillspector.git      # 최초 1회
-skillspector scan <저장소 URL | 디렉터리 | zip> --json
+skillspector scan <저장소 URL | 디렉터리 | zip> --no-llm --format json --output .nereus/skillspector.json
+node "${CLAUDE_PLUGIN_ROOT}/skills/skill-audit/scripts/scan-gate.mjs" .nereus/skillspector.json   # 종료 코드 0 설치 가능, 1 차단
 ```
 설치 전에 반드시 돌린다. 프롬프트 인젝션, 은닉 명령, 위험한 스크립트를 찾는다. 심각한 지적이 하나라도 있으면 설치하지 말고 사용자에게 근거와 함께 보고한다. 이미 검토한 지적은 baseline으로 억제해 재스캔에서 새 항목만 보이게 한다.
 
-설치 게이트: `skillspector scan --json` 결과를 `scripts/scan-gate.mjs`의 `scanGate(report)`로 판정한다. critical/high이 하나라도 있으면 설치 차단(`install: false`), 그 외는 경고로 통과한다. 보고서가 비어 있거나 형식이 깨지면 fail-closed(설치 차단)한다. 설치 여부의 유일 진실원천은 `scanGate` 반환값이다.
+설치 게이트: 위 보고서를 `scan-gate.mjs`(`scanGate(report)`)로 판정한다. 설치 여부의 유일 진실원천은 그 반환값이다.
+- critical/high 가 하나라도 있으면 차단(`install: false`), 그 외는 경고로 통과.
+- `execution_successful: false`·빈 보고서·형식 깨짐은 fail-closed(차단).
+- `analysis_completeness.is_complete: false` 는 통과시키되 `incomplete: true` 로 알린다 — 참조 하나 못 푼 것으로도 partial 이 나와서, 막으면 모든 설치가 막힌다.
+- `--json` 옵션은 없다(2.11). 예전 문서대로 돌리면 `No such option` 으로 끝난다.
+
+**차단됐다고 바로 버리지 않는다 — 지적을 읽고 사용자에게 보인다.** 정적 패턴 매칭이라 보안 문서·테스트 픽스처는 오탐이 많다.
+cloudflare/security-audit-skill 은 HIGH 7건으로 `DO_NOT_INSTALL` 이었지만 전부 오탐이었다(공격 기법 설명의 "credentials.json"·"keychain", 경로 조작 테스트의 `/etc/passwd`).
+지적마다 위치를 열어 "설명·예시인가, 실행되는 지시인가"를 적어 보이고, 설치는 사용자가 정한다.
+
+버전을 올리면 baseline 을 다시 만든다 — 정확 지문 baseline 은 스캐너 버전에 묶여 업그레이드 뒤 아무것도 억제하지 않는다(2.12 CHANGELOG).
 
 ## 3. 중복·토큰 낭비 (임베딩 제공자 필요, 기본 비활성)
 

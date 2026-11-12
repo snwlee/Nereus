@@ -1,6 +1,6 @@
 ---
 name: hud
-description: Print the one-line statusline state (task progress, verification status, context %) or guide its installation. 트리거: "상태 표시", "statusline", "HUD".
+description: "Print the one-line statusline state (task progress, verification status, context %) or guide its installation. 트리거: \"상태 표시\", \"statusline\", \"HUD\"."
 ---
 
 # hud — 한 줄 상태

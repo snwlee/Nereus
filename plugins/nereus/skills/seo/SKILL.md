@@ -1,6 +1,6 @@
 ---
 name: seo
-description: SEO audit checklist (meta, structured data, CWV, crawling, keywords) and report. 트리거: "SEO", "검색 노출", "Lighthouse".
+description: "SEO audit checklist (meta, structured data, CWV, crawling, keywords) and report. 트리거: \"SEO\", \"검색 노출\", \"Lighthouse\"."
 ---
 
 # seo

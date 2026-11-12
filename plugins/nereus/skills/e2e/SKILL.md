@@ -1,6 +1,6 @@
 ---
 name: e2e
-description: E2E for [flow] tasks: Playwright on web, Patrol on Flutter, REST Assured on Spring. Run by qa right before review. 트리거: "E2E", "사용자 흐름 테스트".
+description: "E2E for [flow] tasks: Playwright on web, Patrol on Flutter, REST Assured on Spring. Run by qa right before review. 트리거: \"E2E\", \"사용자 흐름 테스트\"."
 ---
 
 # e2e

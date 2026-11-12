@@ -1,6 +1,6 @@
 ---
 name: image
-description: Generate images and text with Gemini (free web session on mac, API key on Windows); --transparent removes the background. 트리거: "이미지 만들어", "아이콘", "배너".
+description: "Generate images and text with Gemini (free web session on mac, API key on Windows); --transparent removes the background. 트리거: \"이미지 만들어\", \"아이콘\", \"배너\"."
 ---
 
 # image

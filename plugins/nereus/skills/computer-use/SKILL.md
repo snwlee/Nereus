@@ -1,6 +1,6 @@
 ---
 name: computer-use
-description: Operate native desktop windows (Studio dialogs, app settings, off-browser windows) safely — pick the channel (Cua Driver → Orca → vision → Lume), confirm the target, send pid-targeted input, verify every step, ask before irreversible actions. 트리거: "저장 버튼 눌러", "앱 창 조작", "대화상자", "컴퓨터 유즈".
+description: "Operate native desktop windows (Studio dialogs, app settings, off-browser windows) safely — pick the channel (Cua Driver → Orca → vision → Lume), confirm the target, send pid-targeted input, verify every step, ask before irreversible actions. 트리거: \"저장 버튼 눌러\", \"앱 창 조작\", \"대화상자\", \"컴퓨터 유즈\"."
 ---
 
 # computer-use

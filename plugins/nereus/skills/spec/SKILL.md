@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Turn intake output into a spec and tasks — spec-kit for greenfield, OpenSpec for existing code, chosen automatically. 트리거: "스펙", "계획", "태스크로 쪼개".
+description: "Turn intake output into a spec and tasks — spec-kit for greenfield, OpenSpec for existing code, chosen automatically. 트리거: \"스펙\", \"계획\", \"태스크로 쪼개\"."
 ---
 
 # spec
