@@ -86,6 +86,22 @@ AX 트리에 안 잡히는 Qt·웹뷰·캔버스. 창 스크린샷을 보고 **�
 4. **검증**: `verify_state` 또는 새 스냅샷/캡처로 **결과를 눈으로** 확인한다. 검증 없이 다음 행동으로 가지 않는다.
 5. 두 번 연속 결과가 안 바뀌면 멈춘다 — 입력이 어디로 가는지 모르는 상태다. 사용자에게 넘긴다.
 
+## 3.5 Saved steps — 한 번 성공한 조작은 레시피로 남긴다
+
+출처: milind-soni/OpenMausBot `server/saved-steps` (Apache-2.0). 같은 창 조작을 다시 할 때 LLM 판단 없이 재실행한다.
+
+1. **작업 시작 전 먼저 본다**: `node "${CLAUDE_PLUGIN_ROOT}/skills/computer-use/scripts/steps.mjs" list` — 맞는 레시피가 있으면 `run <이름>` 부터.
+2. **실행**: `steps.mjs run <이름> [--approved]` — 종료코드 `0` 통과, `3` 실패(이유를 읽고 §3 행동 루프로 직접 이어받는다), `4` 승인 필요·차단.
+   최근 2회 연속 실패한 레시피는 막힌다 — 앱이 바뀐 것이다. 직접 조작해 성공하면 다시 저장한다.
+3. **저장**: Cua `run_script` 로 흐름을 끝까지 돌려 **결과를 눈으로 확인한 뒤에만** 저장한다.
+   `steps.mjs save <kebab-이름> --app <프로세스명> --script <js파일> [--irreversible] [--note "..."]`
+   - 대상은 `{role, name}` 으로 쓴다. 스냅샷 토큰(`"s0000002a:11"`)은 다음 실행에서 무효라 거절된다.
+   - 마지막 줄은 `return {ok: <검증식>, ...}` — `run_script` 의 `ok` 는 호출 성공일 뿐이다. 실측: 글자가 안 들어갔는데도 `ok:true` 였다.
+   - 저장·전송·삭제·게시가 들어간 흐름은 `--irreversible`. 실행할 때마다 승인 뒤 `--approved`.
+   - 앱은 이름이 아니라 창(`listWindows` 의 title·app_name)으로 찾는다. 실측: `cua.launch("notepad")` 가 Notepad++ 를 띄워 **사용자의 열린 파일**에 입력이 들어갔다.
+
+실행 경로는 `cua-driver mcp`(stdio, 데몬 불필요). 레시피는 프로젝트 `.nereus/saved-steps/<이름>.json` 에 실행 이력과 함께 남는다.
+
 ## 4. 하지 말 것
 
 - 전역 포커스로 키를 보내지 않는다(`System Events keystroke`). 대상이 아닌 앱에 들어간다.
