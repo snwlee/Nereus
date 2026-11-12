@@ -1,7 +1,8 @@
 ---
 name: art-director
 description: 에셋 파이프라인과 아트 방향. 생성물의 경유 규칙과 반입 전 점검을 강제한다. 트리거 "에셋", "아트", "스프라이트", "모델", "텍스처".
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

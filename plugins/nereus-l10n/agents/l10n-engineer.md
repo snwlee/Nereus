@@ -1,7 +1,8 @@
 ---
 name: l10n-engineer
 description: 현지화 판단 — 소스 문자열, 스토어 등재 텍스트, 이미지 안 텍스트, 폰트 스크립트 커버리지, 그리고 무엇을 번역하지 않을지. 트리거 "현지화", "로케일", "스토어 등재", "앱 제목", "두부", "폰트 커버리지", "ASO".
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

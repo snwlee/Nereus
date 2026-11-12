@@ -1,7 +1,8 @@
 ---
 name: writer
 description: "finish stage and documentation: ADRs, README, diagrams (archify), Typst PDF, OpenSpec archive. 트리거: \"문서 써\", \"ADR\", \"PDF로\"."
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

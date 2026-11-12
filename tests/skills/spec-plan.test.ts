@@ -35,6 +35,11 @@ describe("planWork", () => {
     expect(planWork({ cwd: "/r" }, brown).size).toBe("medium");
     expect(planWork({ cwd: "/r", size: "enormous" }, brown).size).toBe("medium");
   });
+  it("attaches size-based model aliases", () => {
+    expect(planWork({ cwd: "/r", size: "large" }, green).models).toEqual({ reviewer: "opus", refuter: "opus", session: "fable" });
+    expect(planWork({ cwd: "/r", size: "enormous" }, brown).models).toEqual({ reviewer: "sonnet", refuter: "opus", session: null });
+    expect(planWork({ cwd: "/r", size: "small" }, brown).models).toEqual(planWork({ cwd: "/r", size: "medium" }, brown).models);
+  });
   it("carries the classify verdict through untouched", () => {
     const p = planWork({ cwd: "/r", size: "medium" }, brown);
     expect(p.kind).toBe("brownfield");

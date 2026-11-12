@@ -1,7 +1,8 @@
 ---
 name: seo
 description: "SEO audit and keyword research, returning a prioritized fix list. 트리거: \"SEO\", \"검색 노출\", \"메타 태그\"."
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__openseo__research_keywords, mcp__openseo__get_keyword_metrics, mcp__openseo__get_serp_results, mcp__openseo__get_ranked_keywords
 ---
 

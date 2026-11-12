@@ -1,13 +1,14 @@
 // Goldfish 리뷰의 결정론 부분. 리뷰 자체(서브에이전트)는 SKILL.md 절차가 하고, 여기는 판단이 필요 없는 일만 한다:
 // 대상 해석 → 기능/구현 범위 분할 → 리뷰어 맥락 링크 수집 → 보고서 파싱 → 라운드 수렴 판정.
 // 출처: google/elephant-goldfish-model (Apache-2.0) skills/egm-review·egm-review-loop 의 규칙을 코드로 옮겼다.
-// 사용: node goldfish.mjs plan <대상> [--mode full|feature|implementation]
+// 사용: node goldfish.mjs plan <대상> [--mode full|feature|implementation] [--size small|medium|large]
 //       node goldfish.mjs parse <보고서.md>
 //       node goldfish.mjs judge <원장.json> <보고서.md> [--not-run a,b]
 //       node goldfish.mjs settle <원장.json> [--settle 키]... [--fixed 키]...
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { modelsFor, resolveSize } from "../../spec/scripts/model-tiers.mjs";
 
 const SKILL_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PERSONAS = path.join(SKILL_DIR, "personas");
@@ -149,7 +150,8 @@ const reviewerPaths = (rv) => ({
   standard: rv.standard ? path.join(STANDARDS, `${rv.standard}.md`) : null,
 });
 
-export function planReview(target, { cwd = process.cwd(), mode = "full" } = {}) {
+export function planReview(target, { cwd = process.cwd(), mode = "full", size } = {}) {
+  const sz = resolveSize(size);
   const t = resolveTarget(target, cwd);
   const notes = [];
   let effective = mode;
@@ -173,6 +175,9 @@ export function planReview(target, { cwd = process.cwd(), mode = "full" } = {}) 
     context,
     synthesizer: path.join(PERSONAS, "synthesizer.md"),
     stages: stagesFor(effective).map((s) => ({ ...s, reviewers: s.reviewers.map(reviewerPaths) })),
+    reviewerModel: modelsFor(sz.size).reviewer,
+    size: sz.size,
+    sizeAssumed: sz.assumed,
     notes,
   };
 }
@@ -249,7 +254,7 @@ const opt = (args, flag) => optAll(args, flag)[0];
 
 function main(argv) {
   const [cmd, ...args] = argv;
-  if (cmd === "plan" && args[0]) return planReview(args[0], { cwd: process.cwd(), mode: opt(args, "--mode") ?? "full" });
+  if (cmd === "plan" && args[0]) return planReview(args[0], { cwd: process.cwd(), mode: opt(args, "--mode") ?? "full", size: opt(args, "--size") });
   if (cmd === "parse" && args[0]) return parseReport(fs.readFileSync(args[0], "utf8"));
   if (cmd === "judge" && args[1]) {
     const report = parseReport(fs.readFileSync(args[1], "utf8"));
@@ -277,7 +282,7 @@ if (process.argv[1] && /goldfish\.mjs$/.test(process.argv[1])) {
   try {
     const out = main(process.argv.slice(2));
     if (out === null) {
-      process.stderr.write("사용: goldfish.mjs plan <대상> [--mode m] | parse <보고서> | judge <원장> <보고서> [--not-run a,b] | settle <원장> [--settle k] [--fixed k]\n");
+      process.stderr.write("사용: goldfish.mjs plan <대상> [--mode m] [--size s] | parse <보고서> | judge <원장> <보고서> [--not-run a,b] | settle <원장> [--settle k] [--fixed k]\n");
       process.exit(2);
     }
     process.stdout.write(JSON.stringify(out, null, 2) + "\n");

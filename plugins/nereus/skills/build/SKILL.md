@@ -72,10 +72,11 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/design/scripts/design-feedback.mjs" status   
 
 ## 5. 비용 티어 (출처: oh-my-openagent category + superpowers tiering)
 
-| 작업 등급 | 예 | 티어 |
+| 작업 등급 | 예 | 티어 (모델 별칭) |
 |---|---|---|
-| 기계적 (mechanical) | 포맷·린트·재테스트·단순 수정 | 가장 낮은 가용 티어 |
-| 통합 (integration) | 다파일 기능 구현·리뷰 반영 | 표준 티어 |
-| 설계·최종판단 (design/final) | 아키텍처 결정·R4–5 escalate·breaker 판정 | 가장 높은 티어 |
+| 기계적 (mechanical) | 린트·재테스트 실행 | `haiku` (파일을 바꾸지 않는 실행만) |
+| 통합 (integration) | 다파일 기능 구현·리뷰 반영·포맷·단순 수정 | 담당 에이전트 frontmatter 의 `model` |
+| 설계·최종판단 (design/final) | 아키텍처 결정·R4–5 escalate·breaker 판정 | `opus` 이상 |
 
-fix 4라운드 이후는 무조건 한 티어 위로 올린다 (고친 주체가 자기 문제를 못 본다).
+별칭 순서는 haiku < sonnet < opus < fable 이다. 담당 에이전트 기준값은 `skills/spec/scripts/model-tiers.mjs` 의 `AGENT_TIERS`.
+fix 4라운드 이후는 무조건 고친 주체의 별칭보다 한 단계 높은 별칭으로 올린다 (고친 주체가 자기 문제를 못 본다).

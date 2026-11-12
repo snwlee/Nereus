@@ -1,7 +1,8 @@
 ---
 name: economy-designer
 description: 게임 경제·수치 밸런싱. 장르 프로파일과 결정론적 시뮬레이터로 병목·인플레·절벽을 판정한다. 트리거 "밸런스", "경제", "수치", "난이도 곡선".
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

@@ -27,6 +27,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/plan.mjs" "$PWD" --size <small|m
 | `specTool` | `tasks-only` 면 스펙 문서 없이 tasks 만 · 아니면 spec-kit / OpenSpec |
 | `reverseSpec` | true 면 spec 단계에서 역스펙 기준선부터 만든다 |
 | `prd` | true 면 §4 의 PRD 를 먼저 만든다 |
+| `models` | 서브에이전트 별칭 `{reviewer, refuter, session}`. review·goldfish 가 `--size` 로 같은 값을 받는다. `models.session` 이 있으면(large) "대형 작업 — 다음 단계를 시작하기 전에 `/model` 뒤에 `models.session` 값을 붙여 세션 모델을 바꿀 수 있다" 한 줄을 알리고 그대로 진행한다(묻지 않는다) |
 
 `interview: "none"` 의 근거: 기존 코드를 고치는 중간 규모 작업에서 요구는 사람 머리가 아니라 **코드에 있다**.
 역스펙이 그것을 캔다. 거기에 인터뷰를 얹으면 이미 답이 있는 질문에 토큰을 쓰고 사용자에게 되묻는다.
@@ -64,6 +65,7 @@ ooo interview
 
 - 모호성 ≤ 0.2 (인터뷰를 돌린 경우). `plan.interview` 가 `none` 이면 이 항목은 해당 없음이다.
 - 결과를 `.nereus/intake.md`에 저장: 목표, 확정된 가정, 제약, 범위 밖, 열린 질문.
+- `.nereus/intake.md` 1행에 `계획:` 으로 시작하는 한 줄을 쓴다(예: `계획: medium · brownfield · openspec`). 제목은 그 아래에 둔다. `--quick` 이어도 쓰고, 매 intake 가 파일을 덮어쓴다. review·goldfish 는 이 줄의 첫 값(size)을 `--size` 로 넘긴다.
 - `plan.reverseSpec` 이 true 면 "역스펙부터"를 intake.md 제약에 적는다 (spec 단계에서 `references/reverse-spec.md` 절차로 기준선을 만든다).
 - 통과하면 "spec 단계로 넘어갑니다"라고 말하고 `nereus:spec`을 이어서 실행한다. 통과 전에는 코드를 만지지 않는다.
 

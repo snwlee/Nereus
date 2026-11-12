@@ -1,7 +1,8 @@
 ---
 name: ads-engineer
 description: AdMob 광고 코드의 판단 — 무효 트래픽 방어, 첫 세션 보호, 동의 순서, 배치 타이밍, 퍼널 수익 레버. 트리거 "광고 단위", "UMP", "동의 순서", "전면 광고 타이밍", "eCPM", "매치율", "광고 수익".
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

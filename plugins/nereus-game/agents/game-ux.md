@@ -1,7 +1,8 @@
 ---
 name: game-ux
 description: 게임 UI·HUD·조작감 설계와 검토. 입력 장치·안전영역·패드 포커스를 1급으로 다룬다. 트리거 "게임 UI", "HUD", "조작감", "메뉴 흐름".
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

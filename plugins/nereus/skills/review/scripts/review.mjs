@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { which, run } from "../../../hooks/scripts/lib/exec.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
+import { modelsFor, resolveSize } from "../../spec/scripts/model-tiers.mjs";
 
 // NEEDS_VALIDATION 은 심각도가 아니라 "배포·환경 사실 하나가 없어 판정 보류"다. 게이트를 막지 않고 맨 뒤에 둔다.
 const ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "NEEDS_VALIDATION"];
@@ -217,8 +218,18 @@ export function severityAction(severity) {
   return "defer-ledger";
 }
 
+// 출력의 plan 키는 runners(어떤 리뷰어가 도는지)다. EGM 이 돌 때만 서브에이전트 별칭을 싣는다.
+export function reviewOutput({ mode, runners, size }) {
+  const r = resolveSize(size);
+  const base = { mode, plan: runners, size: r.size, sizeAssumed: r.assumed };
+  if (!runners.egm) return base;
+  const m = modelsFor(r.size);
+  return { ...base, egmPersonas: EGM_PERSONAS, securityRefuter: SECURITY_REFUTER_PERSONA, egmModel: m.reviewer, refuterModel: m.refuter };
+}
+
 if (process.argv[1] && /review\.mjs$/.test(process.argv[1])) {
   const cfg = loadConfig();
-  const plan = planRunners(cfg.secondOpinion, undefined, makeProbe());
-  process.stdout.write(JSON.stringify({ mode: cfg.secondOpinion, plan, ...(plan.egm ? { egmPersonas: EGM_PERSONAS, securityRefuter: SECURITY_REFUTER_PERSONA } : {}) }) + "\n");
+  const runners = planRunners(cfg.secondOpinion, undefined, makeProbe());
+  const i = process.argv.indexOf("--size");
+  process.stdout.write(JSON.stringify(reviewOutput({ mode: cfg.secondOpinion, runners, size: i > -1 ? process.argv[i + 1] : undefined })) + "\n");
 }

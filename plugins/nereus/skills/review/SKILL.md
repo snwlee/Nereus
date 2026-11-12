@@ -13,10 +13,15 @@ nereus:common 규칙을 따른다. 담당 에이전트: reviewer. 인증·입력
 ## 1. 계획
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs"
+node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs" [--size small|medium|large]
 ```
 설정 `secondOpinion`과 설치 상태로 어떤 리뷰어가 돌지 나온다. `skipped`가 있으면 사용자에게 알린다(차단은 아님).
-EGM 이 계획되면 출력에 `egmPersonas`(goldfish 페르소나 절대 경로)가 함께 나온다.
+EGM 이 계획되면 출력에 `egmPersonas`(goldfish 페르소나 절대 경로)와 서브에이전트 별칭 `egmModel`·`refuterModel` 이 함께 나온다.
+`--size` 는 `.nereus/intake.md` 1행 `계획:` 의 첫 값이다. 그 줄이 없거나 지금 작업의 것이라는 확신이 없으면 빼고 돌린다 — 출력의 `sizeAssumed` 가 true 면 "규모를 몰라 medium 으로 봤다" 한 줄을 알린다.
+
+별칭을 쓸 수 없을 때(`Agent` 오류가 모델을 알 수 없음·사용 불가·허용 안 됨이라고 말할 때만):
+- EGM: 별칭 순서(haiku < sonnet < opus < fable)에서 한 단계 아래 별칭을 명시해 한 번만 재시도한다. 하한은 `sonnet` 이다. 끝내 못 쓰면 EGM 을 `skipped` 로 알리고 게이트는 OCR 결과로 판정한다. large 에서 sonnet 으로 내려가 돌았으면 보고서의 그 리뷰어에 `degraded` 를 붙인다.
+- 반박은 재시도하지 않는다. `refuterModel` 로 못 돌면 반박하지 않은 것으로 둔다(의도: 보안 지적은 닫힌 쪽으로 실패한다 — 약한 반박으로 차단을 풀지 않는다) — 지적은 차단으로 남기고 보고서에 `degraded` 를 붙인다. 풀려면 opus 를 쓸 수 있는 세션에서 반박을 다시 돌리거나, 사용자가 수용·기각하고 그 결정을 `.nereus/review.md` 에 기록한다.
 
 **제3자 검증은 EGM 이 1순위이고 기본으로 그것만 돈다**(2026-11-12 방침). 외부 CLI 의 쿠키·할당량·신뢰 디렉터리 문제에 리뷰가 묶이지 않는다.
 
@@ -39,7 +44,7 @@ Codex 는 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로�
 > `.md` 는 `unsupported_ext` 로 제외되므로, 문서만 바뀐 범위에서 `0 reviewable` 이 나오는 것은 정상이다.
 
 - **OCR delegation**: `ocr delegate preview --from <base> --to HEAD` 로 리뷰할 파일과 룰을 받고, 파일별 `ocr delegate rule <files>`로 룰을 받아 **이 세션의 모델이 직접** 리뷰한다. OCR이 API 키로 직접 리뷰하게 설정돼 있으면 `ocr review --format json --output .nereus/review-ocr.json`을 쓴다.
-- **EGM (기본 2차 의견)**: `Agent`(general-purpose) 서브에이전트를 **페르소나마다 하나씩 같은 메시지에서 병렬로** 띄운다.
+- **EGM (기본 2차 의견)**: `Agent`(general-purpose, model: `egmModel`) 서브에이전트를 **페르소나마다 하나씩 같은 메시지에서 병렬로** 띄운다.
   프롬프트에는 아래만 넣는다 — 이 대화의 결정·이유·요약을 넣으면 새 맥락 리뷰가 아니다(goldfish 원칙).
   ```text
   You are a Goldfish reviewer. First read your persona file and follow it exactly: <egmPersonas 의 경로 하나>
@@ -66,7 +71,7 @@ Codex 는 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로�
 ## 2.5 security 반증 (CRITICAL/HIGH 가 있을 때만)
 
 security 에이전트가 낸 CRITICAL/HIGH 는 발견한 맥락이 아닌 **새 서브에이전트가 반박해 본다**(출처: cloudflare/security-audit-skill — 확인하는 에이전트는 발견한 에이전트가 아니다).
-대상은 `refutationTargets(findings)` 로 고르고, 항목마다 `Agent`(general-purpose)를 같은 메시지에서 병렬로 띄운다. 프롬프트에는 페르소나 경로(`review.mjs` 출력의 `securityRefuter`)와 그 항목 하나만 넣는다 — 다른 항목·이 대화의 판단은 넣지 않는다.
+대상은 `refutationTargets(findings)` 로 고르고, 항목마다 `Agent`(general-purpose, model: `refuterModel`)를 같은 메시지에서 병렬로 띄운다. 프롬프트에는 페르소나 경로(`review.mjs` 출력의 `securityRefuter`)와 그 항목 하나만 넣는다 — 다른 항목·이 대화의 판단은 넣지 않는다.
 ```text
 You are a Goldfish verifier. First read your persona file and follow it exactly: <securityRefuter 경로>
 Finding to refute (JSON): {"file","line","severity","message"}

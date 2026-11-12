@@ -1,7 +1,8 @@
 ---
 name: graphics-engineer
 description: three.js·WebGL 판단 — dispose 완전성, dispose 배선, renderer.info 계측, 렌더 예산과 GPU 누수. 트리거 "three.js", "webgl", "3d 씬", "드로우 콜", "dispose", "gpu 메모리", "프레임 드랍".
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

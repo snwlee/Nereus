@@ -1,6 +1,7 @@
 // 규모 × 신규/수정 → 인터뷰·스펙 도구·역스펙·PRD. 결정 지점을 한 곳에 모은다.
 // classify 는 손대지 않는다 — spec/SKILL.md 와 기존 테스트가 그 출력을 쓴다.
 import { classify } from "./classify.mjs";
+import { modelsFor } from "./model-tiers.mjs";
 
 const SIZES = new Set(["small", "medium", "large"]);
 
@@ -18,7 +19,7 @@ const MATRIX = {
 export function planWork({ cwd, size } = {}, deps = {}) {
   const s = SIZES.has(size) ? size : "medium";   // 모르면 중간이 가장 덜 틀린다
   const c = classify(cwd, deps);
-  return { size: s, ...c, ...MATRIX[`${s}:${c.kind}`] };
+  return { size: s, ...c, ...MATRIX[`${s}:${c.kind}`], models: modelsFor(s) };
 }
 
 if (process.argv[1] && /plan\.mjs$/.test(process.argv[1])) {

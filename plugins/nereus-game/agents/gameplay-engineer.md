@@ -1,7 +1,8 @@
 ---
 name: gameplay-engineer
 description: 게임플레이 코드의 판단 — 코어 루프 구현, 계층 경계, 수직 슬라이스 범위, 서버 권위. 트리거 "코어 루프 구현", "어디부터 만들지", "이 로직 어디 둬", "서버가 정해야 하나", "프로토타입".
-model: inherit
+model: opus
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

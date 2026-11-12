@@ -1,7 +1,8 @@
 ---
 name: level-designer
 description: 레벨·맵 구조와 난이도 곡선 설계. 절차적 생성은 결정론적인 것만 쓴다. 트리거 "레벨", "맵", "스테이지", "난이도 곡선".
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

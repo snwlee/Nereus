@@ -1,7 +1,8 @@
 ---
 name: architect
 description: "Owns intake and spec: interview, spec-tool choice, task decomposition, ADRs and diagrams. 트리거: \"설계\", \"스펙\", \"아키텍처\"."
-model: inherit
+model: opus
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit, WebFetch, mcp__codegraph__codegraph_explore
 ---
 

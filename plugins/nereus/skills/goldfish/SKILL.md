@@ -18,11 +18,12 @@ nereus:common 규칙을 따른다. 담당: 이 세션(Elephant)이 오케스트�
 ## 1. 계획
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/goldfish/scripts/goldfish.mjs" plan <대상> [--mode full|feature|implementation]
+node "${CLAUDE_PLUGIN_ROOT}/skills/goldfish/scripts/goldfish.mjs" plan <대상> [--mode full|feature|implementation] [--size small|medium|large]
 ```
 
 대상: OpenSpec change 디렉터리(`openspec/changes/<이름>`), spec-kit 기능 디렉터리, 또는 md 파일.
 출력의 `feature`·`detailed`(범위), `context.inside`(리뷰어에게 줄 파일), `stages`(단계별 리뷰어·페르소나·표준 절대 경로), `notes` 를 그대로 쓴다.
+`--size` 는 `.nereus/intake.md` 1행 `계획:` 의 첫 값이다. 없거나 확신이 없으면 빼고 돌린다 — `sizeAssumed` 가 true 면 "규모를 몰라 medium 으로 봤다" 한 줄을 알린다. 출력의 `reviewerModel` 이 리뷰어 서브에이전트의 별칭이다.
 
 - 모드 기본은 `full`. 구현 범위가 없으면 스크립트가 `feature` 로 낮추고 `notes` 에 적는다 — 알리고 진행한다.
 - `context.outside`·`context.urls` 는 자동으로 넣지 않는다. URL 은 받아서 `.nereus/goldfish/` 에 파일로 저장해 절대 경로로 넘긴다. 작업 디렉터리 밖 파일은 넣지 않고 넣지 않았다고 알린다.
@@ -44,7 +45,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/goldfish/scripts/goldfish.mjs" plan <대상> 
 
 ### 서브에이전트 띄우기
 
-`Agent` 도구, `subagent_type: general-purpose`. 단계의 리뷰어마다 하나씩 **같은 메시지에서 병렬로** 띄운다(원본의 synthesizer 대신 직접 dispatch — Claude Code 는 서브에이전트가 다시 서브에이전트를 띄우지 못한다).
+`Agent` 도구, `subagent_type: general-purpose`, model: `reviewerModel`. 모델 오류(알 수 없음·사용 불가·허용 안 됨)일 때만 별칭 순서(haiku < sonnet < opus < fable)에서 한 단계 아래 별칭을 명시해 한 번만 재시도한다. 하한은 `sonnet` 이다. 내려가 돌았으면 단계 보고서 `## Reviewer Status` 표의 그 행에 세 번째 열로 `degraded` 를 적고(`| 이름 | completed | degraded |` — 상태 칸은 그대로 둬야 `parseReport` 가 읽는다), 끝내 못 쓰면 아래 규칙대로 `not run` 이다. 단계의 리뷰어마다 하나씩 **같은 메시지에서 병렬로** 띄운다(원본의 synthesizer 대신 직접 dispatch — Claude Code 는 서브에이전트가 다시 서브에이전트를 띄우지 못한다).
 프롬프트에는 아래만 넣는다. 이 대화의 결정·이유·요약을 넣으면 Goldfish 가 아니다.
 
 ```text

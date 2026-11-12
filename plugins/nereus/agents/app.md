@@ -1,7 +1,8 @@
 ---
 name: app
 description: "Implement Flutter/Dart app code with TDD — widgets, state, platform channels, clean analyze. 트리거: \"앱\", \"Flutter\", \"위젯\"."
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit, mcp__codegraph__codegraph_explore, mcp__plugin_nereus_context7__resolve-library-id, mcp__plugin_nereus_context7__query-docs
 ---
 

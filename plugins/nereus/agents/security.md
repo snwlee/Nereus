@@ -1,7 +1,8 @@
 ---
 name: security
 description: "Security review of changes to auth, input handling, DB, files, outbound calls, crypto and payments; SkillSpector scan for external skills. Automatic during review. 트리거: \"보안 점검\"."
-model: inherit
+model: opus
+effort: high
 tools: Read, Grep, Glob, Bash, Write
 ---
 

@@ -1,7 +1,8 @@
 ---
 name: reviewer
 description: "The review stage: OCR delegation merged with EGM (fresh-context subagent) second opinion, findings by severity. 트리거: \"리뷰\", \"코드 검토\"."
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, mcp__codegraph__codegraph_explore
 ---
 

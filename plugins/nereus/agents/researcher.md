@@ -1,7 +1,8 @@
 ---
 name: researcher
 description: "Market, technology and competitive research → an evidence-backed report + PDF. Library docs are looked up by the dev agents via Context7, not here. 트리거: \"조사해\", \"리서치\", \"비교\"."
-model: inherit
+model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
 ---
 
