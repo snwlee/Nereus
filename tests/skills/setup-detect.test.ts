@@ -19,13 +19,16 @@ describe("setup detect", () => {
       expect(t.install.win32).toBeTruthy();
     }
   });
-  it("cloakbrowser 는 선택이고 note 가 무료 핀을 못박는다", () => {
-    const t = TOOLS.find((x: any) => x.bin === "cloakbrowser");
-    expect(t, "cloakbrowser 행").toBeTruthy();
+  it("scrapling 은 선택이고 Markdown extra 와 브라우저 설치 함정을 note 로 적는다", () => {
+    // 2026-11-12: 조사의 차단 우회는 CloakBrowser → Scrapling (스파이크 4/6 vs 2~3/6).
+    expect(TOOLS.map((x: any) => x.bin)).not.toContain("cloakbrowser");
+    const t = TOOLS.find((x: any) => x.bin === "scrapling");
+    expect(t, "scrapling 행").toBeTruthy();
     expect(t.required).toBe(false);
-    // 고정하지 않으면 최신(Pro)을 받는다. 설치 안내에 그 사실이 없으면 유료로 새어나간다.
-    expect(t.note).toContain("CLOAKBROWSER_VERSION");
-    expect(t.note).toContain("146");
+    // [fetchers] 만으로는 Markdown 변환이 markdownify 없음으로 죽는다.
+    expect(t.install.win32).toContain("scrapling[fetchers,ai]");
+    // `scrapling install` 은 성공이라 찍고 브라우저를 안 받는 일이 있었다(Windows 실측).
+    expect(t.note).toMatch(/patchright install chromium/);
   });
 
   it("reports present/missing using injected probe and platform", () => {
