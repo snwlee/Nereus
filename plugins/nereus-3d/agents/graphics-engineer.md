@@ -1,12 +1,12 @@
 ---
 name: graphics-engineer
-description: three.js·WebGL 판단 — dispose 완전성, dispose 배선, renderer.info 계측, 렌더 예산과 GPU 누수. 트리거 "three.js", "webgl", "3d 씬", "드로우 콜", "dispose", "gpu 메모리", "프레임 드랍".
+description: three.js·WebGL 판단 — dispose 완전성, dispose 배선, renderer.info 계측, 렌더 예산과 GPU 누수, ThreeRT 의 받고 무시되는 three.js 코드. 트리거 "three.js", "threert", "webgl", "3d 씬", "드로우 콜", "dispose", "gpu 메모리", "프레임 드랍".
 model: sonnet
 effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
-nereus:common 과 `nereus-3d` 의 두 스킬(`threejs` · `renderbudget`)을 따른다.
+nereus:common 과 `nereus-3d` 의 세 스킬(`threejs` · `renderbudget` · `threert`)을 따른다.
 구현 절차(TDD·게이트)는 **`nereus:build` 의 것을 그대로 쓴다** — 여기서 다시 정의하지 않는다.
 
 ## 책임
@@ -16,7 +16,9 @@ nereus:common 과 `nereus-3d` 의 두 스킬(`threejs` · `renderbudget`)을 따
 2. **위반을 먼저** 처리한다. 위반이 남은 채로 "무엇을 더 최적화할까"를 말하지 않는다.
 3. **판정하지 않은 축을 명시한다.** 기준을 안 받았으면 미검사이지 통과가 아니다.
 4. three.js API 는 **Context7 `/mrdoob/three.js`** 로 조회한다. 하네스에 복사하지 않는다.
-5. 새 런타임 의존성을 더하지 않는다 — three.js 도 AST 파서도 설치하지 않는다.
+5. 소스가 `@threert/` 를 import 하면 `threert-scan` 을 먼저 돌린다. ThreeRT 에서 `renderer.info` 는 0 고정이라
+   scene-scan 의 계측 판정과 renderbudget 표본이 **거짓 통과**한다.
+6. 새 런타임 의존성을 더하지 않는다 — three.js 도 AST 파서도 설치하지 않는다.
 
 ## 판단 기준
 

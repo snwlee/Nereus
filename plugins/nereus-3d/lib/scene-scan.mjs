@@ -15,7 +15,7 @@ const IDENT = "[A-Za-z0-9_$]";
  * 중괄호 짝 세기와 토큰 탐지가 문자열 안의 `{` 나 주석 안의 `dispose` 에 속지 않게 한다.
  * 길이를 보존하므로 원본 인덱스가 그대로 유효하다.
  */
-function stripNoise(text) {
+export function stripNoise(text) {
   const out = text.split("");
   let i = 0;
   const blank = (from, to) => {
@@ -63,7 +63,7 @@ const FN_HEAD = new RegExp(
 );
 
 /** 여는 중괄호 위치에서 짝이 맞는 닫는 위치를 찾는다. 못 찾으면 -1. */
-function matchBrace(text, open) {
+export function matchBrace(text, open) {
   let depth = 0;
   for (let i = open; i < text.length; i += 1) {
     if (text[i] === "{") depth += 1;

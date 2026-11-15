@@ -1,0 +1,65 @@
+{
+  "note": "ThreeRT 가 three.js 코드를 받고도 다르게 동작하는 지점. ThreeRT 가 정하고 ThreeRT 가 바꾸는 값이라 코드에 박지 않는다. 상류는 2026-11-10 에 생긴 빠르게 바뀌는 저장소다 — commit 이 낡으면 이 파일부터 다시 확인한다.",
+  "source": "https://github.com/meshy-dev/ThreeRT",
+  "commit": "1aae0b7f81a5ba6a4491bc624baf4a5799ffb060",
+  "checkedAt": "2026-11-15",
+  "importMarker": "@threert/",
+  "importMarkerWhy": "plain three.js 코드에서는 이 규칙들이 전부 틀린 경고다. ThreeRT 패키지를 import 하는 코드베이스에만 적용한다.",
+  "evidence": {
+    "threert-animation-loop": "packages/scene/src/compat.ts — WebGLRenderer.setAnimationLoop: \"Kept, not called: a ThreeRT game's `frame` runs every frame instead.\"",
+    "threert-info-stub": "packages/scene/src/compat.ts — WebGLRenderer.info = { render: { calls: 0, triangles: 0 }, memory: { geometries: 0, textures: 0 } }, 갱신되지 않는다",
+    "threert-setup-nondeterministic": "packages/gameplay/src/random.ts withDeterminism 은 game.ts 핸들러·node-host.ts 채널에서만 쓰인다. setup 은 감싸지 않고 seed 와 random 을 인자로 준다. 상류 스킬 Non-negotiables: \"no Math.random in setup\" (.claude/skills/threert-scene-authoring/SKILL.md); 리스너 전달은 packages/gameplay/src/node-host.ts `withDeterminism(ts, random, () => channel.deliver(m, world))`",
+    "threert-library-field": "packages/scene/src/core.ts MeshStandardMaterial.setValues 는 모르는 키를 그대로 대입한다. wet·puddles·grime·windows·worldScale 은 packages/scene/src/materials.ts SurfaceMaterial 의 파라미터다",
+    "threert-ignored-setting": "packages/scene/src/compat.ts \"every setting accepted and ignored (`shadowMap.*` included)\"; packages/scene/src/core.ts Light.shadow \"three.js's shadow-map settings: accepted, ignored\". 노출은 camera.setManualExposure / setAutoExposure 다",
+    "threert-lux-suspect": "packages/scene/src/core.ts DirectionalLight \"`intensity` is illuminance in lux\"; .claude/skills/threert-scene-authoring/references/lighting-atmosphere.md — 태양 ~100 000 lux, 달빛 0.1–0.3 lux"
+  },
+  "ignoredSettings": [
+    "toneMappingExposure",
+    "toneMapping",
+    "outputColorSpace",
+    "shadowMap.enabled",
+    "shadowMap.type",
+    "shadowMap.autoUpdate",
+    "shadow.mapSize",
+    "shadow.bias",
+    "shadow.normalBias",
+    "shadow.radius",
+    "shadow.blurSamples",
+    "shadow.camera"
+  ],
+  "libraryOnlyFields": [
+    "wet",
+    "puddles",
+    "grime",
+    "windows",
+    "worldScale"
+  ],
+  "libraryOnlyFieldsWhy": "표준 머티리얼은 three.js 그대로다. 이 필드는 SurfaceMaterial(또는 WetGroundMaterial·FacadeMaterial) 로 옮겨야 렌더된다.",
+  "standardMaterials": [
+    "MeshStandardMaterial",
+    "MeshPhysicalMaterial"
+  ],
+  "luxSuspect": {
+    "above": 0.3,
+    "atMost": 10
+  },
+  "luxSuspectWhy": "three.js 습관의 1~10 은 lux 로는 깊은 황혼이다. 달빛(0.1–0.3)은 정상이라 하한을 둔다. 자동 노출(기본)이면 어둡게 보정돼 '그냥 칙칙한' 장면이 되고, 수동 노출이면 거의 검다. 의도일 수 있으니 경고다.",
+  "ignoredSettingsFix": {
+    "toneMapping": "노출은 camera.setManualExposure(ev100) / setAutoExposure() 로 정한다",
+    "outputColorSpace": "색 출력·톤매핑은 렌더 프리셋이 정한다(render.overrides.post)",
+    "shadow": "받고 무시한다. 그림자는 패스 트레이서가 모든 빛에서 항상 낸다"
+  },
+  "ignoredSettingsFixWhy": "설정마다 처방이 다르다. 접두사로 고른다(shadowMap·shadow.* 는 shadow).",
+  "deferredCallbackMethods": [
+    "on",
+    "once",
+    "addEventListener",
+    "listen",
+    "subscribe"
+  ],
+  "deferredCallbackMethodsWhy": "setup 안에서 등록만 하고 나중에 이벤트로 불리는 콜백. 상류 node-host.ts 가 리스너 전달을 withDeterminism 으로 감싸므로 그 안의 Math.random 은 setup 위반이 아니다. 목록에 없는 등록 API 는 위반으로 나온다(닫힌 쪽으로 실패).",
+  "gameDefiners": [
+    "defineGame"
+  ],
+  "gameDefinersWhy": "게임의 setup 은 이 함수에 넘긴 객체 리터럴의 최상위 setup 멤버다(상류 packages/gameplay defineGame, games/*.game.ts). 프로젝트가 자체 래퍼(상류의 levelGame·destructionGame 같은)를 쓰면 그 이름을 더한다."
+}

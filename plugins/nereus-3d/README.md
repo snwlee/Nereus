@@ -18,14 +18,15 @@ three.js 에서 **조용히 틀리는 것**을 프로세스로 잡는다.
 그래서 이 플러그인은 **문서를 복사하지 않는다.** Context7·pmndrs MCP 로 조회하고 출처만 참조한다.
 복사본은 상류가 리비전을 올리면 낡았다는 표시 없이 틀린다.
 
-## 두 검사기
+## 세 검사기
 
 | 스킬 | 검사기 | 본다 |
 |---|---|---|
 | `threejs` | `lib/scene-scan.mjs` | **코드** — 불완전한 dispose, 배선 안 된 헬퍼, 계측 부재 |
 | `renderbudget` | `lib/render-budget.mjs` | **프레임** — `renderer.info` 표본의 예산 초과와 누수 |
+| `threert` | `lib/threert-scan.mjs` | **ThreeRT 코드** — 받고 무시되는 three.js 설정, setup 비결정성, lux 단위 |
 
-둘 다 stdin JSON → stdout JSON 이고, 모듈로도 import 할 수 있다.
+셋 다 stdin JSON → stdout JSON 이고, 모듈로도 import 할 수 있다.
 
 ## 실제로 무엇을 잡았나
 
@@ -36,6 +37,13 @@ three.js 에서 **조용히 틀리는 것**을 프로세스로 잡는다.
 - `renderer.info` 를 읽는 곳이 **0곳**. → `instrumentation-missing`
 - 같은 저장소의 `game_view.html` 은 속성을 순회해 **완전**하다. 위임까지 따라가므로
   그것을 부르는 `disposeObject3D` 도 통과한다 — 거짓 양성을 내지 않는다.
+
+## ThreeRT (meshy-dev/ThreeRT, MIT)
+
+하드웨어 패스 트레이서 위의 three.js 모양 API. three.js 코드가 그대로 돌게 하려고 렌더러 설정을
+**받고 무시한다** — `setAnimationLoop` 콜백은 안 불리고 `renderer.info` 는 0 이다. 이 플러그인의
+계측 검사·renderbudget 이 거짓 통과하는 지점이라 별도 검사기를 둔다. 장면 작성 문서는 상류 저장소의
+`.claude/skills/threert-scene-authoring/` 이 갖는다 — 복사하지 않는다. 규칙 근거는 `threert-compat.json`.
 
 ## 경계
 

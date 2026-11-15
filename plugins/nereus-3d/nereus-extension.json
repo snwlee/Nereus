@@ -10,6 +10,11 @@
       "skill": "nereus-3d:renderbudget",
       "why": "계측이 없으면 드로우콜도 GPU 메모리도 측정 자체가 불가능하고, 누수는 증상이 난 뒤에야 보인다. 단발 스냅샷으로 판정하면 큰 씬이 전부 빨개져서 아무도 안 본다",
       "re": "드로우\\s?콜|draw\\s?call|renderer\\.info|gpu\\s?메모리|프레임\\s?(드랍|드롭|저하)|텍스처\\s?예산|렌더\\s?예산"
+    },
+    {
+      "skill": "nereus-3d:threert",
+      "why": "ThreeRT 는 three.js 렌더러 설정을 받고 무시한다 — setAnimationLoop 콜백은 안 불리고 renderer.info 는 0 고정이라 계측 검사가 거짓 통과한다. 에러가 없어서 three.js 습관 그대로 쓰면 아무도 모른다",
+      "re": "threert|@threert"
     }
   ]
 }

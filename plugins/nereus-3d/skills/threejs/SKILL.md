@@ -77,3 +77,5 @@ const { violations, unmeasured, disposeHelpers } = scanScene({ sources });
 
 - 에셋 파일(용량·포맷·텍스처 크기)은 `nereus-game:asset` 이다. **여기는 프레임이다.**
 - 런타임 증거(드로우콜·GPU 메모리 표본)는 `nereus-3d:renderbudget` 이다.
+- 소스가 `@threert/` 를 import 하면(ThreeRT) `nereus-3d:threert` 를 같이 돌린다. 거기서 `renderer.info` 는
+  0 고정 스텁이라 `instrumentation-missing` 통과가 **아무것도 증명하지 않는다**.

@@ -35,6 +35,9 @@ const { violations, unmeasured } = checkRenderBudget({ samples, budgets });
 
 판정 축: `calls` · `triangles` · `points` · `lines` · `geometries` · `textures` · `programs`.
 
+**ThreeRT 의 `renderer.info` 표본은 받지 않는다.** 0 고정 스텁이라 초과도 누수도 없다고 나온다
+(`nereus-3d:threert` 의 `threert-info-stub`). ThreeRT 비용은 상류 `tools/bench-live.ts` 의 프레임 시간으로 본다.
+
 ## 2. 예산 기본값을 여기 적지 않는다
 
 드로우콜 상한·텍스처 예산은 **기기 등급·해상도·씬 복잡도가 정하는 운영값**이다.
