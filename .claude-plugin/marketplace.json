@@ -56,7 +56,7 @@
     {
       "name": "nereus-3d",
       "source": "./plugins/nereus-3d",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "three.js 런타임 하네스: dispose 누락·드로우콜·GPU 메모리 누수 판정"
     }
   ]

@@ -1,6 +1,6 @@
 {
   "name": "nereus-3d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "three.js 런타임 하네스: dispose 누락·드로우콜·GPU 메모리 누수를 판정한다. 문서는 만들지 않는다 — Context7 과 pmndrs MCP 가 이미 한다",
   "author": {
     "name": "snwlee",
@@ -15,6 +15,7 @@
     "webgpu",
     "3d",
     "performance",
-    "harness"
+    "harness",
+    "threert"
   ]
 }
