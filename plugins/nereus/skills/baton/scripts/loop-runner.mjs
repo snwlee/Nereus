@@ -2,11 +2,13 @@
 // 사용: node loop-runner.mjs --goal "작업" --tasks <path> [--spec <path>] [--max 30] [--gate "<cmd>"] [--timeout <sec>]
 import fs from "node:fs";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { run, which } from "../../../hooks/scripts/lib/exec.mjs";
 import { handoffPath, handoffDir, latestHandoff } from "../../../hooks/scripts/lib/paths.mjs";
 import { autonomousGate } from "../../../hooks/scripts/lib/autonomous-gate.mjs";
+import { claimWork, isWorkflowTask, releaseWork } from "../../../hooks/scripts/lib/session-documents.mjs";
 import { loadConfig } from "../../../hooks/scripts/lib/config.mjs";
 
 // [wave:N] 태그. [flow] 선례를 따라 대소문자·공백을 관대하게 받는다.
@@ -85,7 +87,7 @@ export function planWorktree({ task, index, root, base }) {
 export async function runWave(group, opts, deps = {}) {
   const root = opts.root ?? opts.cwd ?? process.cwd();
   const log = deps.log ?? (() => {});
-  const runClaudeIn = deps.runClaude ?? ((prompt, cwd) => defaultRunClaude(prompt, cwd, opts.allowedTools ?? LOOP_ALLOWED_TOOLS));
+  const runClaudeIn = deps.runClaude ?? ((prompt, cwd) => defaultRunClaude(prompt, cwd, opts.allowedTools ?? LOOP_ALLOWED_TOOLS, opts.workOwner));
   const prompt = buildPrompt({ ...opts.paths, goal: opts.goal });
 
   if (group.length === 1) {
@@ -244,11 +246,11 @@ export function claudeArgs(prompt, { allowedTools } = {}) {
   return args;
 }
 
-function defaultRunClaude(prompt, cwd, allowedTools = LOOP_ALLOWED_TOOLS) {
+function defaultRunClaude(prompt, cwd, allowedTools = LOOP_ALLOWED_TOOLS, workOwner = "") {
   return new Promise((resolve) => {
     const bin = which("claude");
     if (!bin) return resolve({ ok: false, error: "claude CLI 없음" });
-    const p = spawn(bin, claudeArgs(prompt, { allowedTools }), { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false, env: claudeEnv() });
+    const p = spawn(bin, claudeArgs(prompt, { allowedTools }), { cwd, stdio: ["ignore", "inherit", "inherit"], shell: false, env: claudeEnv({ ...process.env, NEREUS_LOOP_WORK_OWNER: workOwner }) });
     p.on("close", (code) => resolve({ ok: code === 0, code }));
     p.on("error", (e) => resolve({ ok: false, error: String(e) }));
   });
@@ -285,7 +287,7 @@ export async function runLoop(opts, deps = {}) {
   const cwd = opts.cwd ?? process.cwd();
   const readTasks = deps.readTasks ?? (() => fs.readFileSync(path.resolve(cwd, opts.paths.tasks), "utf8"));
   const allowedTools = deps.allowedTools ?? resolveAllowedTools((deps.config ?? (() => loadConfig({ cwd })))());
-  const runClaude = deps.runClaude ?? ((prompt) => defaultRunClaude(prompt, cwd, allowedTools));
+  const runClaude = deps.runClaude ?? ((prompt) => defaultRunClaude(prompt, cwd, allowedTools, opts.workOwner));
   const gitDirty = deps.gitDirty ?? (() => run("git", ["status", "--porcelain"], { cwd }).stdout.trim() !== "");
   const commit = deps.commit ?? ((msg) => { run("git", ["add", "-A"], { cwd }); run("git", ["commit", "-q", "-m", msg], { cwd }); });
   const evaluate = deps.evaluate ?? (() => defaultEvaluate(cwd));
@@ -378,7 +380,26 @@ if (process.argv[1] && /loop-runner\.mjs$/.test(process.argv[1])) {
   const arg = (k, d) => { const i = process.argv.indexOf(k); return i > -1 ? process.argv[i + 1] : d; };
   const cwd = process.cwd();
   const timeoutSec = parseInt(arg("--timeout", "0"), 10);
-  const result = await runLoop({ cwd, max: parseInt(arg("--max", "30"), 10), goal: arg("--goal", "tasks 완료"), gateCmd: arg("--gate", undefined), timeoutMs: Number.isFinite(timeoutSec) && timeoutSec > 0 ? timeoutSec * 1000 : undefined, paths: { waves: path.relative(cwd, wavesDir(cwd)), tasks: arg("--tasks", "tasks.md"), spec: arg("--spec", undefined) } });
-  process.stdout.write(JSON.stringify(result) + "\n");
-  process.exit(result.status === "converged" ? 0 : 2);
+  const tasks = arg("--tasks", "tasks.md");
+  const paths = { waves: path.relative(cwd, wavesDir(cwd)), tasks, spec: arg("--spec", undefined) };
+  let workOwner;
+  try {
+    if (isWorkflowTask(cwd, tasks)) {
+      const owner = `loop-${randomUUID()}`;
+      claimWork(cwd, owner, tasks);
+      workOwner = owner;
+    }
+    const result = await runLoop({
+      cwd, paths, workOwner, max: parseInt(arg("--max", "30"), 10),
+      goal: arg("--goal", "tasks 완료"), gateCmd: arg("--gate", undefined),
+      timeoutMs: Number.isFinite(timeoutSec) && timeoutSec > 0 ? timeoutSec * 1000 : undefined,
+    });
+    process.stdout.write(JSON.stringify(result) + "\n");
+    process.exitCode = result.status === "converged" ? 0 : 2;
+  } catch (error) {
+    process.stderr.write(`[baton-loop] ${error.message}\n`);
+    process.exitCode = 2;
+  } finally {
+    if (workOwner) releaseWork(cwd, workOwner);
+  }
 }

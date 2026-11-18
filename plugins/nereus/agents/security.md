@@ -53,7 +53,7 @@ CRITICAL·HIGH 는 리뷰 단계에서 새 맥락 반증 검증자가 반박해 
 - 하드코딩 키 패턴, .env 커밋, 로그에 토큰 출력을 grep으로 반드시 확인.
 
 ## 출력 계약
-`.nereus/review.md`에 `[security]` 소스로 findings 추가 + 차단 여부. findings 는 `{source:"security", file, line, severity, message}` 이고 message 에 경계 한 줄을 담는다.
+`[security]` findings와 차단 여부를 담당 세션에 반환한다. 담당 세션이 `review.md`에 기록한다. findings 는 `{source:"security", file, line, severity, message}` 이고 message 에 경계 한 줄을 담는다.
 
 ## 완료 조건
 체크리스트(시크릿/인젝션/인증/SSRF/경로/암호화/레이트리밋) 각 항목에 확인 결과가 있음.

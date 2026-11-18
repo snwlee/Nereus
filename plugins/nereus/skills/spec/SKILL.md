@@ -17,10 +17,14 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/plan.mjs" "$PWD" --size small|me
 `reverseSpec` 이 true 일 때만 역스펙 절차를 밟는다. 결과를 한 줄로 알리고 다른 판단을 원하는지 묻지 않는다.
 사용자가 명시적으로 `--tool spec-kit|openspec` 을 주면 그걸 따른다.
 
+## 작업 문서 등록
+
+아래 생성 단계 전에 common의 `session-work.mjs claim`을 실행한다. OpenSpec은 `openspec/changes/<변경 이름>/tasks.md`, spec-kit은 생성할 기능 디렉터리의 `tasks.md`, tasks-only는 선택한 루트 목록(`tasks.md`, `TASKS.md`, `docs/tasks.md`)을 지정한다. 파일 생성 전에도 등록할 수 있다. spec-kit 생성기가 기능 경로를 고정할 수 없는 경우 별도 worktree에서 생성한다.
+
 ## 2A. 신규 → spec-kit
 
 1. `.specify/`가 없으면 `specify init --here --ai claude` 실행 (없으면 setup 안내).
-2. `/speckit.constitution` — `.nereus/intake.md`의 제약과 nereus:common 규칙(TDD, 불변성, 작은 파일)을 원칙으로 넣는다.
+2. `/speckit.constitution` — 세션 작업 폴더의 `intake.md`의 제약과 nereus:common 규칙(TDD, 불변성, 작은 파일)을 원칙으로 넣는다.
 3. `/speckit.specify` — intake의 목표·가정을 입력. 기술 스택 언급 금지(what/why만).
 4. `/speckit.clarify` — 미정 항목이 남았으면.
 5. `/speckit.plan` — 스택(Flutter/Spring/TS 중 해당), 테스트 러너, E2E 도구 명시.

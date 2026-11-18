@@ -17,6 +17,7 @@ import { skillMapBlock } from "./lib/router.mjs";
 import { readInventory } from "./lib/plugin-inventory.mjs";
 import { loadExtensions } from "./lib/extensions.mjs";
 import { delegateRoutes } from "./lib/delegates.mjs";
+import { sessionStateDir } from "./lib/session-documents.mjs";
 import { detectHarness } from "./lib/harness.mjs";
 
 // Baton 이 없어진 뒤 컨텍스트를 지키는 것은 자동 압축뿐이다. 기본값(약 83%)으로 두면 늦게 압축된다.
@@ -145,6 +146,11 @@ export function handle(input, deps = {}) {
   const parts = [];
 
   const env = deps.env ?? process.env;
+  if (typeof input.session_id === "string" && input.session_id && input.session_id !== "nosession") {
+    parts.push(`## Nereus 작업 문서
+세션 ID: \`${input.session_id}\`
+이 세션의 intake.md와 review.md 경로: \`${sessionStateDir(cwd, input.session_id)}\` 아래. CLI의 SESSION_ID에는 위 값을 사용하세요.`);
+  }
   if (env.NEREUS_LOOP) parts.push(loopHandoffBlock(input, { cwd, readFile, exists, now: (deps.now ?? (() => Date.now()))(), entries: (deps.entries ?? defaultEntries)(handoffDir(cwd)), removeFile: deps.removeFile ?? defaultRemoveFile, since: Number(env.NEREUS_LOOP_SINCE) || 0 }));
 
   const learn = (deps.learnings ?? (() => {

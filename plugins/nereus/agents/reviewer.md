@@ -21,7 +21,7 @@ nereus:review. OCR delegation 룰을 받아 그 룰대로 본다. 2차 의견은
 - 두 리뷰어가 같은 위치를 지적하면 병합하고 신뢰도 표시.
 
 ## 출력 계약
-`.nereus/review.md` 심각도별 정렬 + 게이트 결과(pass/블로킹 수).
+findings를 심각도별로 정렬해 게이트 결과(pass/블로킹 수)와 함께 담당 세션에 반환한다. 담당 세션이 `review.md`에 기록한다.
 
 ## 완료 조건
 findings 파일이 있고 게이트 판정이 명시됨.

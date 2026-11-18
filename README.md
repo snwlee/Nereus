@@ -83,6 +83,14 @@ Context is managed by Claude Code's own auto-compaction, set to 50% of the conte
 | `/nereus:doctor` | Report conflicts with other harness plugins — shadowed MCP servers, duplicate agent or skill names, shared hook points. Reports only, never uninstalls |
 | `/nereus:pdf`, `/nereus:image`, `/nereus:research`, `/nereus:seo`, `/nereus:phone`, `/nereus:sfx` | Standalone skills |
 
+### Multiple sessions in one checkout
+
+Nereus registers the task file before creating or resuming a work item. HUD and auto-continue use that session's registration. Intake and review notes live under the session directory printed at startup. A second session can register a different change, while the edit hook rejects changes to another session's registered work when the harness supports blocking. Nereus serializes each OpenSpec archive through its spec commit within the checkout.
+
+Work registrations survive closing a session. Resume that session or, once you've confirmed the previous owner has stopped, run `session-work.mjs release SESSION_ID` with the owner ID shown in the conflict. The same script's `claim SESSION_ID TASKS_FILE` registers the new session. If a crash leaves a stale `.nereus/session-work/registry.lock`, confirm that no registration operation is running before removing it. For an interrupted archive, first confirm OpenSpec has exited and inspect the change and canonical specs. If the archive succeeded, commit its results before releasing the registration. A stale `.nereus/session-work/archive.json` marked as running can be removed after this inspection so the owner can retry or release.
+
+Shell commands, external editors, and direct OpenSpec commands can edit the shared checkout independently of the hooks. Use separate Git worktrees when sharing source files or running parallel loops with automatic commits.
+
 ## Skill routing
 
 Compressed descriptions alone don't make the model reach for a skill, so it is planted at two points.

@@ -11,7 +11,7 @@ describe("skills hand model aliases to subagent calls", () => {
     const t = read("intake");
     expect(t).toMatch(/\| `models` \|/);
     expect(t).toMatch(/models\.session/);
-    expect(t).toMatch(/`\.nereus\/intake\.md` 1행에 `계획:/);
+    expect(t).toMatch(/세션 작업 폴더의 `intake\.md` 1행에 `계획:/);
   });
   it("review runs with --size and launches EGM and refuter on their aliases", () => {
     const t = read("review");

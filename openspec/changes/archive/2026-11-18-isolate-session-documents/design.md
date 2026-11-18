@@ -1,0 +1,11 @@
+## Design
+
+Each checkout has one registry under `.nereus/session-work/`, with a local ignore file that also works in projects without a preconfigured ignore rule. The registry is the single source of ownership and of each session's task-file binding. Register and release through a lock directory and publish the updated registry with an atomic rename. A second claim fails while the registry is busy or another session owns the target. The checkout follows the nearest Git worktree root, with a project-marker fallback for repositories without Git.
+
+Bind the planned task path before generation and the existing path before resuming. OpenSpec and spec-kit task paths reserve their change or feature directories. Root or docs task files reserve the file itself. Losing a task file leaves the registration in place and shows no progress. A session ID is required for registration and continuation. Callers without a session ID can still use the existing read-only task lookup.
+
+Session notes and continuation are private to the session. The Baton CLI reserves a standard task path under a loop-specific owner for the duration of the run and forwards that owner to its child hooks. A resumed interactive session may release and reclaim the document after the loop exits.
+
+Finish starts an archive transaction inside the registry lock. The archive transaction reserves the shared canonical specs through CLI execution and the archive commit. The short registry lock is free during the CLI, so other sessions can claim or release unrelated work. A running archive cannot release its own claim. On CLI failure the archive reservation is cleared and the work claim remains. After success, only the owner releases the reservation after committing. Validation remains enabled. After a crash, inspect the change and canonical specs and confirm the process stopped before clearing any stale state.
+
+Structured edit checks apply at hook time to all recognized edit paths, including rename destinations. Each Nereus writer registers before editing and retains ownership while tools are active. Direct shell commands, external editors, and harnesses that do not honor the edit hook can still write to the checkout. Use separate worktrees when those writers or concurrent code commits need isolation.

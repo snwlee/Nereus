@@ -12,7 +12,7 @@
 
 const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit", "apply_patch"]);
 const EXEC_TOOLS = new Set(["Bash", "shell", "exec", "exec_command"]);
-const PATCH_FILE_RE = /^\*\*\*\s+(?:Update File|Add File|Delete File|Rename File):\s*(.+?)\s*$/;
+const PATCH_FILE_RE = /^\*\*\*\s+(?:Update File|Add File|Delete File|Rename File|Move to):\s*(.+?)\s*$/;
 
 /** 페이로드가 어느 하네스에서 왔는지 판별. 모호하면 claude(기존 동작 유지). */
 export function detectHarness(input = {}) {

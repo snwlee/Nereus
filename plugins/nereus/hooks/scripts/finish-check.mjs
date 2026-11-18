@@ -1,21 +1,21 @@
 // Stop: (1) 재진입이 armed 이면 미완료 태스크를 이어가도록 종료를 막는다. (2) 아니면 미커밋 변경·evidence 상태를 알린다(차단 없음).
-// 재진입은 기본 꺼짐. `/nereus:continue` 가 .nereus/continue.json 을 만들 때만 동작한다. 컨텍스트는 자동 압축이 맡는다.
+// 재진입은 기본 꺼짐. `/nereus:continue` 가 세션별 continue.json 을 만들 때만 동작한다. 컨텍스트는 자동 압축이 맡는다.
 import fs from "node:fs";
 import path from "node:path";
 import { readStdinJson, emit } from "./lib/io.mjs";
 import { run } from "./lib/exec.mjs";
-import { projectStateDir } from "./lib/paths.mjs";
+import { sessionStateDir } from "./lib/session-documents.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
 import { gateNow } from "../../skills/design/scripts/design-feedback.mjs";
-import { taskProgress } from "./lib/tasks.mjs";
+import { sessionTaskProgress } from "./lib/tasks.mjs";
 
-const continueFile = (cwd) => path.join(projectStateDir(cwd), "continue.json");
+const continueFile = (cwd, sessionId) => path.join(sessionStateDir(cwd, sessionId), "continue.json");
 
-function readContinuation(cwd) {
-  try { return JSON.parse(fs.readFileSync(continueFile(cwd), "utf8")); } catch { return null; }
+function readContinuation(cwd, sessionId) {
+  try { return JSON.parse(fs.readFileSync(continueFile(cwd, sessionId), "utf8")); } catch { return null; }
 }
-function writeContinuation(cwd, state) {
-  const f = continueFile(cwd);
+function writeContinuation(cwd, sessionId, state) {
+  const f = continueFile(cwd, sessionId);
   if (state === null) { try { fs.unlinkSync(f); } catch { /* 이미 없음 */ } return; }
   fs.mkdirSync(path.dirname(f), { recursive: true });
   fs.writeFileSync(f, JSON.stringify(state, null, 2));
@@ -30,16 +30,17 @@ export function handle(input, deps = {}) {
   // Claude Code 가 Stop 훅 때문에 다시 멈춘 경우. 여기서 또 막으면 무한 루프가 된다.
   if (input.stop_hook_active) return null;
   const cwd = input.cwd || process.cwd();
-  const cont = (deps.continuation ?? (() => readContinuation(cwd)))();
-  const disarm = deps.disarm ?? (() => writeContinuation(cwd, null));
+  const sessionId = input.session_id;
+  const cont = (deps.continuation ?? (() => sessionId && sessionId !== "nosession" ? readContinuation(cwd, sessionId) : null))();
+  const disarm = deps.disarm ?? (() => writeContinuation(cwd, sessionId, null));
   const notes = [];
 
   if (cont) {
-    const progress = (deps.progress ?? (() => taskProgress(cwd)))();
-    if (!progress || progress.complete || (cont.remaining ?? 0) <= 0) {
+    const progress = (deps.progress ?? (() => sessionTaskProgress(cwd, sessionId)))();
+    if (!progress || (cont.tasks && cont.tasks !== progress.file) || progress.complete || (cont.remaining ?? 0) <= 0) {
       disarm();
     } else {
-      (deps.decrement ?? (() => writeContinuation(cwd, { ...cont, remaining: cont.remaining - 1 })))();
+      (deps.decrement ?? (() => writeContinuation(cwd, sessionId, { ...cont, remaining: cont.remaining - 1 })))();
       return {
         decision: "block",
         reason: `[nereus:continue] 아직 태스크가 남았습니다 (${progress.done}/${progress.total}). 다음 태스크를 nereus:build 규칙대로 이어서 끝내세요: "${progress.next}". 끝내면 체크박스를 채우고 커밋하세요. 남은 자동 계속 ${cont.remaining - 1}회. 멈추려면 사용자가 /nereus:continue off 를 실행합니다.`,

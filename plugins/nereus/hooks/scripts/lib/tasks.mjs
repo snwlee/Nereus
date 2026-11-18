@@ -1,6 +1,7 @@
 // tasks 파일 탐색과 진행률. spec 단계가 만든 체크박스가 유일한 진행 상태의 근거다.
 import fs from "node:fs";
 import path from "node:path";
+import { checkoutRoot, claimedTasks } from "./session-documents.mjs";
 
 const defaultFs = {
   exists: (p) => fs.existsSync(p),
@@ -45,7 +46,16 @@ export function findTasksFile(cwd, fsx = defaultFs) {
 
 export function taskProgress(cwd, fsx = defaultFs) {
   const file = findTasksFile(cwd, fsx);
-  if (!file) return null;
+  return file ? progressFor(file, fsx) : null;
+}
+
+export function sessionTaskProgress(cwd, sessionId) {
+  if (!sessionId) return taskProgress(cwd);
+  const tasks = claimedTasks(cwd, sessionId);
+  return tasks ? progressFor(path.join(checkoutRoot(cwd), tasks), defaultFs) : null;
+}
+
+function progressFor(file, fsx) {
   let tasks;
   try { tasks = parseTasks(fsx.readFile(file)); } catch { return null; }
   if (!tasks.length) return null;

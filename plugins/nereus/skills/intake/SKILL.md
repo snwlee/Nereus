@@ -64,8 +64,8 @@ ooo interview
 ## 3. 게이트
 
 - 모호성 ≤ 0.2 (인터뷰를 돌린 경우). `plan.interview` 가 `none` 이면 이 항목은 해당 없음이다.
-- 결과를 `.nereus/intake.md`에 저장: 목표, 확정된 가정, 제약, 범위 밖, 열린 질문.
-- `.nereus/intake.md` 1행에 `계획:` 으로 시작하는 한 줄을 쓴다(예: `계획: medium · brownfield · openspec`). 제목은 그 아래에 둔다. `--quick` 이어도 쓰고, 매 intake 가 파일을 덮어쓴다. review·goldfish 는 이 줄의 첫 값(size)을 `--size` 로 넘긴다.
+- 결과를 세션 작업 폴더의 `intake.md`에 저장: 목표, 확정된 가정, 제약, 범위 밖, 열린 질문.
+- 세션 작업 폴더의 `intake.md` 1행에 `계획:` 으로 시작하는 한 줄을 쓴다(예: `계획: medium · brownfield · openspec`). 제목은 그 아래에 둔다. `--quick` 이어도 쓰고, 매 intake 가 파일을 덮어쓴다. review·goldfish 는 이 줄의 첫 값(size)을 `--size` 로 넘긴다.
 - `plan.reverseSpec` 이 true 면 "역스펙부터"를 intake.md 제약에 적는다 (spec 단계에서 `references/reverse-spec.md` 절차로 기준선을 만든다).
 - 통과하면 "spec 단계로 넘어갑니다"라고 말하고 `nereus:spec`을 이어서 실행한다. 통과 전에는 코드를 만지지 않는다.
 

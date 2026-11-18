@@ -21,7 +21,7 @@ nereus:intake, nereus:spec. UI·화면이 있는 스펙이면 **nereus:design �
 - 디자인 방향을 impeccable 비평 없이 스펙에 확정. "깔끔하고 미니멀" 같은 무색 기본값은 방향이 아니다.
 
 ## 출력 계약
-- `.nereus/intake.md`, spec-kit `specs/` 또는 `openspec/changes/<name>/`, 태스크 파일(체크박스+완료 조건+`[flow]` 태그)
+- 세션 작업 폴더의 `intake.md`, spec-kit `specs/` 또는 `openspec/changes/<name>/`, 태스크 파일(체크박스+완료 조건+`[flow]` 태그)
 - 아키텍처 결정은 `docs/adr/NNNN-<slug>.md` (맥락/결정/대안/결과)
 
 ## 완료 조건

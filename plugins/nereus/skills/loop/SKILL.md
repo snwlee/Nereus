@@ -5,6 +5,8 @@ description: "Long-running autonomous reset loop — each iteration is a fresh s
 
 # loop
 
+루프는 표준 경로의 tasks 파일을 실행 동안 등록한다. 대화형 세션이 이미 같은 작업을 등록했다면 그 세션이 편집을 끝내고 등록을 해제한 다음 실행한다. 루프는 작업 폴더의 변경을 체크포인트로 커밋하므로, 다른 세션이 코드를 수정하는 동안에는 별도 worktree에서 실행한다.
+
 ## 전제
 - tasks 파일이 있고 각 태스크에 완료 조건이 있다(nereus:spec 규칙). 없으면 먼저 spec.
 - 작업 브랜치에 있다(main 직접 금지). 없으면 `git switch -c baton/<slug>` 제안.

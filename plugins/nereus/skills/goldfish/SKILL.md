@@ -23,7 +23,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/goldfish/scripts/goldfish.mjs" plan <대상> 
 
 대상: OpenSpec change 디렉터리(`openspec/changes/<이름>`), spec-kit 기능 디렉터리, 또는 md 파일.
 출력의 `feature`·`detailed`(범위), `context.inside`(리뷰어에게 줄 파일), `stages`(단계별 리뷰어·페르소나·표준 절대 경로), `notes` 를 그대로 쓴다.
-`--size` 는 `.nereus/intake.md` 1행 `계획:` 의 첫 값이다. 없거나 확신이 없으면 빼고 돌린다 — `sizeAssumed` 가 true 면 "규모를 몰라 medium 으로 봤다" 한 줄을 알린다. 출력의 `reviewerModel` 이 리뷰어 서브에이전트의 별칭이다.
+`--size` 는 세션 작업 폴더의 `intake.md` 1행 `계획:` 의 첫 값이다. 없거나 확신이 없으면 빼고 돌린다 — `sizeAssumed` 가 true 면 "규모를 몰라 medium 으로 봤다" 한 줄을 알린다. 출력의 `reviewerModel` 이 리뷰어 서브에이전트의 별칭이다.
 
 - 모드 기본은 `full`. 구현 범위가 없으면 스크립트가 `feature` 로 낮추고 `notes` 에 적는다 — 알리고 진행한다.
 - `context.outside`·`context.urls` 는 자동으로 넣지 않는다. URL 은 받아서 `.nereus/goldfish/` 에 파일로 저장해 절대 경로로 넘긴다. 작업 디렉터리 밖 파일은 넣지 않고 넣지 않았다고 알린다.

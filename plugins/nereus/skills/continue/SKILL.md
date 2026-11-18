@@ -8,15 +8,16 @@ description: "Turn same-session auto-continuation of remaining tasks on or off (
 Stop 훅이 종료를 가로채 다음 미완료 태스크를 이어가게 한다. `/nereus:loop`(반복마다 **새 세션**)와 달리 **같은 세션**에서 계속하므로 컨텍스트가 계속 쌓인다. 그래서 횟수 제한이 걸려 있고, 쌓인 컨텍스트는 자동 압축(50%)이 정리한다.
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/continue/scripts/arm.mjs" on --max 5
-node "${CLAUDE_PLUGIN_ROOT}/skills/continue/scripts/arm.mjs" off
-node "${CLAUDE_PLUGIN_ROOT}/skills/continue/scripts/arm.mjs" status
+node "${CLAUDE_PLUGIN_ROOT}/skills/continue/scripts/arm.mjs" on --session "$SESSION_ID" --max 5
+node "${CLAUDE_PLUGIN_ROOT}/skills/continue/scripts/arm.mjs" off --session "$SESSION_ID"
+node "${CLAUDE_PLUGIN_ROOT}/skills/continue/scripts/arm.mjs" status --session "$SESSION_ID"
 ```
 
 ## 규칙
+- 기존 태스크로 시작할 때는 common의 `claim`으로 먼저 등록한다.
 - 기본 꺼짐. 사용자가 명시적으로 요청할 때만 켠다.
 - `--max` 기본 5, 상한 20. 한 번 이어갈 때마다 1씩 줄고 0이 되면 해제된다.
-- 태스크 파일이 없거나 전부 체크됐으면 켜지지 않는다.
+- 현재 세션에 등록된 태스크 파일이 없거나 전부 체크됐으면 켜지지 않는다. 이전 폴더 공용 자동 계속 설정은 새 세션에서 다시 켠다.
 - Claude Code가 이미 Stop 훅 때문에 멈춘 경우(`stop_hook_active`)에는 절대 재진입하지 않는다. 무한 루프 방지.
 - 사용자가 중간에 끼어들면 그 지시가 우선이다. 자동 계속을 이유로 사용자 요청을 미루지 않는다.
 

@@ -20,10 +20,27 @@ description: "Shared rules for every Nereus agent and skill. Referenced from age
 13. **순서를 되묻지 않는다**: 할 일이 정해져 있으면(태스크 파일·스펙·방금 합의한 범위) 순서·우선순위·착수 여부를 사용자에게 묻지 않는다. 스스로 정해 하나씩 전부 끝낸다. 질문은 두 경우에만 쓴다 — (a) 하네스가 알 수 없는 정보(build 의 "테스트 환경을 세팅할까요"), (b) 외부로 나가는·되돌리기 어려운 행동(finish 의 "푸시할까요"). 중간에 막히면 묻지 말고 남은 것을 먼저 다 하고, 막힌 것만 마지막에 보고한다.
 14. **버그는 조사부터**: 실패·에러·예상과 다른 동작을 만나면 수정 전에 `nereus:debug` 를 부른다. 원인을 모르는 상태에서 코드를 고치지 않는다.
 
+## 세션 작업 문서
+
+SessionStart 안내의 세션 ID와 세션 작업 폴더를 사용한다. 첫 저장 전 아래 명령으로 버전 관리에서 제외되는 세션 폴더를 준비한다. `intake.md`와 `review.md`는 그 아래에 둔다. 다른 세션의 파일을 작업 근거로 쓰지 않는다. 위임할 때는 담당 세션에 findings를 반환하고 담당 세션이 기록한다.
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/session-work.mjs" notes "$SESSION_ID"
+```
+
+스펙이나 태스크를 만들거나 수정하기 전에 작업 문서를 등록한다. 저장소 루트에서 실행한다. `SESSION_ID`, `TASKS_FILE`은 현재 세션과 선택한 작업의 실제 값으로 설정한다.
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/session-work.mjs" claim "$SESSION_ID" "$TASKS_FILE"
+node "${CLAUDE_PLUGIN_ROOT}/skills/spec/scripts/session-work.mjs" current "$SESSION_ID"
+```
+
+동일 작업이 다른 세션에 등록돼 있으면 그 작업을 읽거나, 소유자가 작업을 끝낸 뒤 다시 시도한다. 세션을 닫아도 등록은 유지되므로 재개 시 기존 작업을 이어갈 수 있다. 작업을 완전히 마쳤거나 더 이상 건드리지 않을 때 `release "$SESSION_ID"` 한다. Baton 루프는 러너가 등록하므로 자식 세션에서 별도로 등록하지 않는다.
+
 ## Ruling (ledger 판정 기록) — 유일 형식
 
 Ruling: <결정> — <이유> (<YYYY-MM-DD>)
 
-- ledger 는 `.nereus/review.md` 또는 커밋 메시지 본문이다. compaction 이후에는 ledger가 기억보다 우선한다. 기억으로 절차·판정을 재현하지 않는다.
+- ledger 는 세션 작업 폴더의 `review.md` 또는 커밋 메시지 본문이다. compaction 이후에는 ledger가 기억보다 우선한다. 기억으로 절차·판정을 재현하지 않는다.
 - findings·이견을 조용히 버리지 않는다. contestable하면 park + Ruling, deferred면 park + Ruling + 다음 build 입력으로 연결한다.
 - 예: `Ruling: MEDIUM 이하 3건 finish 진행 — fix loop 미진입 (defer-ledger) (2026-09-09)`

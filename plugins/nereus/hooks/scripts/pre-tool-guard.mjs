@@ -11,6 +11,7 @@ import { parseDiff } from "./lib/integrity.mjs";
 import { globToRegExp } from "./tdd-guard.mjs";
 import { loadConfig } from "./lib/config.mjs";
 import { tddVerdict, findTestFor, OVERRIDE_FILE } from "./lib/tdd-gate.mjs";
+import { documentConflict } from "./lib/session-documents.mjs";
 import { normalizeToolEvent } from "./lib/harness.mjs";
 import { detectTestRunner, stackFileRules } from "./lib/stack.mjs";
 import { evidenceStatus } from "./lib/evidence.mjs";
@@ -168,6 +169,11 @@ export function handle(input, deps = {}) {
   const tool = ev.tool;
   const target = ev.kind === "exec" ? ev.command ?? "" : ev.files[0] ?? "";
   if (!target) return null;
+  if (ev.kind === "edit") {
+    const owner = process.env.NEREUS_LOOP ? process.env.NEREUS_LOOP_WORK_OWNER : null;
+    const conflict = documentConflict(cwd, input.session_id, ev.files, owner);
+    if (conflict) return { decision: "block", reason: `[nereus:session-work] ${conflict}` };
+  }
   const rules = (deps.rules ?? (() => loadRules(cwd)))();
   for (const r of rules) {
     if (!isEnabled(r)) continue;

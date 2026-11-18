@@ -20,7 +20,7 @@ nereus:common 규칙을 따른다. 담당 에이전트: 스택에 따라 backend
 
 ## 2. 태스크 루프
 
-tasks 파일에서 첫 미완료 태스크를 고른다. 태스크마다:
+재개한 작업은 common의 `claim`으로 담당 문서를 등록한다. `current`로 확인한 tasks 파일에서 첫 미완료 태스크를 고른다. Baton 반복에서는 러너가 전달한 tasks 파일을 사용한다. 태스크마다:
 
 1. **RED**: 완료 조건을 테스트로 옮긴다. 실행해서 **실패를 확인**한다. 실패 출력 첫 줄을 기록한다. 실패하지 않으면 테스트가 잘못된 것이다.
    > **Iron Law — NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.**

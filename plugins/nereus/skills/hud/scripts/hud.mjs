@@ -1,7 +1,7 @@
 // statusline 한 줄. 태스크 진행률 · 검증 상태 · 컨텍스트 비율.
 // "완료라고 보고했지만 검증되지 않은" 상태를 눈에 보이게 하는 것이 목적이다.
 // 사용: node hud.mjs [--cwd <path>] [--session <id>]
-import { taskProgress } from "../../../hooks/scripts/lib/tasks.mjs";
+import { sessionTaskProgress } from "../../../hooks/scripts/lib/tasks.mjs";
 import { evidenceStatus } from "../../../hooks/scripts/lib/evidence.mjs";
 import { officialRatio } from "../../../hooks/scripts/ctx-sink.mjs";
 
@@ -25,9 +25,10 @@ export function hudLine({ progress, evidence, ctxPct }) {
 if (process.argv[1] && /hud\.mjs$/.test(process.argv[1])) {
   const arg = (k, d) => { const i = process.argv.indexOf(k); return i > -1 ? process.argv[i + 1] : d; };
   const cwd = arg("--cwd", process.cwd());
-  const ratio = officialRatio(arg("--session", process.env.CLAUDE_SESSION_ID));
+  const sessionId = arg("--session", process.env.CLAUDE_SESSION_ID);
+  const ratio = officialRatio(sessionId);
   process.stdout.write(hudLine({
-    progress: taskProgress(cwd),
+    progress: sessionTaskProgress(cwd, sessionId),
     evidence: evidenceStatus(cwd),
     ctxPct: ratio === null || ratio === undefined ? null : ratio * 100,
   }) + "\n");
