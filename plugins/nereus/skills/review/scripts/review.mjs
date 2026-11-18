@@ -219,17 +219,28 @@ export function severityAction(severity) {
 }
 
 // 출력의 plan 키는 runners(어떤 리뷰어가 도는지)다. EGM 이 돌 때만 서브에이전트 별칭을 싣는다.
-export function reviewOutput({ mode, runners, size }) {
+export function reviewOutput({ mode, runners, size, harness }) {
   const r = resolveSize(size);
   const base = { mode, plan: runners, size: r.size, sizeAssumed: r.assumed };
   if (!runners.egm) return base;
   const m = modelsFor(r.size);
-  return { ...base, egmPersonas: EGM_PERSONAS, securityRefuter: SECURITY_REFUTER_PERSONA, egmModel: m.reviewer, refuterModel: m.refuter };
+  return {
+    ...base,
+    ...(harness === "codex" ? { reviewerRunner: "claude-cli" } : {}),
+    egmPersonas: EGM_PERSONAS,
+    securityRefuter: SECURITY_REFUTER_PERSONA,
+    egmModel: m.reviewer,
+    refuterModel: m.refuter,
+  };
 }
 
 if (process.argv[1] && /review\.mjs$/.test(process.argv[1])) {
   const cfg = loadConfig();
   const runners = planRunners(cfg.secondOpinion, undefined, makeProbe());
   const i = process.argv.indexOf("--size");
-  process.stdout.write(JSON.stringify(reviewOutput({ mode: cfg.secondOpinion, runners, size: i > -1 ? process.argv[i + 1] : undefined })) + "\n");
+  const h = process.argv.indexOf("--harness");
+  process.stdout.write(JSON.stringify(reviewOutput({
+    mode: cfg.secondOpinion, runners, size: i > -1 ? process.argv[i + 1] : undefined,
+    harness: h > -1 ? process.argv[h + 1] : undefined,
+  })) + "\n");
 }

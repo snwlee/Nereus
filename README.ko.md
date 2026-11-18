@@ -118,7 +118,7 @@ Node 20 이상과 Git이 필요하다. `setup`이 외부 도구를 감지하고,
 
 ```json
 {
-  "secondOpinion": "both",
+  "secondOpinion": "egm",
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/generated/**"] },
   "design": { "enforce": "block", "widths": [320, 768, 1440] },
   "commitQuality": { "block": ["secret", "env_file"], "warn": ["debug_log"] },
@@ -127,7 +127,9 @@ Node 20 이상과 Git이 필요하다. `setup`이 외부 도구를 감지하고,
 }
 ```
 
-`secondOpinion` 은 리뷰어를 고른다. `"both"`(기본), `"codex"`, `"gemini"`, `"none"`(결정론적 OCR 리뷰만), 또는 `["ocr", "gemini"]` 같은 배열.
+`secondOpinion`은 코드 리뷰어를 고른다. `"egm"`(기본)은 OCR과 독립 EGM 리뷰를 실행한다. `"codex"`는 Codex Review를 추가하고, `"none"`은 OCR만 실행한다. `["ocr", "egm"]` 같은 배열로도 지정할 수 있다.
+
+Codex에서 `nereus:review`와 `nereus:goldfish`는 별도 Claude CLI 세션에 독립 검토를 요청한다. Claude Code를 설치하고 로그인하면 사용할 수 있다.
 
 `design.enforce` 는 기본이 `"block"` 이다. 디자인 표면을 만지고 Gemini 비평 라운드를 돌리지 않으면 `finish` 가 막힌다. 게이트 없이 경고만 받으려면 `"warn"` 으로 낮춘다.
 

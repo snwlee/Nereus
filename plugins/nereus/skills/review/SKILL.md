@@ -12,18 +12,20 @@ nereus:common 규칙을 따른다. 담당 에이전트: reviewer. 인증·입력
 
 ## 1. 계획
 
+Codex에서는 현재 읽은 스킬 파일의 상위 플러그인 디렉터리를 기준으로 스크립트의 절대 경로를 정하고, 계획 명령에 `--harness codex`를 붙인다. 훅이나 플러그인 환경변수가 없는 경우에도 gate 스크립트는 같은 디렉터리를 기준으로 찾는다.
+
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/review/scripts/review.mjs" [--size small|medium|large]
 ```
 설정 `secondOpinion`과 설치 상태로 어떤 리뷰어가 돌지 나온다. `skipped`가 있으면 사용자에게 알린다(차단은 아님).
-EGM 이 계획되면 출력에 `egmPersonas`(goldfish 페르소나 절대 경로)와 서브에이전트 별칭 `egmModel`·`refuterModel` 이 함께 나온다.
+EGM 이 계획되면 출력에 `egmPersonas`(goldfish 페르소나 절대 경로)와 모델 별칭 `egmModel`·`refuterModel` 이 함께 나온다. Codex에서 실행하면 계획에 `reviewerRunner: "claude-cli"`가 나온다.
 `--size` 는 세션 작업 폴더의 `intake.md` 1행 `계획:` 의 첫 값이다. 그 줄이 없거나 지금 작업의 것이라는 확신이 없으면 빼고 돌린다 — 출력의 `sizeAssumed` 가 true 면 "규모를 몰라 medium 으로 봤다" 한 줄을 알린다.
 
-별칭을 쓸 수 없을 때(`Agent` 오류가 모델을 알 수 없음·사용 불가·허용 안 됨이라고 말할 때만):
+Claude Code에서 별칭을 쓸 수 없을 때(`Agent` 오류가 모델을 알 수 없음·사용 불가·허용 안 됨이라고 말할 때만):
 - EGM: 별칭 순서(haiku < sonnet < opus < fable)에서 한 단계 아래 별칭을 명시해 한 번만 재시도한다. 하한은 `sonnet` 이다. 끝내 못 쓰면 EGM 을 `skipped` 로 알리고 게이트는 OCR 결과로 판정한다. large 에서 sonnet 으로 내려가 돌았으면 보고서의 그 리뷰어에 `degraded` 를 붙인다.
 - 반박은 재시도하지 않는다. `refuterModel` 로 못 돌면 반박하지 않은 것으로 둔다(의도: 보안 지적은 닫힌 쪽으로 실패한다 — 약한 반박으로 차단을 풀지 않는다) — 지적은 차단으로 남기고 보고서에 `degraded` 를 붙인다. 풀려면 opus 를 쓸 수 있는 세션에서 반박을 다시 돌리거나, 사용자가 수용·기각하고 그 결정을 세션 작업 폴더의 `review.md` 에 기록한다.
 
-**제3자 검증은 EGM 이 1순위이고 기본으로 그것만 돈다**(2026-11-12 방침). 외부 CLI 의 쿠키·할당량·신뢰 디렉터리 문제에 리뷰가 묶이지 않는다.
+**제3자 검증은 EGM이 1순위다.** Codex에서 EGM을 실행하려면 로그인된 Claude CLI가 필요하다.
 
 | 설정값 | 도는 리뷰어 |
 |---|---|
@@ -44,18 +46,18 @@ Codex 는 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로�
 > `.md` 는 `unsupported_ext` 로 제외되므로, 문서만 바뀐 범위에서 `0 reviewable` 이 나오는 것은 정상이다.
 
 - **OCR delegation**: `ocr delegate preview --from <base> --to HEAD` 로 리뷰할 파일과 룰을 받고, 파일별 `ocr delegate rule <files>`로 룰을 받아 **이 세션의 모델이 직접** 리뷰한다. OCR이 API 키로 직접 리뷰하게 설정돼 있으면 세션 작업 폴더에 `ocr review --format json --output "$SESSION_WORK_DIR/review-ocr.json"`으로 저장한다. `SESSION_WORK_DIR`은 common의 `notes`가 출력한 경로다.
-- **EGM (기본 2차 의견)**: `Agent`(general-purpose, model: `egmModel`) 서브에이전트를 **페르소나마다 하나씩 같은 메시지에서 병렬로** 띄운다.
+- **EGM (기본 2차 의견)**: Codex는 [공통 Claude CLI 호출 규칙](../goldfish/references/codex-dispatch.md)에 따라 페르소나별로 새 Claude 세션을 연다. Claude Code는 `Agent`(general-purpose, model: `egmModel`)를 써 병렬로 띄운다.
   프롬프트에는 아래만 넣는다 — 이 대화의 결정·이유·요약을 넣으면 새 맥락 리뷰가 아니다(goldfish 원칙).
   ```text
   You are a Goldfish reviewer. First read your persona file and follow it exactly: <egmPersonas 의 경로 하나>
-  Mode: REVIEW (code). Review only this change (run it yourself; read surrounding code as needed):
+  Mode: REVIEW (code). Review only this change (use the provided diff if present; read surrounding code as needed):
     committed: `git diff <base>...HEAD` · uncommitted: `git diff` plus untracked files from `git status --porcelain`
   Spec for intent (read, do not review): <변경된 openspec change·spec-kit 디렉터리 경로 또는 "none">
   You are read-only. Map your persona's severities: Blocker → CRITICAL, Major → HIGH, Nit → LOW.
   Return a JSON array only: [{"file","line","severity":"CRITICAL|HIGH|MEDIUM|LOW","message"}].
   ```
   리뷰는 보통 커밋 **전**에 돈다 — 커밋 범위만 주면 서브에이전트는 아무것도 못 본다. 두 범위 중 실제로 변경이 있는 쪽을 넣는다.
-  서브에이전트를 띄울 수 없으면 EGM 을 `skipped` 로 알린다. 같은 맥락에서 대신 리뷰하고 EGM 이라 부르지 않는다.
+  독립 리뷰어를 띄울 수 없으면 EGM 을 `skipped` 로 알린다.
 - **Codex (명시했을 때만)**: `codex review` (또는 codex 플러그인의 `/codex:adversarial-review`). 결과를 파일·줄·심각도·메시지로 정리한다.
 
 직접 리뷰할 때는 아래 조용한 실패 5항을 반드시 훑는다 (출처: ecc `silent-failure-hunter`. 기계 게이트가 `silent_failure`으로 잡는 것은 빙산의 일각이다):
@@ -71,7 +73,7 @@ Codex 는 **PATH 존재가 아니라 실제 응답**으로 판정한다(프로�
 ## 2.5 security 반증 (CRITICAL/HIGH 가 있을 때만)
 
 security 에이전트가 낸 CRITICAL/HIGH 는 발견한 맥락이 아닌 **새 서브에이전트가 반박해 본다**(출처: cloudflare/security-audit-skill — 확인하는 에이전트는 발견한 에이전트가 아니다).
-대상은 `refutationTargets(findings)` 로 고르고, 항목마다 `Agent`(general-purpose, model: `refuterModel`)를 같은 메시지에서 병렬로 띄운다. 프롬프트에는 페르소나 경로(`review.mjs` 출력의 `securityRefuter`)와 그 항목 하나만 넣는다 — 다른 항목·이 대화의 판단은 넣지 않는다.
+대상은 `refutationTargets(findings)` 로 고르고, 항목마다 Codex는 같은 Claude CLI 러너를, Claude Code는 `Agent`(general-purpose, model: `refuterModel`)를 사용한다. 이 모델을 사용할 수 없으면 발견을 차단 상태로 유지한다. 프롬프트에는 페르소나 경로(`review.mjs` 출력의 `securityRefuter`)와 그 항목 하나만 넣는다 — 다른 항목·이 대화의 판단은 넣지 않는다.
 ```text
 You are a Goldfish verifier. First read your persona file and follow it exactly: <securityRefuter 경로>
 Finding to refute (JSON): {"file","line","severity","message"}

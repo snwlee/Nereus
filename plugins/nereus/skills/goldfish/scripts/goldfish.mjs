@@ -150,7 +150,7 @@ const reviewerPaths = (rv) => ({
   standard: rv.standard ? path.join(STANDARDS, `${rv.standard}.md`) : null,
 });
 
-export function planReview(target, { cwd = process.cwd(), mode = "full", size } = {}) {
+export function planReview(target, { cwd = process.cwd(), mode = "full", size, harness } = {}) {
   const sz = resolveSize(size);
   const t = resolveTarget(target, cwd);
   const notes = [];
@@ -176,6 +176,7 @@ export function planReview(target, { cwd = process.cwd(), mode = "full", size } 
     synthesizer: path.join(PERSONAS, "synthesizer.md"),
     stages: stagesFor(effective).map((s) => ({ ...s, reviewers: s.reviewers.map(reviewerPaths) })),
     reviewerModel: modelsFor(sz.size).reviewer,
+    ...(harness === "codex" ? { reviewerRunner: "claude-cli" } : {}),
     size: sz.size,
     sizeAssumed: sz.assumed,
     notes,
@@ -254,7 +255,7 @@ const opt = (args, flag) => optAll(args, flag)[0];
 
 function main(argv) {
   const [cmd, ...args] = argv;
-  if (cmd === "plan" && args[0]) return planReview(args[0], { cwd: process.cwd(), mode: opt(args, "--mode") ?? "full", size: opt(args, "--size") });
+  if (cmd === "plan" && args[0]) return planReview(args[0], { cwd: process.cwd(), mode: opt(args, "--mode") ?? "full", size: opt(args, "--size"), harness: opt(args, "--harness") });
   if (cmd === "parse" && args[0]) return parseReport(fs.readFileSync(args[0], "utf8"));
   if (cmd === "judge" && args[1]) {
     const report = parseReport(fs.readFileSync(args[1], "utf8"));

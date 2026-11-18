@@ -5,7 +5,7 @@ description: "Design-doc review by fresh-context subagents (Elephant-Goldfish Mo
 
 # goldfish
 
-nereus:common 규칙을 따른다. 담당: 이 세션(Elephant)이 오케스트레이션하고, 리뷰는 **새 서브에이전트(Goldfish)**가 한다.
+nereus:common 규칙을 따른다. 이 세션(Elephant)이 진행을 맡고, **별도 리뷰어(Goldfish)**가 문서를 검토한다.
 출처: google/elephant-goldfish-model (Apache-2.0) `egm-review`·`egm-review-loop`·`egm-resolve` — `NOTICE` 참고.
 
 ## 왜
@@ -13,9 +13,11 @@ nereus:common 규칙을 따른다. 담당: 이 세션(Elephant)이 오케스트�
 문서를 쓴 맥락은 자기 가정을 검증해 버린다. Goldfish 는 **대화 이력 없이** 문서와 그 문서가 가리키는 파일만 읽는다.
 그래서 "쓴 사람만 아는 전제"가 문서에 빠져 있으면 Goldfish 가 걸린다. 코드 diff 리뷰(`nereus:review`)와는 대상이 다르다 — 이건 build 전 설계 문서다.
 
-**서브에이전트를 띄울 수 없으면 멈추고 그렇게 말한다.** 같은 맥락에서 하는 리뷰는 Goldfish 리뷰가 아니다.
+**독립 리뷰어를 띄울 수 없으면 멈추고 상태를 알린다.**
 
 ## 1. 계획
+
+Codex에서는 현재 읽은 스킬 파일의 상위 플러그인 디렉터리를 기준으로 스크립트의 절대 경로를 정하고, 계획 명령에 `--harness codex`를 붙인다.
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/goldfish/scripts/goldfish.mjs" plan <대상> [--mode full|feature|implementation] [--size small|medium|large]
@@ -43,9 +45,15 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/goldfish/scripts/goldfish.mjs" plan <대상> 
 
 보고서는 `.nereus/goldfish/<대상 이름>/` 에 쓴다. 채팅에 붙이지 않고 경로만 말한다.
 
-### 서브에이전트 띄우기
+### 독립 리뷰어 호출
 
-`Agent` 도구, `subagent_type: general-purpose`, model: `reviewerModel`. 모델 오류(알 수 없음·사용 불가·허용 안 됨)일 때만 별칭 순서(haiku < sonnet < opus < fable)에서 한 단계 아래 별칭을 명시해 한 번만 재시도한다. 하한은 `sonnet` 이다. 내려가 돌았으면 단계 보고서 `## Reviewer Status` 표의 그 행에 세 번째 열로 `degraded` 를 적고(`| 이름 | completed | degraded |` — 상태 칸은 그대로 둬야 `parseReport` 가 읽는다), 끝내 못 쓰면 아래 규칙대로 `not run` 이다. 단계의 리뷰어마다 하나씩 **같은 메시지에서 병렬로** 띄운다(원본의 synthesizer 대신 직접 dispatch — Claude Code 는 서브에이전트가 다시 서브에이전트를 띄우지 못한다).
+Codex에서는 계획의 `reviewerRunner: "claude-cli"`에 따라 [공통 Claude CLI 호출 규칙](references/codex-dispatch.md)으로 프롬프트를 준비하고 `reviewerModel`로 페르소나마다 새 Claude 세션을 실행한다.
+
+```bash
+node "<플러그인 루트>/skills/goldfish/scripts/claude-reviewer.mjs" "$MODEL" < "$PROMPT_FILE"
+```
+
+Claude Code에서는 `Agent` 도구, `subagent_type: general-purpose`, model: `reviewerModel`을 쓴다. 모델 오류(알 수 없음·사용 불가·허용 안 됨)일 때만 별칭 순서(haiku < sonnet < opus < fable)에서 한 단계 아래 별칭을 명시해 한 번만 재시도한다. 하한은 `sonnet` 이다. 내려가 돌았으면 단계 보고서 `## Reviewer Status` 표의 그 행에 세 번째 열로 `degraded` 를 적고(`| 이름 | completed | degraded |` — 상태 칸은 그대로 둬야 `parseReport` 가 읽는다), 끝내 못 쓰면 아래 규칙대로 `not run` 이다. 단계의 리뷰어마다 하나씩 **같은 메시지에서 병렬로** 띄운다(원본의 synthesizer 대신 직접 dispatch — Claude Code 는 서브에이전트가 다시 서브에이전트를 띄우지 못한다).
 프롬프트에는 아래만 넣는다. 이 대화의 결정·이유·요약을 넣으면 Goldfish 가 아니다.
 
 ```text

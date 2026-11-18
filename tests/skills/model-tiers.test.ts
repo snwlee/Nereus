@@ -61,3 +61,18 @@ describe("model tiers", () => {
     expect(modelsFor("constructor")).toEqual({ reviewer: "sonnet", refuter: "opus", session: null });
   });
 });
+
+describe("Codex EGM dispatch plan", () => {
+  it("routes Codex reviews to Claude CLI with Claude models", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gf-codex-"));
+    try {
+      fs.writeFileSync(path.join(dir, "doc.md"), "# Doc\n\nbody\n");
+      expect(planReview("doc.md", { cwd: dir, mode: "feature", harness: "codex" }))
+        .toMatchObject({ reviewerRunner: "claude-cli", reviewerModel: "sonnet" });
+      expect(reviewOutput({ mode: "egm", runners: { egm: true }, size: "large", harness: "codex" }))
+        .toMatchObject({ reviewerRunner: "claude-cli", egmModel: "opus", refuterModel: "opus" });
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

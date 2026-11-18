@@ -126,7 +126,7 @@ All hooks are Node scripts. No bash, zero runtime dependencies, identical on mac
 
 ```json
 {
-  "secondOpinion": "both",
+  "secondOpinion": "egm",
   "tdd": { "exclude": ["**/migrations/**", "**/*.config.*", "**/generated/**"] },
   "design": { "enforce": "block", "widths": [320, 768, 1440] },
   "commitQuality": { "block": ["secret", "env_file"], "warn": ["debug_log"] },
@@ -135,7 +135,9 @@ All hooks are Node scripts. No bash, zero runtime dependencies, identical on mac
 }
 ```
 
-`secondOpinion` picks the reviewers: `"both"` (default), `"codex"`, `"gemini"`, `"none"` (deterministic OCR pass only), or an explicit array such as `["ocr", "gemini"]`.
+`secondOpinion` selects the code reviewers. `"egm"` (default) runs OCR and independent EGM reviewers, `"codex"` adds Codex Review, and `"none"` runs OCR alone. An explicit array such as `["ocr", "egm"]` also works.
+
+In Codex, `nereus:review` and `nereus:goldfish` run independent EGM reviews in fresh Claude CLI sessions. Install and sign in to Claude Code to use this path.
 
 `design.enforce` defaults to `"block"`: touching a design surface without a Gemini critique round stops `finish`. Set it to `"warn"` if you want the warning without the gate.
 
