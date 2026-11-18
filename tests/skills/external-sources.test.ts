@@ -38,3 +38,30 @@ describe("웹 이펙트 저장소", () => {
     expect(fs.readFileSync(FX, "utf8")).toMatch(/nereus-3d/);
   });
 });
+
+const MOTION = "plugins/nereus/skills/design/references/motion-refs.md";
+
+describe("모션 레퍼런스 목록", () => {
+  it("design 스킬이 가리킨다 — 스킬이 아니라 참고 목록이다", () => {
+    expect(fs.existsSync(MOTION)).toBe(true);
+    expect(fs.readFileSync(DESIGN, "utf8")).toContain("motion-refs.md");
+  });
+  it("세 출처를 라이선스와 함께 적는다", () => {
+    const t = fs.readFileSync(MOTION, "utf8");
+    for (const s of ["designbookmark.com/motion", "kokonutui", "smoothui"]) expect(t, s).toContain(s);
+    expect(t).toMatch(/MIT/);
+  });
+  it("라이선스 없는 DesignBookmark 코드를 복사 가능으로 적지 않는다", () => {
+    const t = fs.readFileSync(MOTION, "utf8");
+    const i = t.indexOf("designbookmark.com/motion");
+    expect(t.slice(i, i + 400)).toMatch(/없|불가|금지|보기만/);
+  });
+  it("에이전트가 라이브 데모를 볼 수 없다는 한계를 적는다", () => {
+    expect(fs.readFileSync(MOTION, "utf8")).toMatch(/사람이 (본다|고른다)|라이브/);
+  });
+  it("역할별 스프링 프리셋을 수치로 적고, 수치만 옮겼다고 밝힌다", () => {
+    const t = fs.readFileSync(MOTION, "utf8");
+    for (const s of ["900/50", "280/22", "260/24", "620/36", "190/19", "520/16", "420/32"]) expect(t, s).toContain(s);
+    expect(t).toMatch(/코드는 옮기지 않/);
+  });
+});
