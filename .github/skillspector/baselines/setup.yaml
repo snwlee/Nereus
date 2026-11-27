@@ -44,11 +44,11 @@ fingerprints:
   rule_id: AS1
   file: scripts/mcp-doctor.mjs
   reason: "setup 은 ~/.claude 설정(statusline·autocompact·MCP)을 점검·수정하는 것이 목적이다. 의도된 동작."
-- hash: sha256:c51fdab853aa0e0354ffb16653c6e18cb0400bc3d9dc1ff905a33d430ab8bf42
+- hash: sha256:eea9f04462815b33d7bdb72b2093bb464f0068e49026b7422389aadf3d92986c
   rule_id: PE2
   file: scripts/detect.mjs
   reason: "setup 이 사용자 승인 후 설치 명령을 안내하는 문서. 의도된 동작."
-- hash: sha256:d15e3dec6c84b82a5e7c20126a6ad34087f3f8b41acd1876d71d288735964126
+- hash: sha256:730ce798b208d74a47591c10a3f640d7d40936c548665981992065206f6e6656
   rule_id: RA2
   file: scripts/detect.mjs
   reason: "세션·설정 지속성 안내 문구(설치 안내, 사용자 본인 인증 절차)를 패턴이 잡았다. 문서 텍스트 오탐."
@@ -56,39 +56,39 @@ fingerprints:
   rule_id: SC2
   file: SKILL.md
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:801e0913dfb2e1850adec1814a4da893dd14c167f2ab4b01e6935dfad7ad11b1
+- hash: sha256:1101ff1fdef1445a5e49abaddb36e4926b65392033703520395a10768817fa1a
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:3960a4f7d346c9b376726307fb5d5cb10dd8c2d1d1089d624d2592a572802016
+- hash: sha256:f0ab602fd9ecaebefc29e6512c6aff6a47343564f78961c9e4e17bc2d15e3ebd
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:1bbff629183db4bd66ee1afca759e1b9831dc032339721b563ca6a4221b57f08
+- hash: sha256:d93a4b74d3ecb89e00f1b59116d47455b1d45f2a8a021f3a06d40c2b3593fb19
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:eb2c1826513958d1b397250eeac4ef5204b43258c33cbe5d1d335f41114fda79
+- hash: sha256:148462284659f0c31770d2780575932d65681165dff3c3c98d16bd4fa91257fe
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:51ccad1b92d703a088182636a6df9e36c90bf8fbea4125767b844a6bc9df1ed4
+- hash: sha256:4e342eb7600e874a0ceeaa39071f15ab45c729078bf25e3997b3daf6f598fdbb
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:8ccfdf4a622db24eaaf46aeb2251f9bd8084843e3a8aedcccd19ae5cc3df1432
+- hash: sha256:7e2c570dc09c70036945c1b94e814b42dcf3e02f4d81759e1136e70195269885
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:d1043a605a40263e4db598de4557598d13174634e42ecf3bed70fb987e97f34c
+- hash: sha256:218bef4dd0e3cb82750f9f48f599a4355dccf21c36e57515cbd768adc009739b
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:861098948ffb3e03e1801f694a4a1c8ffa9ab3764e2d0e602f3718c011b421bf
+- hash: sha256:84d3c4db50bbc263ebec1fb4931cf94410100b3df684966e57b99014476cc0f8
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."
-- hash: sha256:878298530d1f459e409b7f7e865937321a16021b9e44d9fab255a264fe10eaa6
+- hash: sha256:4fa56d8c1330c3c942bc91fa6be577738e357362dcea3efb26d729117294fd81
   rule_id: SC2
   file: scripts/detect.mjs
   reason: "setup 의 도구 설치 안내(uv/npm/brew 명령, 사용자 승인 후 실행). 의도된 동작."

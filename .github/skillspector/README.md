@@ -17,7 +17,9 @@ CI `skill-quality` 잡은 `plugins/nereus/skills/` 의 스킬을 하나씩 `skil
 ## baseline 은 "끄기"가 아니라 검토 기록이다
 
 `baselines/<스킬>.yaml` 은 2026-11-28 에 지적을 하나씩 읽고 판정한 결과다. 항목마다 `reason` 이 있다.
-지문은 지적된 줄의 내용으로 만들어지므로 그 줄이 바뀌면 다시 지적된다 — 새로 판정해야 한다.
+지문은 지적된 줄만이 아니라 같은 파일의 다른 내용에도 묶여 있다. 그 파일의 아무 줄이나 바뀌어도
+(예: `setup/scripts/detect.mjs` 의 Node 라벨 한 줄, `design/SKILL.md` 끝에 한 줄 추가) 기존 지적이 새 지적으로 다시 뜬다 —
+지적 내용이 같은지 확인하고 baseline 을 다시 만든다.
 
 2026-11-28 판정 요약:
 
