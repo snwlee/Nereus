@@ -5,15 +5,7 @@
 // 그래야 (1) 회귀 테스트가 성립하고 (2) 수식을 고쳤을 때 무엇이 달라졌는지 보이고
 // (3) finish 게이트가 "밸런스가 깨졌다"를 기계적으로 판정할 수 있다.
 // 체크리스트 스킬이었다면 셋 중 아무것도 못 한다.
-
-/** 선형합동생성기. 같은 시드면 같은 수열이다. Math.random 을 쓰지 않는 이유가 이것이다. */
-function lcg(seed) {
-  let s = (Number(seed) || 1) >>> 0;
-  return () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
+import { lcg } from "./seeded-random.mjs";
 
 /**
  * @param {{ profile: object, economy: { income: {base:number, growth:number}, stages: Array<{name:string,cost:number}> }, turns: number, seed?: number }} input
