@@ -1,0 +1,110 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:02ce0c3b3449027e1e69eac47542f8dbc582792b35c9123328c0adcfd304184c
+  rule_id: AST4
+  file: scripts/chrome_cookies.py
+  reason: "로컬 보조 스크립트의 subprocess 호출(venv 부트스트랩·Keychain 조회). 의도된 동작."
+- hash: sha256:bba5e20af8ee76f98686ed13d5c910b48fb1d218a8c1299b9298a19039a6c921
+  rule_id: AST4
+  file: scripts/cutout.py
+  reason: "로컬 보조 스크립트의 subprocess 호출(venv 부트스트랩·Keychain 조회). 의도된 동작."
+- hash: sha256:e78cf3751b7d609393e51205552a7860c1dba4224d601fb1b661c547f5b7e5e2
+  rule_id: AST4
+  file: scripts/gemini_cli.py
+  reason: "로컬 보조 스크립트의 subprocess 호출(venv 부트스트랩·Keychain 조회). 의도된 동작."
+- hash: sha256:7f9c8c95d151f6793d895a0d3aaf0ce8353520bc43510c5e35d2065d22db1380
+  rule_id: AST5
+  file: scripts/gemini_cli.py
+  reason: "gemini_cli.py 가 자기 venv 를 부트스트랩하는 subprocess 호출. 의도된 동작."
+- hash: sha256:1ce30cbd8a43df0529ff0853781e24b63c4b075129ace5b8db4cfa67cad972d9
+  rule_id: AST4
+  file: scripts/gemini_cli.py
+  reason: "로컬 보조 스크립트의 subprocess 호출(venv 부트스트랩·Keychain 조회). 의도된 동작."
+- hash: sha256:8c66705ea845d788dbe4813af36b5015a4aa794605377df6125b1ee60fc125a0
+  rule_id: AST4
+  file: scripts/gemini_cli.py
+  reason: "로컬 보조 스크립트의 subprocess 호출(venv 부트스트랩·Keychain 조회). 의도된 동작."
+- hash: sha256:669c5e3c3534eab9c3607766716be56f20b438f6c211c4c6c4c55214b26aa354
+  rule_id: AST4
+  file: scripts/gemini_cli.py
+  reason: "로컬 보조 스크립트의 subprocess 호출(venv 부트스트랩·Keychain 조회). 의도된 동작."
+- hash: sha256:d62d7bfe98949c27c3c5752ec123f3d4df7d5741b5a2e4524a17caafea50ae87
+  rule_id: AST4
+  file: scripts/gemini_cli.py
+  reason: "로컬 보조 스크립트의 subprocess 호출(venv 부트스트랩·Keychain 조회). 의도된 동작."
+- hash: sha256:5aa6501a4f8c92468eeda9f37924facc8bb86003da1b9527dfe8436d4cc311cc
+  rule_id: TT2
+  file: scripts/chrome_cookies.py
+  reason: "쿠키 내보내기 경로를 환경변수로 받는 흐름. 의도된 동작."
+- hash: sha256:2e71ef61d6cbeef66a4e3dffcf7b1ee810b17385d155b3704bfc60f01a54d5a5
+  rule_id: TT2
+  file: scripts/gemini_cli.py
+  reason: "쿠키 내보내기 경로를 환경변수로 받는 흐름. 의도된 동작."
+- hash: sha256:762f29891031d61fdf27069b60c70803e8513844d61eacbc88995fa586afe22e
+  rule_id: TT2
+  file: scripts/gemini_cli.py
+  reason: "쿠키 내보내기 경로를 환경변수로 받는 흐름. 의도된 동작."
+- hash: sha256:04ac521adc3c1f61ece8921dbad03b9d7f4df346ce60ccc51e16006a31260cd6
+  rule_id: TT2
+  file: scripts/gemini_cli.py
+  reason: "쿠키 내보내기 경로를 환경변수로 받는 흐름. 의도된 동작."
+- hash: sha256:1252d289474b198664f92367b16c4ba7f1e23063b54716c960bf174eb81b3d81
+  rule_id: TT4
+  file: scripts/gemini_cli.py
+  reason: "저장된 세션 쿠키로 Gemini 웹에 요청하는 흐름 — gemini-web 경로의 핵심 동작."
+- hash: sha256:9b15c900407e3a3f28deb50e365bcb9e9470ea816c81a0b8650ff602998e2cc2
+  rule_id: LP3
+  file: SKILL.md
+  reason: "Claude Code 스킬 프런트매터에 allowed-tools 를 두지 않는 저장소 관례. 권한은 하네스 권한 모드가 정한다."
+- hash: sha256:1b388717b993e3e9a3cea6987a50f73e5341a357299a9dddbeaac9e38e2bfaec
+  rule_id: E1
+  file: muapi-models.json
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
+- hash: sha256:4c875196f60e1c096accbedf75f499caf802c2a1c72445fc2924d1c1c3d0a42e
+  rule_id: E1
+  file: muapi-models.json
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
+- hash: sha256:89305add8eb3bab1efbed2bcccbb432ae240ed79b068f0048e8ef42600d7c6a9
+  rule_id: E1
+  file: scripts/muapi-client.mjs
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
+- hash: sha256:a31f34ae7b463c2b00e2007210ede5d010f4d904c2eb9093e4077140cbf6e7a2
+  rule_id: E1
+  file: scripts/muapi-client.mjs
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
+- hash: sha256:db48783512248abfcdad142b98490a3a93ae25774951d1f9500a759ee89fce90
+  rule_id: PE3
+  file: scripts/chrome_cookies.py
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."
+- hash: sha256:64d5fd83d09473485c2953b7ca3f4bc8b362f5db40647c7927f25ba3c8d8f169
+  rule_id: PE3
+  file: scripts/chrome_cookies.py
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."
+- hash: sha256:53a5517ab8c64878f960bf5ca723c9d3d3d0fe9e6bd87f7d53126224bec9b659
+  rule_id: PE3
+  file: scripts/chrome_cookies.py
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."
+- hash: sha256:522481d6503f38219d6f3b45d51320270ff914de51c05be2d336b7bad7731259
+  rule_id: PE3
+  file: scripts/cookies-import.mjs
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."
+- hash: sha256:237e1a106fc3b4579977575840ab38b5c24448680d79f27ba39835c304d9b1fc
+  rule_id: PE3
+  file: scripts/gemini_cli.py
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."
+- hash: sha256:1e0675a0640d73b51921978532bd3cba5586e381f3b022bdc5a82e72286fbdc4
+  rule_id: PE3
+  file: scripts/gemini_cli.py
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."
+- hash: sha256:b4b6e837b3a3561295d2fbd079753289db3a2370d6a67398a321602ef29e9c74
+  rule_id: PE3
+  file: scripts/gemini_cli.py
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."
+- hash: sha256:c074861ae2b58271baa9a266513ae81025f9e5a52abc2ab1f74cc18bb2a775d2
+  rule_id: PE3
+  file: scripts/gemini_cli.py
+  reason: "Gemini 웹세션 쿠키를 사용자 본인 Chrome/Keychain 에서 읽는 것이 gemini-web 경로의 목적이다(SKILL.md 에 문서화). 의도된 동작."

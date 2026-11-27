@@ -25,5 +25,5 @@ describe("assetDoctor", () => {
 
   it("예외를 던지지 않는다", () => {
     expect(() => assetDoctor({})).not.toThrow();
-  });
+  }, 30_000); // 실제 which/where 를 띄운다 — Windows 러너의 첫 기동은 10초를 넘긴다
 });

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { posix } from "../helpers/posix-path";
 import { handle } from "../../plugins/nereus/hooks/scripts/session-start.mjs";
 
 describe("two loop iterations in one project", () => {
@@ -10,7 +11,7 @@ describe("two loop iterations in one project", () => {
     fs.mkdirSync(path.join(root, ".nereus", "handoff"), { recursive: true });
     const a = handle({ session_id: "aaaaaaaa-1", cwd: root, source: "startup" }, { env: { NEREUS_LOOP: "1" } })!.hookSpecificOutput.additionalContext;
     const b = handle({ session_id: "bbbbbbbb-2", cwd: root, source: "startup" }, { env: { NEREUS_LOOP: "1" } })!.hookSpecificOutput.additionalContext;
-    const pathOf = (ctx: string) => ctx.match(/\.nereus\/handoff\/[\w-]+\.md/)![0];
+    const pathOf = (ctx: string) => posix(ctx).match(/\.nereus\/handoff\/[\w-]+\.md/)![0];
     expect(pathOf(a)).not.toBe(pathOf(b));
     fs.rmSync(root, { recursive: true, force: true });
   });

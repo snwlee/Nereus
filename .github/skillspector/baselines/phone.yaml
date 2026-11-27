@@ -1,0 +1,34 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:0ee8d7ccb0140c9505f47f86523fab18563ee948c905f3cbf3d758ee5c01261f
+  rule_id: AE4
+  file: scripts/relay.mjs
+  reason: "phone 실시간 중계(Twilio↔Realtime) 스크립트의 런타임 의존 표현. 의도된 동작."
+- hash: sha256:89bcb11c407798b3d4627ef2a3966c32aa8e454a55cba7556b4c14c6b031b2b9
+  rule_id: AE4
+  file: scripts/ws.mjs
+  reason: "phone 실시간 중계(Twilio↔Realtime) 스크립트의 런타임 의존 표현. 의도된 동작."
+- hash: sha256:8fc44a1dbaa3a8e7b7028496e17b3e59f68ddff9ce165f7054388ae5de2b115d
+  rule_id: LP3
+  file: SKILL.md
+  reason: "Claude Code 스킬 프런트매터에 allowed-tools 를 두지 않는 저장소 관례. 권한은 하네스 권한 모드가 정한다."
+- hash: sha256:53f6d2cb348c4647616636c8c14623b8283a134d4dcc84714ada86b3248d2a15
+  rule_id: E1
+  file: scripts/twilio.mjs
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
+- hash: sha256:b015e693b6ddaf0ac2a0ab19025b6f69eab1b80668fd7d6d5df9246ae286c0c8
+  rule_id: RA2
+  file: SKILL.md
+  reason: "세션·설정 지속성 안내 문구(설치 안내, 사용자 본인 인증 절차)를 패턴이 잡았다. 문서 텍스트 오탐."
+- hash: sha256:04e131124dedc2b220b1372d8627887c39ae72a9b79b1fa398d367bf85e3057e
+  rule_id: AE1
+  file: SKILL.md
+  reason: "정적 파서 한계(static_parse_limit)로 SKILL.md 가 가리키는 같은 스킬 안 스크립트를 부분 분석했다는 커버리지 신호. 위협 근거 없음."
+- hash: sha256:c5791a1ef87eacae889d49768ded26149912dfee842dc5d9cd97749cf8aac000
+  rule_id: AE1
+  file: SKILL.md
+  reason: "정적 파서 한계(static_parse_limit)로 SKILL.md 가 가리키는 같은 스킬 안 스크립트를 부분 분석했다는 커버리지 신호. 위협 근거 없음."

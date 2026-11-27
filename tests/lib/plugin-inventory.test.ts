@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { posix } from "../helpers/posix-path";
 import { readInventory } from "../../plugins/nereus/hooks/scripts/lib/plugin-inventory.mjs";
 
 const deps = {
@@ -7,8 +8,8 @@ const deps = {
     "/p/settings.json": { enabledPlugins: { "ecc@ecc": false } },
     "/i/ecc/.mcp.json": { mcpServers: { "chrome-devtools": {} } },
     "/i/ecc/hooks/hooks.json": { hooks: { PostToolUse: [{ matcher: "Edit", hooks: [] }] } },
-  }[p]),
-  readDir: (p: string) => ({ "/i/ecc/skills": ["unified-memory"], "/i/ecc/agents": ["reviewer.md"], "/i/ecc/bin": ["ecc"] }[p] ?? []),
+  }[posix(p)]),
+  readDir: (p: string) => ({ "/i/ecc/skills": ["unified-memory"], "/i/ecc/agents": ["reviewer.md"], "/i/ecc/bin": ["ecc"] }[posix(p)] ?? []),
 };
 
 describe("readInventory", () => {

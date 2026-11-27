@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { posix } from "../helpers/posix-path";
 import { parseList, buildRenderArgs, parseRenderLine, SFXLITE_COMMIT, sfxliteHome } from "../../plugins/nereus/skills/sfx/scripts/sfxlite.mjs";
 
 const LIST = [
@@ -33,6 +34,6 @@ describe("sfx.synth", () => {
   it("커밋 고정·설치 위치", () => {
     expect(SFXLITE_COMMIT).toBe("c91a7c9d2690ae658f790859d4ad4004857903dd");
     expect(sfxliteHome({ NEREUS_SFXLITE: "/x/y" })).toBe("/x/y");
-    expect(sfxliteHome({ HOME: "/h" })).toBe("/h/.local/share/nereus/sfx/earshot-sfx-lite");
+    expect(posix(sfxliteHome({ HOME: "/h" }))).toBe("/h/.local/share/nereus/sfx/earshot-sfx-lite");
   });
 });

@@ -8,10 +8,12 @@ const DIR = path.resolve(__dirname, "../../plugins/nereus/skills/image/scripts")
 
 function emit(text: string | null) {
   const code = `import sys; sys.path.insert(0, ${JSON.stringify(DIR)}); import gemini_cli; raise SystemExit(gemini_cli.emit_answer(${JSON.stringify(text)} if ${text !== null ? "True" : "False"} else None))`;
-  return spawnSync("python3", ["-c", code], { encoding: "utf8" });
+  // Windows 의 Python 표준 스트림은 cp1252 라 한글이 \uXXXX 로 이스케이프된다 — UTF-8 로 고정한다.
+  return spawnSync("python3", ["-c", code], { encoding: "utf8", env: { ...process.env, PYTHONIOENCODING: "utf-8" } });
 }
 
-describe("gemini_cli ask — 빈 응답은 실패다", () => {
+// 파이썬 첫 기동(모듈 컴파일 포함)이 Windows 러너에서는 10초를 넘긴다.
+describe("gemini_cli ask — 빈 응답은 실패다", { timeout: 30_000 }, () => {
   it("응답이 있으면 출력하고 0", () => {
     const r = emit("VERDICT: OK");
     expect(r.status).toBe(0);

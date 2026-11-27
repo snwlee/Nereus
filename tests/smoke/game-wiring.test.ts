@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
+import { posix } from "../helpers/posix-path";
 import { loadExtensions } from "../../plugins/nereus/hooks/scripts/lib/extensions.mjs";
 import { routePrompt } from "../../plugins/nereus/hooks/scripts/lib/router.mjs";
 import { detectStack, detectTestRunner } from "../../plugins/nereus/hooks/scripts/lib/stack.mjs";
@@ -54,7 +55,7 @@ describe("도메인 라우트와 Unity 스택", () => {
   it("Unity 프로젝트에서 코어가 확장 스택을 인식한다", () => {
     const ext = loadExtensions({ readJson, records });
     const fsx = {
-      exists: (p: string) => p.endsWith("ProjectSettings/ProjectVersion.txt") || p.endsWith("Packages/manifest.json"),
+      exists: (p: string) => posix(p).endsWith("ProjectSettings/ProjectVersion.txt") || posix(p).endsWith("Packages/manifest.json"),
       readFile: () => "",
     };
     expect(detectStack("/proj", fsx, { extraStacks: ext.stacks })).toContain("unity");

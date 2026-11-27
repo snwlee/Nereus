@@ -8,7 +8,7 @@ import { ENGINE_CANDIDATES } from "../../design/scripts/design-system.mjs";
 const npm = (pkg) => ({ darwin: `npm install -g ${pkg}`, win32: `npm install -g ${pkg}`, linux: `npm install -g ${pkg}` });
 
 export const TOOLS = [
-  { bin: "node", label: "Node.js 20+", required: true, group: "기반", install: { darwin: "brew install node", win32: "winget install OpenJS.NodeJS.LTS", linux: "https://nodejs.org" } },
+  { bin: "node", label: "Node.js 22+", required: true, group: "기반", install: { darwin: "brew install node", win32: "winget install OpenJS.NodeJS.LTS", linux: "https://nodejs.org" } },
   { bin: "git", label: "Git", required: true, group: "기반", install: { darwin: "brew install git", win32: "winget install Git.Git", linux: "apt install git" } },
   { bin: "codegraph", label: "CodeGraph (코드 인덱스)", required: true, group: "코어", install: { darwin: "curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh && codegraph install", win32: "irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex; codegraph install", linux: "curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh" } },
   { bin: "ooo", label: "Ouroboros (인터뷰·평가)", required: true, group: "코어", install: { darwin: "curl -fsSL https://raw.githubusercontent.com/Q00/ouroboros/main/install.sh | sh", win32: "irm https://raw.githubusercontent.com/Q00/ouroboros/main/install.ps1 | iex", linux: "curl -fsSL https://raw.githubusercontent.com/Q00/ouroboros/main/install.sh | sh" }, plugin: "/plugin marketplace add Q00/ouroboros && /plugin install ouroboros@ouroboros" },

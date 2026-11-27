@@ -1,0 +1,14 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:e18a05b9bb232e3ac25fdd3b67100c87ba67a189a0dea5c5fb7f22765059cda1
+  rule_id: LP3
+  file: SKILL.md
+  reason: "Claude Code 스킬 프런트매터에 allowed-tools 를 두지 않는 저장소 관례. 권한은 하네스 권한 모드가 정한다."
+- hash: sha256:de23f8a2c35bbc4704bcdcea216b32df6b6522fd05c0e32c5213885cd830d0c6
+  rule_id: E1
+  file: scripts/openverse.mjs
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."

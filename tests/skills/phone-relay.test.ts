@@ -54,6 +54,9 @@ beforeEach(() => {
 });
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
+// Windows 에는 POSIX 권한 비트가 없다(stat 이 0o666/0o444 만 낸다). 권한 검사는 POSIX 에서만 한다.
+const HAS_POSIX_MODES = process.platform !== "win32";
+
 describe("phone.relay", () => {
   it("가짜 Twilio ↔ 가짜 Realtime 왕복 [flow]", async () => {
     const fake = await startFakeRealtime();
@@ -181,11 +184,11 @@ describe("phone.relay hardening (보안 리뷰 H2·M3·M9)", () => {
     fs.rmSync(logsDir, { recursive: true });
     const fake = await startFakeRealtime();
     const relay = await startRelay({ port: 0, secret: "s", prefix: "/japancall", openaiUrl: fake.url, openaiKey: "k", jobsDir, logsDir, hangup: async () => {}, kickMs: 10_000 });
-    expect(fs.statSync(logsDir).mode & 0o777).toBe(0o700);
+    if (HAS_POSIX_MODES) expect(fs.statSync(logsDir).mode & 0o777).toBe(0o700);
     const a = await open(relay.port);
     a.tw.send(JSON.stringify({ event: "start", start: { streamSid: "MZ1", callSid: "CAtest", customParameters: { job: "t1" } } }));
     await waitFor(() => fs.existsSync(join(logsDir, "CAtest.jsonl")));
-    expect(fs.statSync(join(logsDir, "CAtest.jsonl")).mode & 0o777).toBe(0o600);
+    if (HAS_POSIX_MODES) expect(fs.statSync(join(logsDir, "CAtest.jsonl")).mode & 0o777).toBe(0o600);
     a.tw.close();
     await relay.close(); await fake.close();
   });

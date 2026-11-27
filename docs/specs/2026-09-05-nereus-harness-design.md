@@ -75,7 +75,7 @@ Nereus/
 ```
 
 결정:
-- 플러그인 런타임은 Node 20+ 표준 라이브러리만. 사용자 `npm install` 불필요.
+- 플러그인 런타임은 Node 22+ 표준 라이브러리만. 사용자 `npm install` 불필요.
 - CredStore 소스는 기존 저장소에 두고 npm으로 배포. 여기는 MCP 등록과 커맨드만.
 - 설치: `/plugin marketplace add snwlee/Nereus` → `/plugin install nereus@nereus`, `/plugin install credstore@nereus`.
 
