@@ -185,7 +185,9 @@ function unmeasuredAxes(levels, cap, offer) {
  * @returns {{ levels: Array<object>, violations: Array<object>, unmeasured: string[] }}
  */
 export function measureRetry({ profile, levels, lives, continueOffer, seed = 1 }) {
-  const hasBaseline = Boolean(profile?.retry);
+  // 기준 없음은 retry 키가 없을 때뿐이다. null 같은 잘못된 덮어쓰기를 no-baseline 으로 조용히 바꾸지 않는다.
+  const hasBaseline = profile?.retry !== undefined;
+  if (hasBaseline && (profile.retry === null || typeof profile.retry !== "object")) fail("profile.retry 는 객체여야 한다");
   if (hasBaseline) validateRetry(profile.retry);
   const retry = hasBaseline ? profile.retry : NO_BASELINE_RETRY;
   validateLevels(levels);
@@ -196,11 +198,13 @@ export function measureRetry({ profile, levels, lives, continueOffer, seed = 1 }
 
   const violations = hasBaseline ? [] : [{ code: "no-baseline", why: "프로파일에 retry 기준이 없다 — 지표는 냈지만 판정하지 않았다" }];
   const measured = levels.map((level, i) => {
+    // 보고 이름은 name 이 우선이고, id 만 있는 레벨은 id 로 보고한다(검증이 둘 중 하나를 요구한다).
+    const name = level.name ?? level.id;
     const tier = tierOf(level, i, retry.earlyLevels);
     const tierRule = hasBaseline ? retry.tiers[tier] : null;
     const m = metricsFor(playLevel(level, baseSeed, retry.trials, offer), { retry, cap, offer, range: tierRule?.firstTry });
-    if (tierRule) violations.push(...judgeLevel(level.name, tierRule, m, retry.minContinueSave));
-    return { name: level.name, tier, ...m.public };
+    if (tierRule) violations.push(...judgeLevel(name, tierRule, m, retry.minContinueSave));
+    return { name, tier, ...m.public };
   });
   return { levels: measured, violations, unmeasured: unmeasuredAxes(levels, cap, offer) };
 }

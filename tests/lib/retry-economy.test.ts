@@ -153,6 +153,12 @@ describe("재시도 판정 — 경계·빈 입력·기준", () => {
     expect(r.levels[0].borderline).toBe(false);
   });
 
+  it("이름 없이 id 만 있는 레벨은 id 로 보고한다", () => {
+    const r = measureRetry({ profile: midProfile, levels: [{ id: "lv-14", moves: 20, goal: 23, progress: [0, 2] }], seed: 1 });
+    expect(r.levels[0].name).toBe("lv-14");
+    expect(forLevel(r, "lv-14")).toContain("retry-cliff");
+  });
+
   it("빈 레벨 목록", () => {
     const r = measureRetry({ profile, levels: [], seed: 1 });
     expect(r.levels).toEqual([]);
@@ -201,6 +207,7 @@ describe("재시도 판정 — 경계·빈 입력·기준", () => {
     expect(m({ continueOffer: { moves: 1, price: -1 } })).toThrow(/price/);
     const broken = (retry: Record<string, unknown>) => () =>
       measureRetry({ profile: { ...profile, retry: { ...profile.retry, ...retry } }, levels: [lvl("A", 20)] });
+    expect(() => measureRetry({ profile: { ...profile, retry: null }, levels: [lvl("A", 20)] })).toThrow(/retry/);
     expect(broken({ trials: 0 })).toThrow(/trials/);
     expect(broken({ trials: 100001 })).toThrow(/trials/);
     expect(broken({ minContinueFailures: undefined })).toThrow(/minContinueFailures/);
