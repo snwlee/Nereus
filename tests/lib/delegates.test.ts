@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { posix } from "../helpers/posix-path";
 import { DELEGATES, delegateRoutes, delegateStatus } from "../../plugins/nereus/hooks/scripts/lib/delegates.mjs";
 import { routePrompt } from "../../plugins/nereus/hooks/scripts/lib/router.mjs";
 
@@ -13,7 +14,7 @@ describe("외부 스킬 위임", () => {
 
   it("스킬 디렉터리를 홈 밑에서 찾는다", () => {
     const seen: string[] = [];
-    delegateRoutes({ home: "/h", exists: (p: string) => { seen.push(p); return false; } });
+    delegateRoutes({ home: "/h", exists: (p: string) => { seen.push(posix(p)); return false; } });
     expect(seen.some((p) => p.includes("/h") && p.includes("ad-video"))).toBe(true);
   });
 

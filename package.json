@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "description": "Nereus 하네스 개발·테스트 전용. 플러그인 런타임은 Node 표준 라이브러리만 사용한다.",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",

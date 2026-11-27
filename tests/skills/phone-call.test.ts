@@ -50,6 +50,9 @@ describe("phone.call", () => {
   });
 });
 
+// Windows 에는 POSIX 권한 비트가 없다(stat 이 0o666/0o444 만 낸다). 권한 검사는 POSIX 에서만 한다.
+const HAS_POSIX_MODES = process.platform !== "win32";
+
 describe("phone.call binding (보안 리뷰 M3·M4)", () => {
   it("발신한 잡은 덮어쓰지 못하고 callSid 가 기록된다", () => {
     dir = mkdtempSync(join(os.tmpdir(), "phone-call-"));
@@ -60,6 +63,6 @@ describe("phone.call binding (보안 리뷰 M3·M4)", () => {
     expect(JSON.parse(readFileSync(join(dir, "w.json"), "utf8"))).toEqual({ to: "+82", callSid: "CA123" });
     expect(() => saveJob(dir, "w", { to: "+83" })).toThrow(/이미 발신/);
     expect(() => bindCall(dir, "w", { to: "+82" }, "../x")).toThrow();
-    expect(fs.statSync(dir).mode & 0o777).toBe(0o700);
+    if (HAS_POSIX_MODES) expect(fs.statSync(dir).mode & 0o777).toBe(0o700);
   });
 });

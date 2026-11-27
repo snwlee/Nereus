@@ -5,6 +5,7 @@ import { planReview, parseReport } from "../../plugins/nereus/skills/goldfish/sc
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ALIASES = ["haiku", "sonnet", "opus", "fable"];
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
@@ -50,7 +51,7 @@ describe("model tiers", () => {
     expect(parseReport(md).reviewers.map((r: { name: string; status: string }) => [r.name, r.status])).toEqual([["egm-design", "completed"]]);
   });
   it("goldfish doc puts degraded in its own column", () => {
-    const doc = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "../../plugins/nereus/skills/goldfish/SKILL.md"), "utf8");
+    const doc = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../../plugins/nereus/skills/goldfish/SKILL.md"), "utf8");
     expect(doc).toMatch(/\| 이름 \| completed \| degraded \|/);
   });
   it("flags an assumed size", () => {
