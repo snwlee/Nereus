@@ -1,0 +1,14 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:a97e9824f9faa0c26be0ef8b547911d4a655d358e494d63d794426eb7bf9cef4
+  rule_id: LP3
+  file: SKILL.md
+  reason: "Claude Code 스킬 프런트매터에 allowed-tools 를 두지 않는 저장소 관례. 권한은 하네스 권한 모드가 정한다."
+- hash: sha256:fd5a2d309d5fbc7e06b05aa0856a03f4719b7b4c6776096ad14c93833e96747f
+  rule_id: AE1
+  file: SKILL.md
+  reason: "정적 파서 한계(static_parse_limit)로 SKILL.md 가 가리키는 같은 스킬 안 스크립트를 부분 분석했다는 커버리지 신호. 위협 근거 없음."

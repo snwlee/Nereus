@@ -1,0 +1,14 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:f0abf9ae3f6458853a48554bf0fd5a4ac9fcfaa7d7b1c1e2cb88f128ab893c5d
+  rule_id: LP3
+  file: SKILL.md
+  reason: "Claude Code 스킬 프런트매터에 allowed-tools 를 두지 않는 저장소 관례. 권한은 하네스 권한 모드가 정한다."
+- hash: sha256:1bc74c33ba7dd5e64aff9c728415d0e8e46d69700122072bf382d1d208dfcfcb
+  rule_id: RP1
+  file: scripts/loop-runner.mjs
+  reason: "npx 로 부르는 것은 MCP 서버가 아니라 테스트 러너(vitest·playwright)이고 버전은 package.json 이 고정한다. 오탐."
