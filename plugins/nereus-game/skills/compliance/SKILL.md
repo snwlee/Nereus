@@ -60,8 +60,12 @@ nereus:common 규칙을 따른다. 담당 에이전트: security.
         { "item": "legendary", "odds": 0.5 }
       ],
       "hasUniqueOutcomes": false,
-      "dynamicRemainingOdds": false
+      "dynamicRemainingOdds": false,
+      "pity": { "at": 90, "disclosed": true, "disableWhen": [] }
     }
+  ],
+  "products": [
+    { "sku": "starter-pack", "priceUserInputs": [] }
   ],
   "luckItems": [
     { "name": "lucky-potion", "affects": ["pet-egg"], "numericEffect": "legendary 0.5% → 1.5%", "dynamicUpdate": true }
@@ -89,9 +93,33 @@ echo '{"plan":{...}}' | node "${CLAUDE_PLUGIN_ROOT}/lib/compliance-check.mjs"
 | `luck-no-dynamic-update` | 럭 아이템 활성 중 동적 갱신 선언이 없다 |
 | `luck-target-missing` | 럭 아이템이 없는 상자를 가리킨다 |
 | `no-restricted-fallback` | 유료 확률 아이템이 있는데 금지 지역 대체 경로가 없다 |
+| `pity-undisclosed` | 천장(pity)이 있는데 공개 선언이 없다 |
+| `pity-switchable` | 천장이 꺼지는 조건(`disableWhen`)이 있다 |
+| `price-by-history` | 상품 가격이 사용자 상태(`priceUserInputs`)를 읽는다 |
 
 확률 합은 소수 6자리로 반올림해 비교한다. 부동소수점 오차(`0.1 + 0.2 !== 0.3`)로
 **정상인 계획을 위반으로 잡으면 게이트를 못 쓴다.**
+
+## 3.0 공개했어도 기만이면 막는다
+
+위 규정은 **공개**를 본다. 공개는 했는데 실제 동작이 공개와 다른 패턴은 규정 문구만으로는 안 잡힌다.
+아래 둘은 법령 인용이 아니라 우리 규칙이지만 같은 게이트에서 본다 — 장르 프로파일로 끌 수 있으면
+안 되는 이유가 확률 공개와 같다.
+
+**천장은 공개하고, 어떤 구간에서도 끄지 않는다.** `pity` 를 선언하면 `disclosed: true` 여야 하고
+`disableWhen` 은 비어 있어야 한다. 컬렉션 끝단에서 조용히 꺼지는 천장은 공개한 기대 비용을 거짓으로 만든다.
+`pity` 를 선언하지 않은 상자는 천장 검사를 건너뛴다.
+
+**같은 상품의 가격을 사용자 이력으로 올리지 않는다.** `products[].priceUserInputs` 는 가격 함수가 읽는
+사용자 상태(결제 이력, 재구매 횟수, 예측 가치)다. 비어 있어야 한다. 지역별 가격은 스토어 가격 등급이
+정하고 가격 함수의 입력이 아니다. 첫 구매용 저가 상품을 1회 한정으로 두는 것은 괜찮다 — 모두에게 같은 가격,
+같은 조건이고, 구매 뒤 같은 SKU 가 더 비싸게 다시 나오지 않으면 된다.
+
+검사기는 선언을 본다. 선언과 코드가 같은지는 테스트로 확인한다:
+
+- [ ] 천장이 진행 중 어떤 조건에서도 꺼지지 않는다(시드 고정 테스트로 천장 도달까지 돌린다)
+- [ ] 컬렉션 마지막 몇 개를 완성하는 기대 구매 수가 앞부분 전체 대비 정한 상한 안이다(`balance` 시뮬레이터로 잰다)
+- [ ] 신규 프로필과 결제자 프로필에서 같은 SKU 가 같은 가격이다(테스트)
 
 ## 3.1 통과한 뒤의 배선
 
@@ -113,4 +141,6 @@ echo '{"plan":{...}}' | node "${CLAUDE_PLUGIN_ROOT}/lib/compliance-check.mjs"
 - 확률을 "대략" 적지 않는다. 실제 수치여야 한다.
 - 럭 아이템을 "확률이 올라갑니다"로 넘기지 않는다. 수치로 적고 활성 중 갱신한다.
 - 금지 지역 대체 경로를 나중으로 미루지 않는다. 없으면 그 지역에서 게임이 막힌다.
+- 공개한 확률·천장을 몰래 끄거나 바꾸지 않는다.
+- 같은 상품의 가격을 결제 이력·재구매 횟수·예측 가치로 올리지 않는다.
 - 이 판정을 밸런스 논의와 섞지 않는다. 밸런스는 우리가 정하고, 이것은 남이 정한다.

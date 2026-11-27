@@ -102,3 +102,32 @@ describe("paid random items", () => {
     expect(codes(checkPaidRandom({ policy, plan: p }))).not.toContain("no-restricted-fallback");
   });
 });
+
+describe("paid random items — 기만 금지(천장·가격)", () => {
+  it("천장을 선언하지 않은 상자는 천장 검사를 하지 않는다", () => {
+    expect(checkPaidRandom({ policy, plan: plan() }).violations).toEqual([]);
+  });
+  it("공개되고 꺼지는 조건이 없는 천장은 통과", () => {
+    const p = plan({ boxes: [box({ pity: { at: 90, disclosed: true, disableWhen: [] } })] });
+    expect(checkPaidRandom({ policy, plan: p }).violations).toEqual([]);
+  });
+  it("공개되지 않은 천장은 pity-undisclosed", () => {
+    const p = plan({ boxes: [box({ pity: { at: 90 } })] });
+    expect(codes(checkPaidRandom({ policy, plan: p }))).toContain("pity-undisclosed");
+  });
+  it("어떤 조건에서든 꺼지는 천장은 pity-switchable", () => {
+    const p = plan({ boxes: [box({ pity: { at: 90, disclosed: true, disableWhen: ["collection>=95%"] } })] });
+    const v = checkPaidRandom({ policy, plan: p }).violations.find((x: any) => x.code === "pity-switchable");
+    expect(v).toBeTruthy();
+    expect(v.conditions).toEqual(["collection>=95%"]);
+  });
+  it("가격이 사용자 이력을 읽으면 price-by-history", () => {
+    const p = plan({ products: [{ sku: "starter", priceUserInputs: ["purchaseCount"] }] });
+    const v = checkPaidRandom({ policy, plan: p }).violations.find((x: any) => x.code === "price-by-history");
+    expect(v).toMatchObject({ sku: "starter", inputs: ["purchaseCount"] });
+  });
+  it("사용자 상태를 읽지 않는 가격은 통과", () => {
+    const p = plan({ products: [{ sku: "starter", priceUserInputs: [] }, { sku: "gems" }] });
+    expect(codes(checkPaidRandom({ policy, plan: p }))).not.toContain("price-by-history");
+  });
+});
