@@ -35,7 +35,7 @@ B10 의 내용 — 첫 결제 문턱을 낮추는 상품은 하나·한 번이�
 - 새 모듈 `lib/seeded-random.mjs`·`lib/retry-economy.mjs`·`lib/starter-offer.mjs`
 - `profiles/casual-puzzle.json` 의 `retry` 블록과 `balance.note` 갱신(잠정값임을 적는다)
 - balance SKILL.md: "아직 재지 않는 것" 절을 재시도·스타터 절로 교체하고 회복 시간 축만 남긴다. 비통과 세 경우(`no-baseline`, 비어 있지 않은 `unmeasured`, `null` 지표)를 통과로 읽지 않는다고 적는다
-- 샘플 레벨 파일 `skills/balance/references/puzzle-levels.sample.json`
+- 샘플 레벨 파일 `skills/balance/assets/puzzle-levels.sample.json`
 - nereus-game 패치 버전
 
 ## Non-Goals

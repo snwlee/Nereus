@@ -33,12 +33,12 @@
 "중반 위치" 레벨은 앞에 `earlyLevels`(10) 개의 쉬운 채움 레벨(moves 20, goal 10)을 두거나, 테스트용 프로파일 복사본의 `retry.earlyLevels` 를 0 으로 둔다.
 기준 없는 프로파일은 `{ ...loadProfile("sim-tycoon") }`(`retry` 없음)를 쓴다.
 
-- [ ] T1. 시드 난수 모듈 분리
+- [x] T1. 시드 난수 모듈 분리
   - Files: Create `plugins/nereus-game/lib/seeded-random.mjs` · Modify `plugins/nereus-game/lib/balance-sim.mjs` (lcg 정의를 import 로) · Test `tests/lib/seeded-random.test.ts`
   - Interfaces: Produces `lcg(seed): () => number`(balance-sim 의 것을 코드 변경 없이 옮겨 export) · `mixSeed(seed: number, key: string): number`
   - `mixSeed` 정의: key 를 UTF-8 바이트로 인코딩(`TextEncoder`), FNV-1a 32비트(offset `0x811c9dc5`, prime `0x01000193`, `Math.imul`), 결과와 `seed >>> 0` 을 XOR, fmix32(`h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16`), `>>> 0`, 0 이면 `0x9e3779b9`
   - Steps:
-    - [ ] 실패 테스트 작성(기대값은 별도 Python 참조 구현으로 미리 계산한 값):
+    - [x] 실패 테스트 작성(기대값은 별도 Python 참조 구현으로 미리 계산한 값):
       ```ts
       import { lcg, mixSeed } from "../../plugins/nereus-game/lib/seeded-random.mjs";
       it("한글 키의 시드는 고정값이다", () => {
@@ -51,16 +51,16 @@
         expect([r(), r(), r()]).toEqual([0.23645552527159452, 0.3692706737201661, 0.5042420323006809]);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/seeded-random.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: 위 정의대로
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/seeded-random.test.ts tests/lib/balance-sim.test.ts tests/lib/balance-sim-lives.test.ts` · Expected: PASS
+    - [x] 실패 확인: Run `npx vitest run tests/lib/seeded-random.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: 위 정의대로
+    - [x] 통과 확인: Run `npx vitest run tests/lib/seeded-random.test.ts tests/lib/balance-sim.test.ts tests/lib/balance-sim-lives.test.ts` · Expected: PASS
   - Done when: 세 파일 통과(기존 simulate 결과 불변), 기준선에 없던 실패 0
 
-- [ ] T2. 재시도 경제 측정·판정
+- [x] T2. 재시도 경제 측정·판정
   - Files: Create `plugins/nereus-game/lib/retry-economy.mjs` · Modify `plugins/nereus-game/profiles/casual-puzzle.json` (`retry` 블록 — proposal "프로파일 기본값" 그대로) · Test `tests/lib/retry-economy.test.ts`
   - Interfaces: Consumes `lib/seeded-random.mjs: lcg, mixSeed` · (CLI 만) `lib/profiles.mjs: loadProfile`, `lib/cli-input.mjs: readCliInput, runCli` · Produces `measureRetry({ profile, levels, lives?, continueOffer?, seed? }) → { levels, violations, unmeasured }` · CLI stdin `{ genre, retry?, levels, lives?, continueOffer?, seed? }` — `retry` 가 있으면 `{ ...loadProfile(genre), retry }` 로 통째로 대신한다(같은 검증)
   - Steps:
-    - [ ] 실패 테스트 작성: 스펙 `balanceSim.retry` 시나리오 26개 중 "한글 키의 시드는 고정값이다"(T1 소관)를 뺀 25개를 같은 이름의 `it` 로, 위 픽스처 표대로. 대표:
+    - [x] 실패 테스트 작성: 스펙 `balanceSim.retry` 시나리오 26개 중 "한글 키의 시드는 고정값이다"(T1 소관)를 뺀 25개를 같은 이름의 `it` 로, 위 픽스처 표대로. 대표:
       ```ts
       it("이동 수가 클리어율을 움직인다", () => {
         const levels = [
@@ -71,16 +71,16 @@
         expect(r.levels[1].firstTryWinRate - r.levels[0].firstTryWinRate).toBeGreaterThanOrEqual(0.4);
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/retry-economy.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: 스펙의 판 모델(기본·이어하기 난수열 분리, 판마다 정확히 `moves` 개 추출, `goal − 1e-9`)·지표 7종·위반 5종·`unmeasured`·입력 검증(프로파일 `retry` 필수 키·상한·총 추출 수, seed 는 `(Number(seed) || 1) >>> 0`)·CLI
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/retry-economy.test.ts` · Expected: PASS
+    - [x] 실패 확인: Run `npx vitest run tests/lib/retry-economy.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: 스펙의 판 모델(기본·이어하기 난수열 분리, 판마다 정확히 `moves` 개 추출, `goal − 1e-9`)·지표 7종·위반 5종·`unmeasured`·입력 검증(프로파일 `retry` 필수 키·상한·총 추출 수, seed 는 `(Number(seed) || 1) >>> 0`)·CLI
+    - [x] 통과 확인: Run `npx vitest run tests/lib/retry-economy.test.ts` · Expected: PASS
   - Done when: 25개 시나리오 통과, 기준선에 없던 실패 0
 
-- [ ] T3. 1회 한정 첫 구매 상품 판정
+- [x] T3. 1회 한정 첫 구매 상품 판정
   - Files: Create `plugins/nereus-game/lib/starter-offer.mjs` · Test `tests/lib/starter-offer.test.ts`
   - Interfaces: Consumes `lib/cli-input.mjs: readCliInput, runCli` · Produces `checkStarterOffer({ shop }) → { violations, metrics: { starterSku, valueRatio } }` · CLI stdin `{ shop }`
   - Steps:
-    - [ ] 실패 테스트 작성(스펙 `balanceSim.starterOffer` 시나리오 12개). 대표:
+    - [x] 실패 테스트 작성(스펙 `balanceSim.starterOffer` 시나리오 12개). 대표:
       ```ts
       it("더 비싼 상품으로 교체", () => {
         const shop = { products: [
@@ -90,16 +90,16 @@
         expect(checkStarterOffer({ shop }).violations.map((v) => v.code)).toContain("starter-replaced-pricier");
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/starter-offer.test.ts` · Expected: FAIL (모듈 없음)
-    - [ ] 최소 구현: 위반 5종(교체 사슬 추적, 같은 `currency` 끼리만 가격 비교), `valueRatio`(짝수 개 중앙값은 가운데 둘의 평균 — balance-sim 의 지배 전략 중앙값과 달리 상품 수가 적어 위쪽 값 하나로 치우치지 않게 한다), 입력 검증(sku 중복·price·없는 replacedBy·순환), CLI
-    - [ ] 통과 확인: Run `npx vitest run tests/lib/starter-offer.test.ts` · Expected: PASS
+    - [x] 실패 확인: Run `npx vitest run tests/lib/starter-offer.test.ts` · Expected: FAIL (모듈 없음)
+    - [x] 최소 구현: 위반 5종(교체 사슬 추적, 같은 `currency` 끼리만 가격 비교), `valueRatio`(짝수 개 중앙값은 가운데 둘의 평균 — balance-sim 의 지배 전략 중앙값과 달리 상품 수가 적어 위쪽 값 하나로 치우치지 않게 한다), 입력 검증(sku 중복·price·없는 replacedBy·순환), CLI
+    - [x] 통과 확인: Run `npx vitest run tests/lib/starter-offer.test.ts` · Expected: PASS
   - Done when: 12개 시나리오 통과, 기준선에 없던 실패 0
 
-- [ ] T4. 시뮬레이터 배선(재시도만 — 스타터 판정은 배선하지 않음, MODIFIED `balanceSim.run`)
+- [x] T4. 시뮬레이터 배선(재시도만 — 스타터 판정은 배선하지 않음, MODIFIED `balanceSim.run`)
   - Files: Modify `plugins/nereus-game/lib/balance-sim.mjs` (`simulate` 의 반환 직전) · Test `tests/lib/balance-sim-retry.test.ts`
   - Interfaces: Consumes `lib/retry-economy.mjs: measureRetry` · Produces `summary.retry?`
   - Steps:
-    - [ ] 실패 테스트 작성:
+    - [x] 실패 테스트 작성:
       ```ts
       import { simulate } from "../../plugins/nereus-game/lib/balance-sim.mjs";
       import { measureRetry } from "../../plugins/nereus-game/lib/retry-economy.mjs";
@@ -123,13 +123,13 @@
         expect(() => simulate({ profile, economy: { ...base, levels: null }, turns: 5 })).toThrow();
       });
       ```
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/balance-sim-retry.test.ts` · Expected: FAIL
-    - [ ] 최소 구현: `simulate` 에서 `economy?.levels !== undefined` 이면 `measureRetry({ profile, levels: economy.levels, lives: economy.lives, continueOffer: economy.continueOffer, seed })` 를 불러 `{ ...summary, retry }` 를 돌려준다. 배열이 아닌 값은 `measureRetry` 의 오류가 그대로 던져진다
-    - [ ] 통과 확인: Run `npx vitest run tests/lib` · Expected: PASS
+    - [x] 실패 확인: Run `npx vitest run tests/lib/balance-sim-retry.test.ts` · Expected: FAIL
+    - [x] 최소 구현: `simulate` 에서 `economy?.levels !== undefined` 이면 `measureRetry({ profile, levels: economy.levels, lives: economy.lives, continueOffer: economy.continueOffer, seed })` 를 불러 `{ ...summary, retry }` 를 돌려준다. 배열이 아닌 값은 `measureRetry` 의 오류가 그대로 던져진다
+    - [x] 통과 확인: Run `npx vitest run tests/lib` · Expected: PASS
   - Done when: 새 시나리오 3개 통과, 기존 balance-sim 테스트 통과, 기준선에 없던 실패 0
 
-- [ ] T5. 문서·샘플·버전
-  - Files: Modify `plugins/nereus-game/skills/balance/SKILL.md` (frontmatter 불변) · Modify `plugins/nereus-game/profiles/casual-puzzle.json` (`balance.note` 의 "아직 측정되지 않는다" 문장을 "재시도 경제는 `retry` 블록과 retry-economy 로 잰다 — 범위·상한은 잠정값" 으로 교체) · Create `plugins/nereus-game/skills/balance/references/puzzle-levels.sample.json` · Modify `plugins/nereus-game/README.md`, `plugins/nereus-game/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `tests/lib/profiles-casual-puzzle.test.ts`
+- [x] T5. 문서·샘플·버전
+  - Files: Modify `plugins/nereus-game/skills/balance/SKILL.md` (frontmatter 불변) · Modify `plugins/nereus-game/profiles/casual-puzzle.json` (`balance.note` 의 "아직 측정되지 않는다" 문장을 "재시도 경제는 `retry` 블록과 retry-economy 로 잰다 — 범위·상한은 잠정값" 으로 교체) · Create `plugins/nereus-game/skills/balance/assets/puzzle-levels.sample.json` · Modify `plugins/nereus-game/README.md`, `plugins/nereus-game/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `tests/lib/profiles-casual-puzzle.test.ts`
   - Interfaces: 없음(문서·데이터)
   - 샘플 파일: `{ "genre": "casual-puzzle", "seed": 1, "lives": { "cap": 5 }, "continueOffer": { "moves": 5, "price": 900 }, "levels": [아래 14개] }`. 레벨 14개 — 초반 10개(moves 20, goal 13~17 로 점점 어렵게), 그 뒤 `mid` 2개(goal 20·20.5), `tier: "hard"` 1개(goal 21.7), 표시 없는 벽 레벨 1개(goal 23 — `retry-cliff` 가 나는 예시). `measureRetry` 는 `genre` 키를 무시한다
   - SKILL.md 체크리스트("시뮬레이터가 아직 재지 않는 것" 절을 교체하고, 그 이름의 절에는 회복 시간 축만 남긴다):
@@ -144,7 +144,7 @@
   - README: "밸런싱 시뮬레이터" 단락에 `summary.retry` 한 줄, 검사기 표에 `retry-economy.mjs`·`starter-offer.mjs` 두 행
   - 버전: `plugin.json` 과 `marketplace.json` 의 nereus-game 버전을 같은 값으로 패치 1 올린다(`tests/smoke/extension-wiring.test.ts` 가 둘을 비교). PR 을 열 때 main 최신의 nereus-game 버전 + 1 로 맞춘다
   - Steps:
-    - [ ] 실패 테스트 작성: `tests/lib/profiles-casual-puzzle.test.ts` 에 `import { measureRetry } from "../../plugins/nereus-game/lib/retry-economy.mjs";` 를 더하고
+    - [x] 실패 테스트 작성: `tests/lib/profiles-casual-puzzle.test.ts` 에 `import { measureRetry } from "../../plugins/nereus-game/lib/retry-economy.mjs";` 를 더하고
       ```ts
       it("SKILL.md 가 재시도·스타터 판정과 비통과 규칙을 적는다", () => {
         const md = fs.readFileSync("plugins/nereus-game/skills/balance/SKILL.md", "utf8");
@@ -153,17 +153,17 @@
           "회복 시간", "잠정"]) expect(md).toContain(c);
       });
       it("샘플 레벨 파일이 measureRetry 로 돈다", () => {
-        const sample = JSON.parse(fs.readFileSync("plugins/nereus-game/skills/balance/references/puzzle-levels.sample.json", "utf8"));
+        const sample = JSON.parse(fs.readFileSync("plugins/nereus-game/skills/balance/assets/puzzle-levels.sample.json", "utf8"));
         const r = measureRetry({ profile: loadProfile("casual-puzzle"), ...sample });
         expect(r.levels.length).toBe(sample.levels.length);
         expect(r.violations.map((v) => v.code)).toContain("retry-cliff");
       });
       ```
       기존 "수명 게이트가 아직 축이 아니라는 사실이 적혀 있다" 테스트는 이름을 "수명(목숨) 판정이 문서에 적혀 있다" 로 바꾼다(단언은 그대로)
-    - [ ] 실패 확인: Run `npx vitest run tests/lib/profiles-casual-puzzle.test.ts` · Expected: FAIL
-    - [ ] 최소 구현: 위 체크리스트·README·샘플·note·버전
-    - [ ] 통과 확인: Run `npx vitest run` · Expected: 기준선에 없던 실패 0
-  - Done when: 기준선에 없던 실패 0, `node plugins/nereus-game/lib/retry-economy.mjs < plugins/nereus-game/skills/balance/references/puzzle-levels.sample.json` 가 레벨별 지표 JSON 을 내고 종료 코드 0
+    - [x] 실패 확인: Run `npx vitest run tests/lib/profiles-casual-puzzle.test.ts` · Expected: FAIL
+    - [x] 최소 구현: 위 체크리스트·README·샘플·note·버전
+    - [x] 통과 확인: Run `npx vitest run` · Expected: 기준선에 없던 실패 0
+  - Done when: 기준선에 없던 실패 0, `node plugins/nereus-game/lib/retry-economy.mjs < plugins/nereus-game/skills/balance/assets/puzzle-levels.sample.json` 가 레벨별 지표 JSON 을 내고 종료 코드 0
 
 ## Global Constraints
 
