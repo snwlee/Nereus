@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { posix } from "../helpers/posix-path";
 import { readinessFrom, localHourIn, parseArgs, requestFor, collect } from "../../plugins/nereus/skills/phone/scripts/probe.mjs";
 import { loadEnv, readEnv, missingKeys, paths, envFiles, endpoints, REQUIRED_KEYS } from "../../plugins/nereus/skills/phone/scripts/config.mjs";
 
@@ -54,8 +55,8 @@ describe("config", () => {
 
   it("paths 는 NEREUS_PHONE_HOME 을 따른다", () => {
     const p = paths({ NEREUS_PHONE_HOME: "/tmp/np" });
-    expect(p.jobs).toBe("/tmp/np/jobs");
-    expect(p.logs).toBe("/tmp/np/logs");
+    expect(posix(p.jobs)).toBe("/tmp/np/jobs");
+    expect(posix(p.logs)).toBe("/tmp/np/logs");
     expect(REQUIRED_KEYS).toContain("TWILIO_FROM");
   });
 });
@@ -68,7 +69,7 @@ describe("probe.requestFor / config.envFiles", () => {
   });
 
   it("nereus 위치가 japancall 보다 먼저다", () => {
-    expect(envFiles("/h")).toEqual(["/h/.config/nereus/phone/env", "/h/.config/japancall/env"]);
+    expect(envFiles("/h").map(posix)).toEqual(["/h/.config/nereus/phone/env", "/h/.config/japancall/env"]);
   });
 });
 
