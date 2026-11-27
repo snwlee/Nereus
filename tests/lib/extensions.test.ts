@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { posix } from "../helpers/posix-path";
 import { loadExtensions } from "../../plugins/nereus/hooks/scripts/lib/extensions.mjs";
 
 // 실제 계약: installPath 는 installed_plugins.json 에, 활성 여부는 settings.json 에 따로 있다.
@@ -8,7 +9,7 @@ const records = [{ name: "nereus-game@nereus", enabled: true, installPath: "/p/g
 describe("loadExtensions", () => {
   it("활성 플러그인의 routes 와 stacks 를 모은다", () => {
     const readJson = (p: string) =>
-      p === "/p/game/nereus-extension.json"
+      posix(p) === "/p/game/nereus-extension.json"
         ? {
             routes: [{ skill: "nereus-game:roblox", why: "로블록스", re: "로블록스|roblox" }],
             stacks: [{ name: "roblox", marker: "default.project.json" }],
@@ -78,7 +79,7 @@ describe("실제 설정 파일 계약", () => {
     const readJson = (p: string) => {
       if (p.endsWith("installed_plugins.json")) return installed;
       if (p.endsWith("settings.json")) return settings;
-      if (p === "/p/game/nereus-extension.json") return { routes: [{ skill: "nereus-game:roblox", why: "로블록스", re: "roblox" }] };
+      if (posix(p) === "/p/game/nereus-extension.json") return { routes: [{ skill: "nereus-game:roblox", why: "로블록스", re: "roblox" }] };
       return undefined;
     };
     const out = loadExtensions({

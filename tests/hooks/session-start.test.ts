@@ -1,3 +1,4 @@
+import { posix } from "../helpers/posix-path";
 import { describe, it, expect } from "vitest";
 import { handle } from "../../plugins/nereus/hooks/scripts/session-start.mjs";
 
@@ -77,7 +78,7 @@ describe("session-start handoff ownership (loop subsessions only)", () => {
   it("tells this loop iteration which handoff file it owns", () => {
     const out = handle({ session_id: "a1b2c3d4xx", cwd: "/r", source: "startup" }, deps({ entries: () => [], now: () => new Date("2026-09-12T14:30:00").getTime(), env: LOOP }));
     const ctx = out!.hookSpecificOutput.additionalContext;
-    expect(ctx).toContain(".nereus/handoff/20260912-1430-a1b2c3d4.md");
+    expect(posix(ctx)).toContain(".nereus/handoff/20260912-1430-a1b2c3d4.md");
     expect(ctx).toContain("여기에만");
   });
   it("injects the newest handoff from the session directory", () => {

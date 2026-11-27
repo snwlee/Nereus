@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { posix } from "../helpers/posix-path";
 import { videoGateVerdict, findPaidMarker, scriptTargets, effectiveCwd, VIDEO_GATE_DEFAULTS } from "../../plugins/nereus/hooks/scripts/lib/video-gate.mjs";
 
 const OM = "/Users/u/OpenMontage";
@@ -9,8 +10,8 @@ const files: Record<string, string> = {
 };
 const base = (over: any = {}) => ({
   cwd: "/p",
-  readFile: (p: string) => { if (p in files) return files[p]; throw new Error("ENOENT"); },
-  isOpenMontage: (dir: string) => dir === OM || dir.startsWith(OM + "/"),
+  readFile: (p: string) => { if (posix(p) in files) return files[posix(p)]; throw new Error("ENOENT"); },
+  isOpenMontage: (dir: string) => posix(dir) === OM || posix(dir).startsWith(OM + "/"),
   override: null as string | null,
     config: VIDEO_GATE_DEFAULTS,
   ...over,
@@ -28,9 +29,9 @@ describe("findPaidMarker", () => {
 
 describe("scriptTargets / effectiveCwd", () => {
   it("실행되는 스크립트 경로를 cd 를 반영해 푼다", () => {
-    expect(effectiveCwd("cd /q && python x.py", "/p")).toBe("/q");
-    expect(scriptTargets("cd /p && ./.venv/bin/python scripts/gen_i2v.py a b", "/x")).toEqual(["/p/scripts/gen_i2v.py"]);
-    expect(scriptTargets("node /n/plugins/nereus/skills/image/scripts/muapi-cli.mjs generate --x", "/p")).toEqual(["/n/plugins/nereus/skills/image/scripts/muapi-cli.mjs"]);
+    expect(posix(effectiveCwd("cd /q && python x.py", "/p"))).toBe("/q");
+    expect(scriptTargets("cd /p && ./.venv/bin/python scripts/gen_i2v.py a b", "/x").map(posix)).toEqual(["/p/scripts/gen_i2v.py"]);
+    expect(scriptTargets("node /n/plugins/nereus/skills/image/scripts/muapi-cli.mjs generate --x", "/p").map(posix)).toEqual(["/n/plugins/nereus/skills/image/scripts/muapi-cli.mjs"]);
   });
 });
 

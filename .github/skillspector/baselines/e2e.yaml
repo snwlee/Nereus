@@ -1,0 +1,14 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:47688b0df3ae3859548c8629b533822408dd2b44490d676e4bfd6a4973df7de2
+  rule_id: RP1
+  file: SKILL.md
+  reason: "npx 로 부르는 것은 MCP 서버가 아니라 테스트 러너(vitest·playwright)이고 버전은 package.json 이 고정한다. 오탐."
+- hash: sha256:d78013fe8b28bceb0ff2407248915c50f66135769e65b48dd6c1472d6bd67087
+  rule_id: RP1
+  file: references/playwright.md
+  reason: "npx 로 부르는 것은 MCP 서버가 아니라 테스트 러너(vitest·playwright)이고 버전은 package.json 이 고정한다. 오탐."

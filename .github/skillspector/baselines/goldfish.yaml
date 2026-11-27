@@ -1,0 +1,14 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:9e25941b62dfe62d70ccd919695da34e17b2c3b8473628b5b84e0a5bd7faead4
+  rule_id: EA3
+  file: standards/feature-spec-standard.md
+  reason: "goldfish 리뷰 기준 문서의 문장(대안 평가·결정 0 규칙)을 패턴이 잡았다. 데이터 파일 오탐."
+- hash: sha256:9ea2ed820f43ae4348126401c1dc708b22b641fea3c27fb3744a45e1aea3b1f0
+  rule_id: EA3
+  file: standards/implementation-readiness-standard.md
+  reason: "goldfish 리뷰 기준 문서의 문장(대안 평가·결정 0 규칙)을 패턴이 잡았다. 데이터 파일 오탐."

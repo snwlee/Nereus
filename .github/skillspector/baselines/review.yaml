@@ -1,0 +1,22 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:5d1ddf4cfdf5ea200761ec02e818c10408b46e67ab0cca612b7ac442bed8475d
+  rule_id: MP3
+  file: references/security/ai-and-llm.md
+  reason: "보안 리뷰 참고 문서가 메모리 오염 공격을 설명하는 본문이다. 데이터 파일 오탐."
+- hash: sha256:1e15e9462b5c18dc76aaf5beeaa0f6e3ad05f119a14f3383ac36e2ffed611b86
+  rule_id: AE1
+  file: SKILL.md
+  reason: "정적 파서 한계(static_parse_limit)로 SKILL.md 가 가리키는 같은 스킬 안 스크립트를 부분 분석했다는 커버리지 신호. 위협 근거 없음."
+- hash: sha256:c93a9f7955d748a0e7028dd07eacd5683015375c903b9e15f011243f99abcf2e
+  rule_id: AE1
+  file: SKILL.md
+  reason: "정적 파서 한계(static_parse_limit)로 SKILL.md 가 가리키는 같은 스킬 안 스크립트를 부분 분석했다는 커버리지 신호. 위협 근거 없음."
+- hash: sha256:d43ef4dc99b76d851fd960e80edb22cea47a96841747587ca3407e42a35379c4
+  rule_id: AE1
+  file: SKILL.md
+  reason: "정적 파서 한계(static_parse_limit)로 SKILL.md 가 가리키는 같은 스킬 안 스크립트를 부분 분석했다는 커버리지 신호. 위협 근거 없음."

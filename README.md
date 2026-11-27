@@ -25,7 +25,7 @@ Interview first. Spec before code. TDD enforced by hooks. Three reviewers in par
 /nereus:setup
 ```
 
-Requires Node 20+ and Git. `setup` detects the external tools, installs what you approve, and writes the config file.
+Requires Node 22+ and Git. `setup` detects the external tools, installs what you approve, and writes the config file.
 
 ### Plugins
 

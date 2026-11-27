@@ -1,0 +1,18 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:c776bbbc0796bf2f535b3173db9201c1c90a69de97626a13250c8ddd62e1087e
+  rule_id: E1
+  file: SKILL.md
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
+- hash: sha256:ef49ecbbda9a9ce63bd28b9ba6fe1a8d41f54b112fe8b5aed5fbf0b5b3fbd457
+  rule_id: E1
+  file: SKILL.md
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
+- hash: sha256:202888faeecf6711398ddc3c8968ac376a63f3a7aa755dca039eae7a433fff2e
+  rule_id: E1
+  file: SKILL.md
+  reason: "문서화된 외부 API 호출(Gemini 웹세션·Muapi·무료 효과음 검색) 경로. 사용자 키로 사용자 요청만 보낸다. 의도된 동작."
