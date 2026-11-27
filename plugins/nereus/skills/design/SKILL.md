@@ -163,3 +163,4 @@ node "$D" status            # 종료코드 0=통과, 1=차단
 
 웹 이펙트 라이브러리를 참고할 때는 `references/web-effect-repos.md` 를 먼저 본다 — **라이선스부터 확인한다.**
 UI 모션(버튼·입력·카드 인터랙션)의 레퍼런스가 필요하면 `references/motion-refs.md` — 사람이 보고 고르고, 코드는 MIT 저장소에서만 가져온다.
+레퍼런스(영감 사이트)나 무료 리소스(아이콘·폰트·일러스트·팔레트·목업·스톡 사진)를 찾을 때는 `references/resource-directory.md` 를 본다.
