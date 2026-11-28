@@ -160,3 +160,27 @@ describe("checkAdPolicy — 타게팅 신호 일관성", () => {
     expect(v.formats).toContain("rewarded");
   });
 });
+
+describe("무효 트래픽 — 보여 주지 않을 로드", () => {
+  it("loads 축을 주지 않으면 검사하지 않는다", () => {
+    expect(checkAdPolicy({}).violations).toEqual([]);
+  });
+  it("노출 지면이 있는 로드는 통과", () => {
+    const r = checkAdPolicy({ loads: [{ format: "rewarded", surface: "continue-after-fail" }] });
+    expect(r.violations).toEqual([]);
+  });
+  it("노출 지면이 없는 로드는 load-without-surface", () => {
+    const r = checkAdPolicy({ loads: [{ format: "interstitial" }, { format: "rewarded", surface: "  " }] });
+    const v = r.violations.filter((x: any) => x.code === "load-without-surface");
+    expect(v.map((x: any) => x.format)).toEqual(["interstitial", "rewarded"]);
+  });
+  it("계획에 없는 포맷을 불러오면 지면이 적혀 있어도 load-without-surface", () => {
+    const r = checkAdPolicy({
+      plan: { formats: ["rewarded"] },
+      session: { launchCount: 5 },
+      loads: [{ format: "interstitial", surface: "cpm-probe" }],
+    });
+    const v = r.violations.find((x: any) => x.code === "load-without-surface");
+    expect(v).toMatchObject({ format: "interstitial", reason: "format-not-planned" });
+  });
+});

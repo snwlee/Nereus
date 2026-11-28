@@ -7,6 +7,36 @@ import { readCliInput, runCli } from "./cli-input.mjs";
 import { loadProfile } from "./profiles.mjs";
 const DAYS = ["d1", "d7", "d30"];
 
+// 사람이 보낸 것처럼 보이면 안 되는 발신자. 봇·NPC 의 공격·도전·선물을 플레이어 것처럼
+// 보이게 하면 "친구가 나를 공격했다"는 재방문 동기 자체가 거짓이 된다.
+const NON_HUMAN_ACTORS = new Set(["npc", "bot"]);
+
+/**
+ * 재방문 훅 주기표. `hooks` 를 주지 않으면 검사하지 않는다 — 모르는 것과 통과한 것은 다르다.
+ * 주기가 없으면 "돌아올 이유"가 언제 생기는지 아무도 모르고,
+ * 발신자가 없으면 그 훅이 봇을 사람으로 위장하는지 판정할 수 없다.
+ */
+function checkHooks(hooks) {
+  if (!Array.isArray(hooks)) return [];
+  const out = [];
+  for (const h of hooks) {
+    const hook = h?.name ?? "";
+    if (!(Number(h?.intervalHours) > 0)) out.push({ code: "hook-no-interval", hook });
+    const actor = String(h?.actor ?? "").trim();
+    if (!actor) {
+      out.push({ code: "hook-actor-undeclared", hook });
+    } else if (NON_HUMAN_ACTORS.has(actor) && h?.npcLabeled !== true) {
+      out.push({
+        code: "bot-disguised",
+        hook,
+        actor,
+        why: "봇·NPC 의 상호작용이 NPC 로 표기되지 않는다. 사람이 한 것처럼 보이는 재방문 훅은 기만이다.",
+      });
+    }
+  }
+  return out;
+}
+
 export function checkLiveops({ profile, plan, metrics = null } = {}) {
   const violations = [];
   const unmeasured = [];
@@ -35,6 +65,8 @@ export function checkLiveops({ profile, plan, metrics = null } = {}) {
   for (let i = 1; i < curve.length; i += 1) {
     if (curve[i] > curve[i - 1]) { violations.push({ code: "retention-shape", curve }); break; }
   }
+
+  violations.push(...checkHooks(plan?.hooks));
 
   const actual = metrics?.retention;
   if (!actual) {

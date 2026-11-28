@@ -16,6 +16,44 @@ const SUM_DECIMALS = 6;
 const round = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
 const decimalsOf = (n) => (String(n).split(".")[1] ?? "").length;
 
+// ── 기만 금지 ───────────────────────────────────────────────────────────
+// 아래 둘은 법령 인용이 아니라 우리 규칙이다. 그래도 같은 게이트에 둔다 —
+// 장르 프로파일로 끌 수 있으면 안 되는 이유가 확률 공개와 같다.
+
+/** 천장(pity)은 공개하고, 어떤 조건에서도 꺼지지 않는다. 선언이 없으면 검사하지 않는다. */
+function checkPity(box, pity) {
+  if (!pity || typeof pity !== "object") return [];
+  const out = [];
+  if (pity.disclosed !== true) out.push({ code: "pity-undisclosed", box });
+  const conditions = Array.isArray(pity.disableWhen) ? pity.disableWhen.filter((c) => String(c ?? "").trim()) : [];
+  if (conditions.length) {
+    out.push({
+      code: "pity-switchable",
+      box,
+      conditions,
+      why: "공개한 천장이 어떤 구간에서 꺼진다. 공개는 했어도 실제 기대 비용이 공개와 달라진다.",
+    });
+  }
+  return out;
+}
+
+/** 같은 상품의 가격은 사용자 이력(결제·재구매 횟수·예측 가치)으로 오르지 않는다. */
+function checkPricing(products) {
+  if (!Array.isArray(products)) return [];
+  const out = [];
+  for (const p of products) {
+    const inputs = Array.isArray(p?.priceUserInputs) ? p.priceUserInputs.filter((x) => String(x ?? "").trim()) : [];
+    if (!inputs.length) continue;
+    out.push({
+      code: "price-by-history",
+      sku: p?.sku ?? "",
+      inputs,
+      why: "가격 함수가 사용자 상태를 읽는다. 같은 상품이 사람마다, 살 때마다 비싸진다.",
+    });
+  }
+  return out;
+}
+
 export function checkPaidRandom({ policy, plan } = {}) {
   const violations = [];
   const boxes = Array.isArray(plan?.boxes) ? plan.boxes : [];
@@ -54,7 +92,11 @@ export function checkPaidRandom({ policy, plan } = {}) {
     if (b?.hasUniqueOutcomes && !b?.dynamicRemainingOdds) {
       violations.push({ code: "unique-no-remaining-odds", box: name });
     }
+
+    violations.push(...checkPity(name, b?.pity));
   }
+
+  violations.push(...checkPricing(plan?.products));
 
   const boxNames = new Set(boxes.map((b) => b?.name));
   for (const l of luckItems) {
