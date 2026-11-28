@@ -26,7 +26,7 @@ jobs:
       - name: SkillEvaluator Tier 1 (키 없이 도는 결정론 검사)
         run: |
           uv tool install git+https://github.com/NVIDIA/SkillEvaluator.git || exit 0
-          for s in plugins/nereus/skills/*/; do
+          for s in plugins/*/skills/*/; do
             for check in validate quality-check security-scan lint-scripts pii-scan; do
               skillevaluator "$check" "$s" || true
             done
@@ -35,35 +35,13 @@ jobs:
         env:
           SKILLSPECTOR_VERSION: v2.13.7
         # 판정 기준 (.github/skillspector/README.md):
-        # - 스킬마다 따로 스캔한다. 재귀 스캔은 --baseline 을 받지 않는다.
-        # - baselines/<스킬>.yaml 은 검토를 마친 기존 지적과 그 사유다. 내용이 바뀐 줄은 다시 지적된다.
+        # - plugins/*/skills/*/ 의 모든 스킬을 하나씩 스캔한다(새 플러그인도 글롭으로 자동 포함).
+        #   재귀 스캔은 --baseline 을 받지 않는다.
+        # - baselines/<플러그인>/<스킬>.yaml 은 검토를 마친 기존 지적과 그 사유다. 내용이 바뀐 줄은 다시 지적된다.
         # - 새 CRITICAL/HIGH 지적, 스캔 실패, skillspector 위험도 HIGH 이상 → 실패.
         #   새 MEDIUM/LOW 는 경고로 띄운다(scan-gate.mjs 와 같은 기준).
+        # - 로컬에서도 같은 스크립트를 돌린다: .github/skillspector/scan-all.sh
         run: |
           uv tool install "git+https://github.com/NVIDIA/skillspector.git@${SKILLSPECTOR_VERSION}"
           skillspector --version
-          out="$RUNNER_TEMP/skillspector"
-          mkdir -p "$out"
-          fail=0
-          for s in plugins/nereus/skills/*/; do
-            name=$(basename "$s")
-            report="$out/$name.json"
-            baseline=".github/skillspector/baselines/$name.yaml"
-            args=(scan "$s" --no-llm --format json --output "$report")
-            [ -f "$baseline" ] && args+=(--baseline "$baseline")
-            if ! skillspector "${args[@]}" > /dev/null; then
-              echo "::error::$name: skillspector 가 실패했거나 위험도 HIGH 이상을 냈다"
-              fail=1
-            fi
-            if ! verdict=$(node plugins/nereus/skills/skill-audit/scripts/scan-gate.mjs "$report"); then
-              echo "::error::$name: 새 CRITICAL/HIGH 지적"
-              echo "$verdict" | jq '.blocking'
-              fail=1
-            fi
-            warn=$(echo "$verdict" | jq '[.warnings[] | select(.severity != "info")] | length')
-            if [ "$warn" != "0" ]; then
-              echo "::warning::$name: 새 MEDIUM/LOW 지적 ${warn}건 — 검토 후 고치거나 baseline 에 사유와 함께 추가"
-              echo "$verdict" | jq '[.warnings[] | select(.severity != "info") | {id, severity, pattern, location}]'
-            fi
-          done
-          exit "$fail"
+          .github/skillspector/scan-all.sh "$RUNNER_TEMP/skillspector"

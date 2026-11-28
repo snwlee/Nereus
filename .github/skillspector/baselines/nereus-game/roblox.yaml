@@ -1,0 +1,10 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:edb07336eeecc1b1509b541bcc087204f9bed608fc6a3ebcd2323b2241904d4e
+  rule_id: EA4
+  file: templates/economy_math.luau
+  reason: "maxAffordable 의 while 루프는 maxLevel 상한과 유한값 검사(isFinite)·가격>=1 검사로 끝이 보장된다. 'loop forever' 를 막는다는 주석 문구를 무제한 자원 접근으로 본 오탐."
