@@ -11,7 +11,18 @@ root=$(cd "$(dirname "$0")/../.." && pwd)
 cd "$root"
 out="${1:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/skillspector}"
 mkdir -p "$out"
-gate="plugins/nereus/skills/skill-audit/scripts/scan-gate.mjs"
+gate="$root/plugins/nereus/skills/skill-audit/scripts/scan-gate.mjs"
+baselines="$root/.github/skillspector/baselines"
+
+# 작업 트리를 그대로 스캔하지 않는다. .gitignore 된 산출물(테스트가 만든 __pycache__ 등)은
+# 커밋되지 않으니 CI 체크아웃에는 없다 — 로컬과 CI 가 같은 파일을 보도록
+# git 이 커밋할 파일(추적 + 무시되지 않은 새 파일)만 임시 트리로 옮겨 스캔한다.
+tree=$(mktemp -d)
+trap 'rm -rf "$tree"' EXIT
+git ls-files -z -co --exclude-standard -- plugins \
+  | while IFS= read -r -d '' f; do [ -e "$f" ] && printf '%s\0' "$f"; done \
+  | tar --null -T - -cf - | tar -xf - -C "$tree"
+cd "$tree"
 
 # GitHub Actions 에서는 annotation, 로컬에서는 평문으로 찍는다.
 note() { # note <error|warning> <메시지>
@@ -32,7 +43,7 @@ for s in plugins/*/skills/*/; do
   count=$((count + 1))
   mkdir -p "$out/$plugin"
   report="$out/$plugin/$name.json"
-  baseline=".github/skillspector/baselines/$plugin/$name.yaml"
+  baseline="$baselines/$plugin/$name.yaml"
   args=(scan "$s" --no-llm --format json --output "$report")
   [ -f "$baseline" ] && args+=(--baseline "$baseline")
   if ! skillspector "${args[@]}" > /dev/null; then

@@ -7,6 +7,9 @@ CI `skill-quality` 잡은 `plugins/*/skills/*/` 의 모든 플러그인 스킬�
 .github/skillspector/scan-all.sh   # 종료 코드 0 = 통과
 ```
 
+스크립트는 작업 트리를 그대로 보지 않고 git 이 커밋할 파일(추적 + 무시되지 않은 새 파일)만 임시 트리로 옮겨 스캔한다.
+`npm test` 가 남기는 `image/scripts/__pycache__/*.pyc` 같은 gitignore 산출물 때문에 로컬에서만 SC8·SC9 가 뜨는 일을 막는다.
+
 버전은 워크플로의 `SKILLSPECTOR_VERSION` 으로 고정한다(현재 v2.13.7). 올릴 때는 baseline 도 같이 다시 만든다 —
 지문(fingerprint) 형식과 규칙이 버전마다 바뀐다.
 
