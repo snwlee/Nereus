@@ -4,6 +4,7 @@ import { loadProfile, listProfiles } from "../../plugins/nereus-game/lib/profile
 import { checkSound } from "../../plugins/nereus-game/lib/sound-budget.mjs";
 import { checkImpact } from "../../plugins/nereus-game/lib/impact-budget.mjs";
 import { simulate } from "../../plugins/nereus-game/lib/balance-sim.mjs";
+import { measureRetry } from "../../plugins/nereus-game/lib/retry-economy.mjs";
 
 describe("casual-puzzle 프로파일", () => {
   it("로드되고 루프·지표를 가진다", () => {
@@ -96,9 +97,27 @@ describe("문서가 프로파일 목록과 어긋나지 않는다", () => {
     expect(md).toContain("casual-puzzle");
   });
 
-  it("수명 게이트가 아직 축이 아니라는 사실이 적혀 있다", () => {
+  it("수명(목숨) 판정이 문서에 적혀 있다", () => {
     const md = fs.readFileSync("plugins/nereus-game/skills/balance/SKILL.md", "utf8");
     expect(md).toMatch(/수명|에너지/);
+  });
+
+  it("SKILL.md 가 재시도·스타터 판정과 비통과 규칙을 적는다", () => {
+    const md = fs.readFileSync("plugins/nereus-game/skills/balance/SKILL.md", "utf8");
+    for (const c of ["retry-cliff", "retry-too-easy", "lives-wall", "continue-weak", "no-baseline", "unmeasured",
+      "starter-missing", "starter-duplicate", "starter-not-one-time", "starter-not-cheapest", "starter-replaced-pricier",
+      "회복 시간", "잠정"]) expect(md).toContain(c);
+  });
+
+  it("샘플 레벨 파일이 measureRetry 로 돈다", () => {
+    const sample = JSON.parse(fs.readFileSync("plugins/nereus-game/skills/balance/assets/puzzle-levels.sample.json", "utf8"));
+    const r = measureRetry({ profile: loadProfile("casual-puzzle"), ...sample });
+    expect(r.levels.length).toBe(sample.levels.length);
+    expect(r.violations.map((v: { code: string }) => v.code)).toContain("retry-cliff");
+  });
+
+  it("프로파일 note 가 재시도 경제를 미측정이라 하지 않는다", () => {
+    expect(loadProfile("casual-puzzle").balance.note).not.toContain("아직 측정되지 않는다");
   });
 
   it("README 가 프로파일 다섯을 전부 적는다", () => {

@@ -5,15 +5,8 @@
 // 그래야 (1) 회귀 테스트가 성립하고 (2) 수식을 고쳤을 때 무엇이 달라졌는지 보이고
 // (3) finish 게이트가 "밸런스가 깨졌다"를 기계적으로 판정할 수 있다.
 // 체크리스트 스킬이었다면 셋 중 아무것도 못 한다.
-
-/** 선형합동생성기. 같은 시드면 같은 수열이다. Math.random 을 쓰지 않는 이유가 이것이다. */
-function lcg(seed) {
-  let s = (Number(seed) || 1) >>> 0;
-  return () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
+import { lcg } from "./seeded-random.mjs";
+import { measureRetry } from "./retry-economy.mjs";
 
 /**
  * @param {{ profile: object, economy: { income: {base:number, growth:number}, stages: Array<{name:string,cost:number}> }, turns: number, seed?: number }} input
@@ -78,7 +71,14 @@ export function simulate({ profile, economy, turns, seed = 1 }) {
     });
   }
 
-  return { turns: log, summary: summarize({ profile, economy, log, stageIndex, stages }) };
+  const summary = summarize({ profile, economy, log, stageIndex, stages });
+  // 레벨 목록을 주면 캐주얼 퍼즐 재시도 경제를 덧붙인다. 기존 summary 키는 그대로 둔다(가산).
+  // null 등 배열이 아닌 값은 조용히 건너뛰지 않고 measureRetry 의 오류로 던진다 — 건너뛰면 재지 않은 것이 초록으로 읽힌다.
+  if (economy?.levels === undefined) return { turns: log, summary };
+  const retry = measureRetry({
+    profile, levels: economy.levels, lives: economy.lives, continueOffer: economy.continueOffer, seed,
+  });
+  return { turns: log, summary: { ...summary, retry } };
 }
 
 // 장르마다 실패 양상이 다르다 — 타이쿤은 병목(다음 단계 도달 불가), 오비는 절벽(난이도 급등).

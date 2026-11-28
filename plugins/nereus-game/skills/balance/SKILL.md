@@ -87,15 +87,89 @@ const r = simulate({ profile, economy, turns: 60, seed: 1 });
 수치를 낸 것으로 끝내지 않는다. 기준을 태스크의 완료 조건에 적는다 —
 예: "`bottlenecks` 가 비어 있고 `cliffs` 가 2개 이하". 기준 없는 수치는 판정이 아니다.
 
+## 캐주얼 퍼즐 재시도 경제 — `casual-puzzle`
+
+곡선(병목·절벽·지배 전략)만으로는 퍼즐 고유의 실패 — **목숨(수명·에너지)이 떨어져 세션이 끊긴다** — 가 안 잡힌다.
+이동 수 제한 레벨 목록을 시드 고정으로 레벨마다 2000판 돌려 클리어율과 재시도 비용을 잰다.
+
+```bash
+node plugins/nereus-game/lib/retry-economy.mjs < plugins/nereus-game/skills/balance/assets/puzzle-levels.sample.json
+```
+
+입력은 `{ genre, retry?, levels, lives?, continueOffer?, seed? }`. 레벨은 `{ name, id?, moves, goal, progress:[min,max], tier? }` —
+수마다 진척을 `[min,max]` 균등분포로 뽑아 더해 `moves` 안에 `goal` 에 닿으면 클리어다. JS 에서는 `measureRetry({ profile, levels, lives, continueOffer, seed })`,
+`simulate()` 경제에 `levels` 를 넣으면 `summary.retry` 로 같은 결과가 붙는다.
+
+| 지표 | 뜻 |
+|---|---|
+| `firstTryWinRate` | 이어하기 없이 첫 시도에 클리어할 비율 p |
+| `cumulativeWinRate[n-1]` | n번째 시도까지 누적 클리어율 1 − (1−p)^n |
+| `expectedLivesPerClear` | 클리어까지 잃는 목숨 평균 (1−p)/p |
+| `livesOutRate` | 목숨을 가득 채우고 들어와 한 줄(`cap`)을 다 쓰고도 못 깰 확률 (1−p)^cap |
+| `continueSaveRate` | 실패한 판 중 이어하기(`continueOffer.moves` 추가)로 구해지는 비율. 실패가 50판 미만이면 `null` |
+| `continueCostPerClear` | 실패마다 이어하기를 사는 플레이어의 클리어당 지출(상한 쪽 값, 판정에 안 씀) |
+| `borderline` | p 가 티어 범위 경계에서 2σ 안 — 시드·`id` 를 바꾸면 판정이 뒤집힐 수 있는 레벨 |
+
+| 위반 | 뜻 | 대응 |
+|---|---|---|
+| `retry-cliff` | 첫 시도 클리어율이 티어 범위 아래 — 난이도 절벽 | 이동 수를 늘리거나 목표를 낮춘다 |
+| `retry-too-easy` | 티어 범위 위 — 난이도 인플레, 재시도가 일어나지 않는다 | 하드로 표시한 레벨이 하드 노릇을 못 한다. 이동 수를 줄인다 |
+| `lives-wall` | `livesOutRate` 가 티어 상한 초과 — 목숨 한 줄로 못 깨고 세션이 끊긴다 | 클리어율을 올리거나 `cap` 을 늘린다. 기본값에서는 `cap` 4 이하일 때 따로 의미가 생긴다 |
+| `continue-weak` | 이어하기를 사도 구해지는 판이 `minContinueSave` 미만 | 이어하기 이동 수를 늘린다 |
+| `no-baseline` | 프로파일에 `retry` 기준이 없다 | 지표만 났다. 통과가 아니다 |
+
+티어별 목표 첫 시도 클리어율(`casual-puzzle` 의 `retry`, **잠정값** — 검증된 기준이 아니라 출발점이다):
+
+| 티어 | 범위 | `maxLivesOut` |
+|---|---|---|
+| `early` (앞 `earlyLevels`=10 개, 표시 없을 때) | 0.8 ~ 1.0 | 0.01 |
+| `mid` (그 뒤, 표시 없을 때) | 0.4 ~ 0.6 | 0.1 |
+| `hard` (`tier: "hard"` 로 표시) | 0.15 ~ 0.35 | 0.5 |
+
+게임마다 다르면 CLI 입력에 `retry` 를 통째로 주어 덮어쓴다(같은 검증).
+
+자원과 오류:
+
+- `assets/puzzle-levels.sample.json` — 샘플 레벨 세트 14개(초반 10·중반 2·하드 1·표시 없는 벽 1). 벽 레벨에서 `retry-cliff`·`lives-wall` 이 나는 것을 보여 준다. 새 게임의 레벨 파일을 이 모양으로 만든다.
+- 잘못된 입력(배열이 아닌 `levels`, 1~1000 밖의 `moves`, 겹치는 레벨 이름, 빠진 `retry` 키, 총 추출 2×10^8 초과 등)은 사유를 담아 던진다. CLI 는 그 사유를 stderr 에 내고 종료 코드 1, 위반이 있어도 결과를 내고 종료 코드 0 이다.
+
+**통과로 읽지 않는 것 세 가지**: `no-baseline`, 비어 있지 않은 `unmeasured`(재지 않은 축 — `levels`·`lives`·`continue`), `null` 지표.
+
+읽는 법과 한계:
+
+- `progress` 는 설계자가 넣는 보정값이다. 플레이테스트·텔레메트리의 레벨별 클리어율로 맞추고 출처를 적는다. 출처 없는 결과는 이동 수·목표 비교용으로만 읽는다.
+- 실력 차가 있으면 한 번 실패한 플레이어는 약한 쪽일 가능성이 커서 실제 `livesOutRate` 는 계산값보다 크고 실제 누적 클리어율은 작다 — 계산값은 각각 하한·상한이다. 실력 차가 크면 `progress` 를 약한 층 기준으로 보정한다. 학습 효과는 반대 방향이다.
+- 운 모델이라 무작위 리필 매치-3 류에 맞는다. 같은 판을 다시 하는 고정 판 퍼즐(라인·물리)에는 맞지 않는다.
+- `livesOutRate` 는 레벨 단위다. 레벨 사이에 목숨이 이어지는 세션 단위 끊김의 하한으로 읽는다.
+- 목숨 단위가 다르다: 재시도 판정은 목숨 1 = 실패한 시도 1, `simulate()` 턴 루프는 목숨 1 = 시도한 턴 1.
+- 레벨이 많으면 레벨마다 `tier` 를 적는다. 안 적은 하드 레벨은 `mid` 기준에서 `retry-cliff` 로 잡힌다. 지표는 레벨 이름(`id ?? name`)으로 시드를 정해 레벨을 끼워 넣어도 그대로지만, 티어 기본값은 위치라 판정은 바뀔 수 있다.
+- 게이트로 쓸 때는 태스크 완료 조건에 시드를 고정해 적는다 — 시드를 바꿔 가며 초록을 고르지 않는다.
+
+## 1회 한정 첫 구매 상품 — 스타터
+
+첫 결제 문턱을 낮추는 상품은 하나·한 번이고, 가장 싸며, 산 뒤 그 자리를 더 비싼 상품으로 교체하지 않는다(채택한 설계 규칙).
+
+```bash
+echo '{"shop":{"products":[
+  {"sku":"starter","price":0.99,"value":500,"oneTime":true,"starter":true},
+  {"sku":"small","price":1.99,"value":100}]}}' | node plugins/nereus-game/lib/starter-offer.mjs
+```
+
+| 위반 | 뜻 |
+|---|---|
+| `starter-missing` | 현금 유료 상품이 있는데 `starter: true` 가 없다 |
+| `starter-duplicate` | 스타터가 둘 이상 |
+| `starter-not-one-time` | 스타터에 `oneTime: true` 가 없다 |
+| `starter-not-cheapest` | 스타터보다 싼 유료 상품이 있다 |
+| `starter-replaced-pricier` | `replacedBy` 사슬(교체의 교체까지)에 스타터보다 비싼 상품이 있다. 같은 값·더 싼 교체는 괜찮다 |
+
+가격 비교는 같은 `currency`(기본 `"real"`) 상품끼리만 한다. `valueRatio` 는 스타터의 가격당 가치가 다른 유료 상품 중앙값의 몇 배인지 — 판정이 아니라 판단 재료다.
+정적 데이터 검사라 데이터에 적히지 않은 런타임 교체·가격 변경은 잡지 못한다. 사용자 이력으로 가격을 바꾸는지는 `nereus-game:compliance` 몫이다.
+
 ## 시뮬레이터가 아직 재지 않는 것
 
-시뮬레이터의 실패 축은 셋이다 — 병목·절벽·지배 전략. **캐주얼 퍼즐의 고유 실패인
-"수명(에너지) 고갈로 세션이 강제 종료된다"는 이 셋 어디에도 없다.** `casual-puzzle` 로
-밸런싱하면 곡선의 벽은 잡히지만 수명 게이트는 잡히지 않는다.
-
-그러니 퍼즐을 볼 때는 시뮬레이터 결과를 "곡선은 통과"로만 읽고, 수명·재시도 경제는
-따로 판정한다. 재지 않은 것을 통과로 읽지 않는다 — 그건 기준 없는 초록이다.
-네 번째 축을 넣으려면 `balance-sim.mjs` 에 `economy.lives` 입력과 재시도 벽 계산이 필요하다.
+**목숨 회복 시간.** 재시도 판정은 가득 찬 목숨 한 줄만 본다. 목숨이 덜 찬 채 시작하는 세션과 회복 대기
+(`lives.regenTurns`)는 `simulate()` 의 턴 루프가 소비·회복·`blocked` 를 기록할 뿐 판정하지 않는다. 재지 않은 것을 통과로 읽지 않는다.
 
 ## 하지 말 것
 
