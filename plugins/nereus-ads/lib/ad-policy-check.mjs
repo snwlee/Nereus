@@ -30,7 +30,7 @@ export function loadAdsPolicy(policyPath = POLICY_PATH) {
  * @param units     `[{ format, platform, resolvedId }]` 실제로 SDK 에 넘어가는 단위
  * @returns `{ violations }`
  */
-export function checkAdPolicy({ build = null, units = null, session = null, plan = null, consent = null, targeting = null, policy = null } = {}) {
+export function checkAdPolicy({ build = null, units = null, session = null, plan = null, consent = null, targeting = null, loads = null, policy = null } = {}) {
   const p = policy ?? loadAdsPolicy();
   const violations = [];
 
@@ -62,6 +62,22 @@ export function checkAdPolicy({ build = null, units = null, session = null, plan
           resolvedId: u?.resolvedId,
           why: "릴리스 빌드에 데모 단위가 남았다. 광고는 정상으로 보이는데 수익이 0 이고 아무 에러도 나지 않는다.",
         });
+      }
+    }
+  }
+
+  // ── 보여 주지 않을 로드 ────────────────────────────────────────────────
+  // 단가를 재려고 광고를 불러만 두고 띄우지 않으면 요청만 쌓이고 노출이 없다 —
+  // 무효 트래픽 패턴이다. 로드마다 그 광고가 뜰 지면이 있어야 한다.
+  // 계획(plan.formats)에 없는 포맷의 로드는 지면을 적어도 뜰 곳이 없는 로드다.
+  if (Array.isArray(loads)) {
+    const planned = Array.isArray(plan?.formats) ? new Set(plan.formats) : null;
+    for (const l of loads) {
+      const why = "보여 주지 않을 광고를 불러온다. 노출 없는 요청은 무효 트래픽으로 집계되고 누적되면 계정이 정지된다.";
+      if (!String(l?.surface ?? "").trim()) {
+        violations.push({ code: "load-without-surface", format: l?.format, reason: "no-surface", why });
+      } else if (planned && !planned.has(l?.format)) {
+        violations.push({ code: "load-without-surface", format: l?.format, surface: l.surface, reason: "format-not-planned", why });
       }
     }
   }

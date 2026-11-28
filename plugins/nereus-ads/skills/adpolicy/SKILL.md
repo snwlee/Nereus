@@ -46,6 +46,7 @@ nereus:common 규칙을 따른다. 담당 에이전트: ads-engineer.
   "plan":    { "formats": ["interstitial", "rewarded"] },
   "session": { "launchCount": 0, "protectionEnabled": true },
   "consent": { "initBeforeConsent": false, "skippedForConsent": ["fixedBanner"], "retryRegistered": ["fixedBanner"] },
+  "loads":   [{ "format": "rewarded", "surface": "continue-after-fail" }],
   "targeting": {
     "fixedBanner": { "keywords": ["wallpaper", "kpop"], "contentUrl": "https://example.com" },
     "rewarded":    { "keywords": ["wallpaper", "kpop"], "contentUrl": "https://example.com" }
@@ -66,6 +67,7 @@ echo '{"build":{"debug":true},"units":[…]}' | node "${CLAUDE_PLUGIN_ROOT}/lib/
 |---|---|---|
 | `prod-unit-in-debug` | 디버그 빌드가 프로덕션 단위에 트래픽을 만든다 | 무효 트래픽은 집계 뒤 정지로 온다. **되돌릴 수 없다** |
 | `demo-unit-in-release` | 릴리스에 데모 단위가 남았다 | 광고는 정상으로 보이고 수익만 0 이다 |
+| `load-without-surface` | 보여 줄 지면이 없는 로드다 (지면 없음 · 계획에 없는 포맷) | 요청만 쌓이고 노출이 없다. 무효 트래픽으로 정지된다 |
 | `first-session-interruptive` | 첫 세션에 중단형 포맷을 띄운다 | 리텐션 손실은 지표에만 나타난다 |
 | `init-before-consent` | 동의 해석 전에 광고를 초기화했다 | 규정 위반이고 되돌릴 수 없다 |
 | `consent-retry-missing` | 동의 대기로 건너뛴 로드를 재시도하지 않는다 | 그 세션 동안 그 포맷이 영원히 빈다 |
@@ -81,6 +83,19 @@ echo '{"build":{"debug":true},"units":[…]}' | node "${CLAUDE_PLUGIN_ROOT}/lib/
 
 **플랫폼마다 데모 ID 가 다르다.** 안드로이드 데모 ID 를 iOS 빌드에 쓰면 그것은
 그 플랫폼의 데모가 아니고, 무효 트래픽이 된다. 그래서 표를 2차원으로 둔다.
+
+### 로드는 노출할 자리에만 한다
+
+단가를 재거나 "어느 네트워크가 비싼지" 보려고 광고를 불러만 두고 띄우지 않는 코드가 있다.
+요청은 쌓이는데 노출이 없으니 무효 트래픽 패턴이고, 정지 사유다. 수익을 재는 일은 `adrevenue` 의
+퍼널 지표로 하고, 측정용 로드를 만들지 않는다.
+
+`loads[]` 는 **코드가 실제로 부르는 로드 호출**마다 하나씩 적는다. 각 로드에는 그 광고가 뜰 지면(`surface`)이
+있어야 한다. `plan.formats` 를 같이 주면 계획에 없는 포맷의 로드는 지면을 적었어도 위반이다 — 뜰 곳이 없다.
+`loads` 를 주지 않으면 검사하지 않는다. 선언과 코드가 같은지는 리뷰에서 본다:
+
+- [ ] 광고 로드 호출마다 짝이 되는 show 호출이 있다(코드 검토)
+- [ ] 첫 세션 로드 수를 로그로 확인한다. 첫 세션에 띄우지 않을 포맷을 미리 불러오지 않는다
 
 ### 미설정은 보호다
 
@@ -115,5 +130,6 @@ UMP 동의와 SDK(TCF 문자열)가 정한다. 여기서 또 판정하면 두 �
 - **실측 수익 수치와 퍼블리셔 ID 를 하네스에 복사하지 않는다.** 시점·계정 종속이라 빨리 낡고,
   조용히 낡은 수치가 틀린 확신을 만든다.
 - **노출을 줄이라는 처방을 내지 않는다.** 지켜지지 않고, 지켜지지 않는 게이트는 꺼진다.
+- **보여 주지 않을 광고를 가치 측정용으로 불러오지 않는다.** 무효 트래픽이다.
 - **원격 설정 키 분류를 여기서 하지 않는다.** `nereus-game:liveops` 의 몫이다.
 - **배치 타이밍을 여기서 정하지 않는다.** `adplacement` 가 한다.
