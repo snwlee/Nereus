@@ -1,0 +1,140 @@
+{
+  "genre": "casual-puzzle",
+  "seed": 1,
+  "lives": {
+    "cap": 5
+  },
+  "continueOffer": {
+    "moves": 5,
+    "price": 900
+  },
+  "levels": [
+    {
+      "name": "01 튜토리얼",
+      "moves": 20,
+      "goal": 13,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "02 튜토리얼",
+      "moves": 20,
+      "goal": 13.5,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "03 튜토리얼",
+      "moves": 20,
+      "goal": 14,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "04",
+      "moves": 20,
+      "goal": 14.5,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "05",
+      "moves": 20,
+      "goal": 15,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "06",
+      "moves": 20,
+      "goal": 15.5,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "07",
+      "moves": 20,
+      "goal": 16,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "08",
+      "moves": 20,
+      "goal": 16.5,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "09",
+      "moves": 20,
+      "goal": 17,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "10",
+      "moves": 20,
+      "goal": 17,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "11",
+      "moves": 20,
+      "goal": 20,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "12",
+      "moves": 20,
+      "goal": 20.5,
+      "progress": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "13 보스",
+      "moves": 20,
+      "goal": 21.7,
+      "progress": [
+        0,
+        2
+      ],
+      "tier": "hard"
+    },
+    {
+      "name": "14",
+      "moves": 20,
+      "goal": 23,
+      "progress": [
+        0,
+        2
+      ]
+    }
+  ]
+}

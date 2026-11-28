@@ -143,6 +143,14 @@ detectFlutterGame(root) → { runner, flame, flavors, layers, notes }
 
 `lib/balance-sim.mjs` — 결정론적(seed 기반). 경제 정의를 N턴 돌려
 `bottlenecks` · `inflation` · `cliffs` 를 수치로 낸다. 같은 입력이면 같은 출력이라 게이트로 쓸 수 있다.
+경제에 `levels`(이동 수 제한 레벨 목록)를 넣으면 캐주얼 퍼즐 재시도 경제를 `summary.retry` 로 덧붙인다.
+
+| 검사기 | 부르는 스킬 | 판정 |
+|---|---|---|
+| `lib/retry-economy.mjs` (`measureRetry`) | `balance` | 레벨별 첫 시도·누적 클리어율, 목숨 한 줄 소진율, 이어하기 구제율 — `retry-cliff`·`retry-too-easy`·`lives-wall`·`continue-weak` (`casual-puzzle.retry` 기준, 잠정값) |
+| `lib/starter-offer.mjs` (`checkStarterOffer`) | `balance` | 1회 한정 첫 구매 상품 — 없음·중복·1회 한정 아님·가장 싸지 않음·더 비싼 상품으로 교체 |
+
+둘 다 stdin JSON → stdout JSON 프로세스다. 레벨 난수열은 `lib/seeded-random.mjs` 의 `mixSeed`(레벨 이름 해시)로 정해 레벨을 끼워 넣어도 다른 레벨 지표가 그대로다.
 
 ## 이식한 검사기 (awesome-gamedev-agent-skills, Apache-2.0)
 
