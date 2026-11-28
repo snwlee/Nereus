@@ -1,0 +1,10 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.13.7
+rules: []
+fingerprints:
+- hash: sha256:562f516cee54fcb3346d62fb95d4736cfc332b0b48636a26baf01f9b4495c91d
+  rule_id: SC2
+  file: SKILL.md
+  reason: "진짜 지적, 수정 보류(오너 판단 대기, 2026-11-28): SKILL.md 가 pch 설치를 'curl -fsSL https://patch.gg/install.sh | sh' 로 안내한다. setup 의 SC2(사용자 승인 후 설치 안내)와 달리 승인 절차 없는 제3자 스크립트 파이프 실행이다. 검색·상세 조회는 REST(curl -s)로 되므로 pch 는 선택이다. 고치면 이 항목을 지운다."
